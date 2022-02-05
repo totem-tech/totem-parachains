@@ -22,8 +22,20 @@ scale-info = { version = "1.0.0", default-features = false, features = ["derive"
 serde = { version = "1.0.132", optional = true, features = ["derive"] }
 smallvec = "1.6.1"
 
-# Local Dependencies
-pallet-template = { path = "../pallets/template", default-features = false }
+# Totem
+totem-common = { default-features = false, path = '../common' }
+pallet-accounting = { default-features = false, path = '../pallets/accounting' }
+pallet-balances-totem = { default-features = false, path = '../pallets/balances' }
+# pallet-archive = { default-features = false, path = '../pallets/archive' }
+# pallet-bonsai = { default-features = false, path = '../pallets/bonsai' }
+# pallet-escrow = { default-features = false, path = '../pallets/escrow' }
+# pallet-funding = { default-features = false, path = '../pallets/funding' }
+# pallet-orders = { default-features = false, path = '../pallets/orders' }
+# pallet-prefunding = { default-features = false, path = '../pallets/prefunding' }
+# pallet-teams = { default-features = false, path = '../pallets/teams' }
+# pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
+pallet-transaction-payment = { default-features = false, path = '../pallets/transaction-payment', package = 'pallet-transaction-payment-totem' }
+# pallet-transfer = { default-features = false, path = '../pallets/transfer' }
 
 # Substrate Dependencies
 ## Substrate Primitive Dependencies
@@ -52,11 +64,11 @@ frame-system-rpc-runtime-api = { git = "https://github.com/paritytech/substrate"
 ## Substrate Pallet Dependencies
 pallet-aura = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 pallet-authorship = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
-pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
+# pallet-balances = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 pallet-session = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 pallet-sudo = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
-pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
+# pallet-transaction-payment = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.16" }
 
 # Cumulus dependencies
@@ -106,11 +118,11 @@ std = [
 	"frame-system/std",
 	"pallet-aura/std",
 	"pallet-authorship/std",
-	"pallet-balances/std",
+	"pallet-balances-totem/std",
 	"pallet-collator-selection/std",
 	"pallet-session/std",
 	"pallet-sudo/std",
-	"pallet-template/std",
+	# "pallet-template/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
@@ -128,25 +140,26 @@ std = [
 	"xcm-builder/std",
 	"xcm-executor/std",
 	"xcm/std",
+	'totem-common/std',
 ]
 
-runtime-benchmarks = [
-	"hex-literal",
-	"sp-runtime/runtime-benchmarks",
-	"xcm-builder/runtime-benchmarks",
-	"frame-benchmarking/runtime-benchmarks",
-	"frame-system-benchmarking",
-	"frame-support/runtime-benchmarks",
-	"frame-system/runtime-benchmarks",
-	"pallet-balances/runtime-benchmarks",
-	"pallet-collator-selection/runtime-benchmarks",
-	"pallet-template/runtime-benchmarks",
-	"pallet-timestamp/runtime-benchmarks",
-	"pallet-xcm/runtime-benchmarks",
-	"cumulus-pallet-session-benchmarking/runtime-benchmarks",
-]
+# runtime-benchmarks = [
+# 	"hex-literal",
+# 	"sp-runtime/runtime-benchmarks",
+# 	"xcm-builder/runtime-benchmarks",
+# 	"frame-benchmarking/runtime-benchmarks",
+# 	"frame-system-benchmarking",
+# 	"frame-support/runtime-benchmarks",
+# 	"frame-system/runtime-benchmarks",
+# 	"pallet-balances-totem/runtime-benchmarks",
+# 	"pallet-collator-selection/runtime-benchmarks",
+# 	# "pallet-template/runtime-benchmarks",
+# 	"pallet-timestamp/runtime-benchmarks",
+# 	"pallet-xcm/runtime-benchmarks",
+# 	"cumulus-pallet-session-benchmarking/runtime-benchmarks",
+# ]
 
-try-runtime = [
-	"frame-try-runtime",
-	"frame-executive/try-runtime",
-]
+# try-runtime = [
+# 	"frame-try-runtime",
+# 	"frame-executive/try-runtime",
+# ]
