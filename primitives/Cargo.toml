@@ -1,0 +1,35 @@
+[package]
+name = 'totem-primitives'
+version = '1.1.0'
+authors = ['Totem Accounting <support@totemaccounting.com>']
+description = 'Types used to communicates with the clients'
+license = 'GNU'
+homepage = 'https://totemaccounting.com'
+repository = 'https://gitlab.com/totem-tech/totem'
+edition = '2021'
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+[dependencies]
+# external dependencies
+codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = [
+	"derive",
+	"max-encoded-len",
+] }
+frame-support = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.16', default-features = false }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.16', default-features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.16', default-features = false }
+scale-info = { version = "1.0", default-features = false, features = ["derive"] }
+strum = { version = "0.23", default-features = false, features = ["derive"] }
+
+[features]
+default = ['std']
+std = [
+    'codec/std',
+    'scale-info/std',
+    'frame-support/std',
+    'sp-runtime/std',
+    'sp-std/std',
+]
+mock = []

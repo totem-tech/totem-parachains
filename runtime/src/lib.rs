@@ -6,6 +6,8 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod totem;
+
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
@@ -35,6 +37,9 @@ use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
+
+pub use pallet_balances_totem::Call as BalancesCall;
+
 pub use sp_consensus_aura::sr25519::AuthorityId as AuraId;
 pub use sp_runtime::{MultiAddress, Perbill, Permill};
 
@@ -58,7 +63,7 @@ use xcm_builder::{
 use xcm_executor::{Config, XcmExecutor};
 
 /// Import the template pallet.
-pub use pallet_template;
+// pub use pallet_template;
 
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
@@ -173,8 +178,8 @@ impl_opaque_keys! {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("template-parachain"),
-	impl_name: create_runtime_str!("template-parachain"),
+	spec_name: create_runtime_str!("lego-parachain"),
+	impl_name: create_runtime_str!("lego-parachain"),
 	authoring_version: 1,
 	spec_version: 1,
 	impl_version: 0,
@@ -206,7 +211,10 @@ pub const MILLIUNIT: Balance = 1_000_000_000;
 pub const MICROUNIT: Balance = 1_000_000;
 
 /// The existential deposit. Set to 1/10 of the Connected Relay Chain.
-pub const EXISTENTIAL_DEPOSIT: Balance = MILLIUNIT;
+// pub const EXISTENTIAL_DEPOSIT: Balance = MILLIUNIT;
+
+// Totem does not want users to lose funds accidentally.
+pub const EXISTENTIAL_DEPOSIT: Balance = 1;
 
 /// We assume that ~5% of the block weight is consumed by `on_initialize` handlers. This is
 /// used to limit the maximal weight of a single extrinsic.
@@ -285,7 +293,7 @@ impl frame_system::Config for Runtime {
 	/// Converts a module to an index of this module in the runtime.
 	type PalletInfo = PalletInfo;
 	/// The data to be stored in an account.
-	type AccountData = pallet_balances::AccountData<Balance>;
+	type AccountData = pallet_balances_totem::AccountData<Balance>;
 	/// What to do if a new account is created.
 	type OnNewAccount = ();
 	/// What to do if an account is fully reaped from the system.
@@ -336,7 +344,7 @@ parameter_types! {
 	pub const MaxReserves: u32 = 50;
 }
 
-impl pallet_balances::Config for Runtime {
+impl pallet_balances_totem::Config for Runtime {
 	type MaxLocks = MaxLocks;
 	/// The type for recording an account's balance.
 	type Balance = Balance;
@@ -345,9 +353,10 @@ impl pallet_balances::Config for Runtime {
 	type DustRemoval = ();
 	type ExistentialDeposit = ExistentialDeposit;
 	type AccountStore = System;
-	type WeightInfo = pallet_balances::weights::SubstrateWeight<Runtime>;
+	type WeightInfo = pallet_balances_totem::weights::SubstrateWeight<Runtime>;
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = [u8; 8];
+	type Accounting = pallet_accounting::Pallet<Self>;
 }
 
 parameter_types! {
@@ -362,6 +371,10 @@ impl pallet_transaction_payment::Config for Runtime {
 	type WeightToFee = WeightToFee;
 	type FeeMultiplierUpdate = SlowAdjustingFeeUpdate<Self>;
 	type OperationalFeeMultiplier = OperationalFeeMultiplier;
+	// Totem
+	type TransactionConverter = totem_common::converter::Converter;
+	type Currency = pallet_balances_totem::Pallet<Self>;
+	type Accounting = pallet_accounting::Pallet<Self>;
 }
 
 parameter_types! {
@@ -573,7 +586,7 @@ pub type CollatorSelectionUpdateOrigin = EnsureRoot<AccountId>;
 
 impl pallet_collator_selection::Config for Runtime {
 	type Event = Event;
-	type Currency = Balances;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type UpdateOrigin = CollatorSelectionUpdateOrigin;
 	type PotId = PotId;
 	type MaxCandidates = MaxCandidates;
@@ -585,12 +598,18 @@ impl pallet_collator_selection::Config for Runtime {
 	type ValidatorIdOf = pallet_collator_selection::IdentityCollator;
 	type ValidatorRegistration = Session;
 	type WeightInfo = ();
+	// type Accounting = pallet_accounting::Pallet<Self>;
 }
 
-/// Configure the pallet template in pallets/template.
-impl pallet_template::Config for Runtime {
+impl pallet_sudo::Config for Runtime {
+	type Call = Call;
 	type Event = Event;
 }
+
+// /// Configure the pallet template in pallets/template.
+// impl pallet_template::Config for Runtime {
+// 	type Event = Event;
+// }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -606,9 +625,10 @@ construct_runtime!(
 		} = 1,
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
 		ParachainInfo: parachain_info::{Pallet, Storage, Config} = 3,
+		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
 
 		// Monetary stuff.
-		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
+		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage} = 11,
 
 		// Collator support. The order of these 4 are important and shall not change.
@@ -625,7 +645,21 @@ construct_runtime!(
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 
 		// Template
-		TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
+		// TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
+
+		// Totem
+		Accounting: pallet_accounting::{Pallet, Call, Storage, Event<T>} = 40,
+		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
+		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
+		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
+		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
+		// Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
+		// Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
+		// Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
+		// Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
+		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
+
+		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
 	}
 );
 
@@ -637,7 +671,7 @@ extern crate frame_benchmarking;
 mod benches {
 	define_benchmarks!(
 		[frame_system, SystemBench::<Runtime>]
-		[pallet_balances, Balances]
+		[pallet_balances_totem, Balances]
 		[pallet_session, SessionBench::<Runtime>]
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]

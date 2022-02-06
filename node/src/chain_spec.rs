@@ -102,6 +102,7 @@ pub fn development_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
 				1000.into(),
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 			)
 		},
 		Vec::new(),
@@ -157,6 +158,7 @@ pub fn local_testnet_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
 				1000.into(),
+				get_account_id_from_seed::<sr25519::Public>("Alice"),
 			)
 		},
 		// Bootnodes
@@ -181,6 +183,7 @@ fn testnet_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
 	id: ParaId,
+	root_key: AccountId,
 ) -> parachain_template_runtime::GenesisConfig {
 	parachain_template_runtime::GenesisConfig {
 		system: parachain_template_runtime::SystemConfig {
@@ -188,13 +191,14 @@ fn testnet_genesis(
 				.expect("WASM binary was not build, please build it!")
 				.to_vec(),
 		},
+		sudo: parachain_template_runtime::SudoConfig { key: Some(root_key) },
 		balances: parachain_template_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
 		parachain_info: parachain_template_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: parachain_template_runtime::CollatorSelectionConfig {
 			invulnerables: invulnerables.iter().cloned().map(|(acc, _)| acc).collect(),
-			candidacy_bond: EXISTENTIAL_DEPOSIT * 16,
+			candidacy_bond: EXISTENTIAL_DEPOSIT * 16_000_000_000,
 			..Default::default()
 		},
 		session: parachain_template_runtime::SessionConfig {
