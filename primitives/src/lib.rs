@@ -64,7 +64,7 @@ pub type PostingIndex = u128;
 /// Used for comparisons.
 pub type ComparisonAmounts = u128;
 
-#[derive(Decode, Encode, Debug, Clone, Copy, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Decode, Encode, Debug, Clone, Copy, PartialEq, TypeInfo)]
 pub enum RecordType {
     Teams,
     Timekeeping,

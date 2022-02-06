@@ -35,11 +35,11 @@
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum ChangesInInventories {
     /// P50_0001_D000,
@@ -51,7 +51,7 @@ pub enum ChangesInInventories {
 }
 /// Cost Of Goods Sold
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Cogs {
     ChangesInInventories(ChangesInInventories),
@@ -72,7 +72,7 @@ pub enum Cogs {
 }
 /// Charges In Out
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0002_ {
     /// P50_0002_D000,
@@ -94,7 +94,7 @@ pub enum _0002_ {
 }
 /// PropertyPlantEquipment
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum PropertyPlantEquipment {
     /// P50_0003_D001,
@@ -139,7 +139,7 @@ pub enum PropertyPlantEquipment {
 }
 /// Primary Intangibles
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum IntangibleAssetList {
     /// P50_0003_D011,
@@ -157,7 +157,7 @@ pub enum IntangibleAssetList {
 }
 /// Depreciation Depletion Amortization
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0003_ {
     /// P50_0003_D000,
@@ -173,7 +173,7 @@ pub enum _0003_ {
 }
 /// Field Trials
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0004_ {
     /// P50_0004_D000,
@@ -185,7 +185,7 @@ pub enum _0004_ {
 }
 /// Warranties
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0005_ {
     /// P50_0005_D000,
@@ -193,7 +193,7 @@ pub enum _0005_ {
 }
 /// Tax Corporation Tax
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0006_ {
     /// P50_0006_D000,
@@ -201,7 +201,7 @@ pub enum _0006_ {
 }
 /// Tax Fines And Penalties
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0007_ {
     /// P50_0007_D000,
@@ -231,7 +231,7 @@ pub enum _0007_ {
 }
 /// Claims
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0008_ {
     /// P50_0008_D000,
@@ -239,7 +239,7 @@ pub enum _0008_ {
 }
 /// Commissions
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0009_ {
     /// P50_0009_D000,
@@ -253,7 +253,7 @@ pub enum _0009_ {
 }
 /// Marketing Programs
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0010_ {
     /// P50_0010_D000,
@@ -317,7 +317,7 @@ pub enum _0010_ {
 }
 /// Consulting Fees
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0011_ {
     /// P50_0011_D000,
@@ -325,7 +325,7 @@ pub enum _0011_ {
 }
 /// Services
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0012_ {
     /// P50_0012_D000,
@@ -379,7 +379,7 @@ pub enum _0012_ {
 }
 /// Travel Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0013_ {
     /// P50_0013_D000,
@@ -397,7 +397,7 @@ pub enum _0013_ {
 }
 /// Hotels
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0014_ {
     /// P50_0014_D000,
@@ -405,7 +405,7 @@ pub enum _0014_ {
 }
 /// Meetings Conferences
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0015_ {
     /// P50_0015_D000,
@@ -423,7 +423,7 @@ pub enum _0015_ {
 }
 /// Restaurant Meals
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0016_ {
     /// P50_0016_D000,
@@ -445,7 +445,7 @@ pub enum _0016_ {
 }
 /// Other Travel Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0017_ {
     /// P50_0017_D000,
@@ -453,7 +453,7 @@ pub enum _0017_ {
 }
 /// Cost Pooling
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0018_ {
     /// P50_0018_D000,
@@ -461,7 +461,7 @@ pub enum _0018_ {
 }
 /// Car Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0019_ {
     /// P50_0019_D000,
@@ -485,7 +485,7 @@ pub enum _0019_ {
 }
 /// Equipment
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0020_ {
     /// P50_0020_D000,
@@ -493,7 +493,7 @@ pub enum _0020_ {
 }
 /// Plant Maintenance
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0021_ {
     /// P50_0021_D000,
@@ -501,7 +501,7 @@ pub enum _0021_ {
 }
 /// Phones Telecom
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0022_ {
     /// P50_0022_D000,
@@ -515,7 +515,7 @@ pub enum _0022_ {
 }
 /// Rental Leases
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0023_ {
     /// P50_0023_D000,
@@ -535,7 +535,7 @@ pub enum _0023_ {
 }
 /// Repair Maintenance
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0024_ {
     /// P50_0024_D000,
@@ -573,7 +573,7 @@ pub enum _0024_ {
 }
 /// Supplies
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0025_ {
     /// P50_0025_D000,
@@ -597,7 +597,7 @@ pub enum _0025_ {
 }
 /// Utilities
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0026_ {
     /// P50_0026_D000,
@@ -623,7 +623,7 @@ pub enum _0026_ {
 }
 /// Insurance
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0027_ {
     /// P50_0027_D000,
@@ -643,7 +643,7 @@ pub enum _0027_ {
 }
 /// Corporate Governance
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0028_ {
     /// P50_0028_D000,
@@ -651,7 +651,7 @@ pub enum _0028_ {
 }
 /// Legal Fees
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0029_ {
     /// P50_0029_D000,
@@ -699,7 +699,7 @@ pub enum _0029_ {
 }
 /// Non Capitalised Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum NonCapitalised {
     /// P50_0030_D015,
@@ -709,7 +709,7 @@ pub enum NonCapitalised {
 }
 /// Recovered Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum RecoveredExpenses {
     /// P50_0030_D018,
@@ -729,7 +729,7 @@ pub enum RecoveredExpenses {
 }
 /// Administration Cost
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0030_ {
     /// P50_0030_D000,
@@ -775,7 +775,7 @@ pub enum _0030_ {
     //// Bad Debts
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0031_ {
     /// P50_0031_D000,
@@ -783,7 +783,7 @@ pub enum _0031_ {
 }
 /// Miscellaneous Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0032_ {
     /// P50_0032_D000,
@@ -817,7 +817,7 @@ pub enum _0032_ {
 }
 /// Financial Guarantee Fees
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0033_ {
     /// P50_0033_D000,
@@ -825,7 +825,7 @@ pub enum _0033_ {
 }
 /// Royalty Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0034_ {
     /// P50_0034_D000,
@@ -833,7 +833,7 @@ pub enum _0034_ {
 }
 /// Extraordinary Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0035_ {
     /// P50_0035_D000,
@@ -841,7 +841,7 @@ pub enum _0035_ {
 }
 /// Impairmentlossonfinassets
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0036_ {
     /// P50_0036_D000,
@@ -852,7 +852,7 @@ pub enum _0036_ {
 }
 /// Provisions
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0038_ {
     /// P50_0038_D000,
@@ -862,7 +862,7 @@ pub enum _0038_ {
 }
 /// Other Miscellaneous Charges
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _1001_ {
     /// P51_1001_D000,
@@ -874,7 +874,7 @@ pub enum _1001_ {
 }
 /// Social Security
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum SocialSecurity {
     /// P52_2001_D009,
@@ -892,7 +892,7 @@ pub enum SocialSecurity {
 }
 /// Salaries
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _2001_ {
     /// P52_2001_D000,
@@ -963,7 +963,7 @@ pub enum _2001_ {
 }
 /// Expat Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _2002_ {
     /// P52_2002_D000,
@@ -989,7 +989,7 @@ pub enum _2002_ {
 }
 /// Incentive Plan
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _2003_ {
     /// P52_2003_D000,
@@ -997,7 +997,7 @@ pub enum _2003_ {
 }
 /// Incentive Plan Overhead
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _2004_ {
     /// P52_2004_D000,
@@ -1005,7 +1005,7 @@ pub enum _2004_ {
 }
 /// Employee Services
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _2005_ {
     /// P52_2005_D000,
@@ -1049,7 +1049,7 @@ pub enum _2005_ {
 }
 /// Interest Expense
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _3001_ {
     /// P53_3001_D000,
@@ -1065,7 +1065,7 @@ pub enum _3001_ {
 }
 /// Accrued Reveues Receivalbles
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum AccruedRevenuesReceivables {
     /// B10_0010_D000,
@@ -1082,7 +1082,7 @@ pub enum AccruedRevenuesReceivables {
 }
 /// Inventory
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Inventory {
     /// B10_0013_D000,
@@ -1093,7 +1093,7 @@ pub enum Inventory {
     FinishedGoods,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum CurrentAssets {
     /// B10_0001_D000,
@@ -1139,7 +1139,7 @@ pub enum CurrentAssets {
 }
 /// CryptoCurrency
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Coins {
     /// B11_4001_D000,
@@ -1160,7 +1160,7 @@ pub enum Coins {
 }
 /// Fungibility
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Fungibility {
     Fungible,
@@ -1168,7 +1168,7 @@ pub enum Fungibility {
 }
 /// Tokens
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Tokens {
     /// B11_4002_D000,
@@ -1189,7 +1189,7 @@ pub enum Tokens {
     CryptoLoanCollateral,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum CurrentAssetsCrypto {
     Coins(Coins),
@@ -1198,14 +1198,14 @@ pub enum CurrentAssetsCrypto {
     TokenImpairment(Tokens),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum FixedAssets {
     PropPlantEquip(PropertyPlantEquipment),
     AccumulatedDepreciation(PropertyPlantEquipment),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum IntagibleAssets {
         Intangibles(IntangibleAssetList),
@@ -1218,7 +1218,7 @@ pub enum IntagibleAssets {
         AccumulatedDepreciationIntangibles(IntangibleAssetList),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherReceivables {
     LoansTo(Parties),    
@@ -1232,7 +1232,7 @@ pub enum OtherReceivables {
     Other,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum InvestmentIn {
     /// B14_3001_D000,
@@ -1248,7 +1248,7 @@ pub enum InvestmentIn {
     Properties,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum NonCurrentAssets {
     InvestmentIn(InvestmentIn),
@@ -1271,7 +1271,7 @@ pub enum NonCurrentAssets {
     ImpairmentOfFixedAssets,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Provisions {
     /// B20_0018_C000,
@@ -1280,7 +1280,7 @@ pub enum Provisions {
     UnusedLeave,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum CurrentLiabilities {
     /// B20_0001_C000,
@@ -1325,7 +1325,7 @@ pub enum CurrentLiabilities {
 }
 /// Related Or Non Related Parties
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Parties {
     /// B14_3009_D001,
@@ -1344,7 +1344,7 @@ pub enum Parties {
 /// Derivative Financial Intruments
 /// Used In Current Liabilities And Non Current Liabilities
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Derivatives {
     /// B14_3010_D000,
@@ -1361,7 +1361,7 @@ pub enum Derivatives {
     CommodityForwards,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum NonCurrentLiabilities {
     /// B21_1001_C000,
@@ -1396,7 +1396,7 @@ pub enum NonCurrentLiabilities {
     FinancialInstruments(Derivatives),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum ShareholdersEquity {
     /// B30_0001_C000,
@@ -1405,14 +1405,14 @@ pub enum ShareholdersEquity {
     OwnersEquity,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherEquity {
     /// B31_1001_C000,
     CorpTaxByJurisdictCalcAfterPL,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum CapitalStock {
     /// B32_2001_C000,
@@ -1424,7 +1424,7 @@ pub enum CapitalStock {
 }
 /// Fair Value Gains or Losses on Financial Assets at FVOCI
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _3003_ {
     /// B33_3003_C000,
@@ -1433,7 +1433,7 @@ pub enum _3003_ {
     EquityInstrFVOCIGainLoss,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherReserves {
     /// B33_3001_C000,
@@ -1450,7 +1450,7 @@ pub enum OtherReserves {
     AssetRevaluationReserve(PropertyPlantEquipment),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum RetainedEarnings {
     /// B34_4001_D000,
@@ -1459,7 +1459,7 @@ pub enum RetainedEarnings {
     RetainedEarnings,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Sales {
     /// P40_0001_C000,
@@ -1483,7 +1483,7 @@ pub enum Sales {
 }
 /// Other Income Interest Income
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _1002_ {
     /// P41_1002_C000,
@@ -1500,7 +1500,7 @@ pub enum _1002_ {
     DebtInvestmentsMeasuredFVOCI,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherIncome {
     /// P41_1001_C000,
@@ -1529,7 +1529,7 @@ pub enum OtherIncome {
     FVGainLossContingentConsideration,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherOperatingIncome {
     /// P42_1001_C000,
@@ -1540,7 +1540,7 @@ pub enum OtherOperatingIncome {
     GainLossDiscontinuedOperations,
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherComprehensiveIncome {
     /// P43_2001_C000,
@@ -1573,7 +1573,7 @@ pub enum OtherComprehensiveIncome {
     GainLossDisposalTokens(Tokens),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OperatingExpenses {
     /// _0001_(Cogs),
@@ -1654,14 +1654,14 @@ pub enum OperatingExpenses {
     WriteOff(PropertyPlantEquipment),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherOperatingExpenses {
     /// _1001_(_1001_),
     OtherMiscellaneousCharges(_1001_),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum PersonnelCosts {
     /// _2001_(_2001_),
@@ -1676,14 +1676,14 @@ pub enum PersonnelCosts {
     EmployeeServices(_2005_),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum FinanceCosts {
     /// _3001_(_3001_),
     InterestExpense(_3001_),
 }
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum ControlAccounts {
     /// C60_0001_000D,
@@ -1703,7 +1703,7 @@ pub enum ControlAccounts {
 }
 /// Assets
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum A {
     CurrentAssets(CurrentAssets),
@@ -1714,7 +1714,7 @@ pub enum A {
 }
 /// Liabilities
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum L {
     CurrentLiabilities(CurrentLiabilities),
@@ -1722,7 +1722,7 @@ pub enum L {
 }
 /// Equity
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum E {
     ShareholdersEquity(ShareholdersEquity),
@@ -1733,7 +1733,7 @@ pub enum E {
 }
 /// Income
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum I {
     Sales(Sales),
@@ -1743,7 +1743,7 @@ pub enum I {
 }
 /// Expenses
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum X {
     OperatingExpenses(OperatingExpenses),
@@ -1753,7 +1753,7 @@ pub enum X {
 }
 /// Profit And Loss
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum P {
     Income(I),
@@ -1761,7 +1761,7 @@ pub enum P {
 }
 /// Balance Sheet
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum B {
     Assets(A),
@@ -1770,7 +1770,7 @@ pub enum B {
 }
 /// Ledger
 #[allow(non_camel_case_types)]
-#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Ledger {
     BalanceSheet(B),

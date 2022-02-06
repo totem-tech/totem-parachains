@@ -72,7 +72,7 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 
 /// Debit or Credit Indicator
 /// Debit and Credit balances are account specific - see chart of accounts.
-#[derive(Clone, Decode, Encode, Copy, TypeInfo)]
+#[derive(MaxEncodedLen, Clone, Decode, Encode, Copy, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Indicator {
     /// Debit
@@ -81,7 +81,7 @@ pub enum Indicator {
     Credit = 1,
 }
 
-#[derive(Clone, Decode, Encode, TypeInfo)]
+#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
 pub struct Record<AccountId, Hash, BlockNumber> {
     pub primary_party: AccountId,
     pub counterparty: AccountId,

@@ -1,6 +1,6 @@
 // This file is part of Substrate.
 
-// Copyright (C) 2021-2022 Parity Technologies (UK) Ltd.
+// Copyright (C) 2021 Parity Technologies (UK) Ltd.
 // SPDX-License-Identifier: Apache-2.0
 
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,7 +21,6 @@ use codec::{Decode, Encode};
 #[cfg(feature = "std")]
 use serde::{Deserialize, Serialize};
 
-use sp_runtime::traits::{AtLeast32BitUnsigned, Zero};
 use sp_std::prelude::*;
 
 use frame_support::weights::{DispatchClass, Weight};
@@ -46,19 +45,6 @@ pub struct InclusionFee<Balance> {
 	pub adjusted_weight_fee: Balance,
 }
 
-impl<Balance: AtLeast32BitUnsigned + Copy> InclusionFee<Balance> {
-	/// Returns the total of inclusion fee.
-	///
-	/// ```ignore
-	/// inclusion_fee = base_fee + len_fee + adjusted_weight_fee
-	/// ```
-	pub fn inclusion_fee(&self) -> Balance {
-		self.base_fee
-			.saturating_add(self.len_fee)
-			.saturating_add(self.adjusted_weight_fee)
-	}
-}
-
 /// The `FeeDetails` is composed of:
 ///   - (Optional) `inclusion_fee`: Only the `Pays::Yes` transaction can have the inclusion fee.
 ///   - `tip`: If included in the transaction, the tip will be added on top. Only signed
@@ -72,21 +58,6 @@ pub struct FeeDetails<Balance> {
 	// Do not serialize and deserialize `tip` as we actually can not pass any tip to the RPC.
 	#[cfg_attr(feature = "std", serde(skip))]
 	pub tip: Balance,
-}
-
-impl<Balance: AtLeast32BitUnsigned + Copy> FeeDetails<Balance> {
-	/// Returns the final fee.
-	///
-	/// ```ignore
-	/// final_fee = inclusion_fee + tip;
-	/// ```
-	pub fn final_fee(&self) -> Balance {
-		self.inclusion_fee
-			.as_ref()
-			.map(|i| i.inclusion_fee())
-			.unwrap_or_else(|| Zero::zero())
-			.saturating_add(self.tip)
-	}
 }
 
 /// Information related to a dispatchable's class, weight, and fee that can be queried from the
