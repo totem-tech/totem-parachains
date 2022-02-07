@@ -41,7 +41,7 @@ LABEL description="Multistage Docker image for Totem Live Accounting Parachain" 
 	totem.live.image.source="https://github.com/totem-tech/totem-parachains/parachain_collator_builder.Dockerfile" \
 	totem.live.image.documentation="https://github.com/totem-tech/totem-parachains"
 
-COPY --from=builder /totem/target/release/parachain-collator /usr/local/bin
+COPY --from=builder /totem-parachains/target/release/parachain-collator /usr/local/bin
 
 RUN useradd -m -u 1000 -U -s /bin/sh -d /totem totemadmin && \
 mkdir -p /totem/.local/share/parachain-collator && \
