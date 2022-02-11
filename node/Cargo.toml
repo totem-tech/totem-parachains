@@ -1,11 +1,11 @@
 [package]
-name = "parachain-template-node"
-version = "0.1.0"
-authors = ["Anonymous"]
-description = "A new Cumulus FRAME-based Substrate Node, ready for hacking together a parachain."
-license = "Unlicense"
-homepage = "https://substrate.io"
-repository = "https://github.com/paritytech/cumulus/"
+name = "totem-parachain-node"
+version = "1.1.0"
+authors = ['Totem Accounting <support@totemaccounting.com>']
+description = 'Totem Parachain Node'
+license = 'GNU'
+homepage = 'https://totemaccounting.com'
+repository = 'https://gitlab.com/totem-tech/totem'
 edition = "2021"
 build = "build.rs"
 
@@ -16,7 +16,7 @@ targets = ["x86_64-unknown-linux-gnu"]
 substrate-build-script-utils = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.16" }
 
 [[bin]]
-name = "parachain-collator"
+name = "totem-parachain-collator"
 path = "src/main.rs"
 
 # [features]

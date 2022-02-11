@@ -1,6 +1,6 @@
 {
-  "name": "Kapex Parachain",
-  "id": "kapex_parachain",
+  "name": "Kapex",
+  "id": "kapex",
   "chainType": "Live",
   "bootNodes": [
     "/dns4/k-boot-1.kapex.network/tcp/30333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",

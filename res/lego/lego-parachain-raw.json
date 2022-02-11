@@ -1,6 +1,6 @@
 {
-  "name": "Lego Parachain",
-  "id": "lego_parachain",
+  "name": "Lego",
+  "id": "lego",
   "chainType": "Local",
   "bootNodes": [
     "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWBrMCZx5f3W5fgw6E8VmpUcivWQSJwDNMB95WzepoEG8i"
