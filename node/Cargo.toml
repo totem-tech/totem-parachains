@@ -35,7 +35,7 @@ hex-literal = "0.3.1"
 jsonrpc-core = "18.0.0"
 
 # Local Dependencies
-parachain-template-runtime = { path = "../runtime" }
+totem-parachain-runtime = { path = "../runtime" }
 # lego-runtime = { path = '../runtime' }
 # parachains-common = { path = "../../parachains-common" }
 
