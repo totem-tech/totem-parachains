@@ -178,8 +178,8 @@ impl_opaque_keys! {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("lego-parachain"),
-	impl_name: create_runtime_str!("lego-parachain"),
+	spec_name: create_runtime_str!("totem-parachain"),
+	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
 	spec_version: 1,
 	impl_version: 0,
@@ -209,6 +209,7 @@ pub const DAYS: BlockNumber = HOURS * 24;
 pub const UNIT: Balance = 1_000_000_000_000;
 pub const MILLIUNIT: Balance = 1_000_000_000;
 pub const MICROUNIT: Balance = 1_000_000;
+pub const THOUSAND: Balance = 1_000;
 
 /// The existential deposit. Set to 1/10 of the Connected Relay Chain.
 // pub const EXISTENTIAL_DEPOSIT: Balance = MILLIUNIT;
@@ -361,7 +362,7 @@ impl pallet_balances_totem::Config for Runtime {
 
 parameter_types! {
 	/// Relay Chain `TransactionByteFee` / 10
-	pub const TransactionByteFee: Balance = 10 * MICROUNIT;
+	pub const TransactionByteFee: Balance = 10 * THOUSAND;
 	pub const OperationalFeeMultiplier: u8 = 5;
 }
 
