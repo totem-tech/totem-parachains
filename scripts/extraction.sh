@@ -42,7 +42,6 @@
 #______________________________________________________________#
 
 # Rename all the *-new files to just their normal names
-# move the readable files to the final folder
 
 #______________________________________________________________#
 # Note on how to extract a local chainspec from polkadot (not in this repo)
