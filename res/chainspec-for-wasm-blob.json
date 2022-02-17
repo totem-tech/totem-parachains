@@ -1,22 +1,20 @@
 {
-  "name": "Lego",
-  "id": "lego",
+  "name": "Local Testnet",
+  "id": "local_testnet",
   "chainType": "Local",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWBrMCZx5f3W5fgw6E8VmpUcivWQSJwDNMB95WzepoEG8i"
+    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWMidCRXu53eq3emCJYJqk8L8PsbvzEbuqsBJYLGjH3kEM"
   ],
-  "telemetryEndpoints": [
-    ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
-  ],
-  "protocolId": "lego",
+  "telemetryEndpoints": null,
+  "protocolId": "template-local",
   "forkId": null,
   "properties": {
     "ss58Format": 42,
     "tokenDecimals": 12,
-    "tokenSymbol": "LEGO"
+    "tokenSymbol": "UNIT"
   },
   "relay_chain": "rococo-local",
-  "para_id": 2000,
+  "para_id": 1000,
   "consensusEngine": null,
   "codeSubstitutes": {},
   "genesis": {
@@ -26,31 +24,67 @@
       },
       "parachainSystem": null,
       "parachainInfo": {
-        "parachainId": 2000
+        "parachainId": 1000
       },
       "sudo": {
-        "key": "5CcEDRg5DpwhLs8e2gn1A9Yjv9pRKTbgadkYtur7WH6hMSZJ"
+        "key": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
       },
       "balances": {
         "balances": [
           [
-            "5CcEDRg5DpwhLs8e2gn1A9Yjv9pRKTbgadkYtur7WH6hMSZJ",
-            2541818000000000000
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            1152921504606846976
           ],
           [
-            "5Fxc4SWjmAnJgQtDosmytWevznn2LMDjv2s7AUJ8EeU4CqYA",
-            20000000000000000
+            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            1152921504606846976
           ],
           [
-            "5F2NU9EgK2tas9yj4ATui2hxoMvLB4Ge8Ws4GWDb7ryHirjM",
-            20000000000000000
+            "5FLSigC9HGRKVhB9FiEo4Y3koPsNmBmLJbpXg2mp1hXcS59Y",
+            1152921504606846976
+          ],
+          [
+            "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy",
+            1152921504606846976
+          ],
+          [
+            "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw",
+            1152921504606846976
+          ],
+          [
+            "5CiPPseXPECbkjWCa6MnjNokrgYjMqmKndv2rSnekmSK2DjL",
+            1152921504606846976
+          ],
+          [
+            "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY",
+            1152921504606846976
+          ],
+          [
+            "5HpG9w8EBLe5XCrbczpwq5TSXvedjrBGCwqxK1iQ7qUsSWFc",
+            1152921504606846976
+          ],
+          [
+            "5Ck5SLSHYac6WFt5UZRSsdJjwmpSZq85fd5TRNAdZQVzEAPT",
+            1152921504606846976
+          ],
+          [
+            "5HKPmK9GYtE1PSLsS1qiYU9xQ9Si1NcEhdeCq9sw5bqu4ns8",
+            1152921504606846976
+          ],
+          [
+            "5FCfAonRZgTFrTd9HREEyeJjDpT397KMzizE6T3DvebLFE7n",
+            1152921504606846976
+          ],
+          [
+            "5CRmqmsiNFExV6VbdmPJViVxrWmkaXXvBrSX8oqBT8R9vmWk",
+            1152921504606846976
           ]
         ]
       },
       "collatorSelection": {
         "invulnerables": [
-          "5Fxc4SWjmAnJgQtDosmytWevznn2LMDjv2s7AUJ8EeU4CqYA",
-          "5F2NU9EgK2tas9yj4ATui2hxoMvLB4Ge8Ws4GWDb7ryHirjM"
+          "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+          "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
         ],
         "candidacyBond": 16000000000,
         "desiredCandidates": 0
@@ -58,17 +92,17 @@
       "session": {
         "keys": [
           [
-            "5Fxc4SWjmAnJgQtDosmytWevznn2LMDjv2s7AUJ8EeU4CqYA",
-            "5Fxc4SWjmAnJgQtDosmytWevznn2LMDjv2s7AUJ8EeU4CqYA",
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
+            "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY",
             {
-              "aura": "5Fxc4SWjmAnJgQtDosmytWevznn2LMDjv2s7AUJ8EeU4CqYA"
+              "aura": "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
             }
           ],
           [
-            "5F2NU9EgK2tas9yj4ATui2hxoMvLB4Ge8Ws4GWDb7ryHirjM",
-            "5F2NU9EgK2tas9yj4ATui2hxoMvLB4Ge8Ws4GWDb7ryHirjM",
+            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
+            "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty",
             {
-              "aura": "5F2NU9EgK2tas9yj4ATui2hxoMvLB4Ge8Ws4GWDb7ryHirjM"
+              "aura": "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty"
             }
           ]
         ]
