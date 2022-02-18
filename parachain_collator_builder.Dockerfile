@@ -7,13 +7,13 @@
 # docker build \
 # -t totemlive/totem-parachain:local \
 # -f parachain_collator_builder.Dockerfile \
-# --build-arg chain=totem-parachain-node \
+# --build-arg package=totem-parachain-node \
 # --build-arg buildtype=check .
 
 # docker build \
 # -t totemlive/totem-parachain:local \
 # -f parachain_collator_builder.Dockerfile \
-# --build-arg chain=totem-parachain-node \
+# --build-arg package=totem-parachain-node \
 # --build-arg buildtype=build .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
@@ -41,13 +41,13 @@ LABEL description="Multistage Docker image for Totem Live Accounting Parachain" 
 	totem.live.image.source="https://github.com/totem-tech/totem-parachains/parachain_collator_builder.Dockerfile" \
 	totem.live.image.documentation="https://github.com/totem-tech/totem-parachains"
 
-COPY --from=builder /totem/target/release/totem-parachain-collator /usr/local/bin
+COPY --from=builder /totem-parachains/target/release/totem-parachain-collator /usr/local/bin
 
-RUN useradd -m -u 1000 -U -s /bin/sh -d /totem totemadmin && \
-mkdir -p /totem/.local/share/totem-parachain-collator && \
+RUN useradd -m -u 1000 -U -s /bin/sh -d /totem-parachains totemadmin && \
+mkdir -p /totem-parachains/.local/share/totem-parachain-collator && \
 chown -R totemadmin:totemadmin /totem/.local/share && \
-ln -s /totem/.local/share /data && \
-rm -rf /usr/bin /usr/sbin && \
+ln -s /totem-parachains/.local/share /data && \
+# rm -rf /usr/bin /usr/sbin && \
 /usr/local/bin/totem-parachain-collator --version
 
 USER totemadmin
