@@ -7,7 +7,10 @@
     "/dns4/l-boot-1.kapex.network/tcp/31436/ws/p2p/12D3KooWNpTmqisnMwdAUtjRHCxdb6EQcymdwQvdQFNuFfgBX1K3"
   ],
   "telemetryEndpoints": [
-    ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
+    [
+      "wss://telemetry.polkadot.io/submit/",
+      0
+    ]
   ],
   "protocolId": "lego",
   "forkId": null,

@@ -6,7 +6,10 @@
     "/dns4/w-boot-1.kapex.network/tcp/30333/ws/p2p/12D3KooWAhxe6K9RbzsGgrE3nRtSCzRbgSDYUHZgSPSRQfBx7CAV"
   ],
   "telemetryEndpoints": [
-    ["/dns/telemetry.polkadot.io/tcp/443/x-parity-wss/%2Fsubmit%2F", 0]
+    [
+      "wss://telemetry.polkadot.io/submit/",
+      0
+    ]
   ],
   "protocolId": "wapex",
   "forkId": null,

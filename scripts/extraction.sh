@@ -20,9 +20,9 @@
 # Then execute the next step to convert the readable chainspec to raw format for sharing.
 #______________________________________________________________#
 
-# ./target/release/totem-parachain-collator build-spec --chain ./res/wapex/wapex-parachain-readable.json --raw > ./res/wapex/wapex-parachain-raw.json && \
-# ./target/release/totem-parachain-collator build-spec --chain ./res/kapex/kapex-parachain-readable.json --raw > ./res/kapex/kapex-parachain-raw.json && \
-# ./target/release/totem-parachain-collator build-spec --chain ./res/lego/lego-parachain-readable.json --raw > ./res/lego/lego-parachain-raw.json
+# ./target/release/totem-parachain-collator build-spec --chain ./res/wapex/wapex-parachain-readable.json --raw > ./res/wapex/wapex-parachain-raw-new.json && \
+# ./target/release/totem-parachain-collator build-spec --chain ./res/kapex/kapex-parachain-readable.json --raw > ./res/kapex/kapex-parachain-raw-new.json && \
+# ./target/release/totem-parachain-collator build-spec --chain ./res/lego/lego-parachain-readable.json --raw > ./res/lego/lego-parachain-raw-new.json
 
 #______________________________________________________________#
 # The raw file is ready to be shared and also used as the basis to extract the genesis states for each file.
