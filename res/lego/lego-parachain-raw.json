@@ -3,7 +3,8 @@
   "id": "lego",
   "chainType": "Local",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWBrMCZx5f3W5fgw6E8VmpUcivWQSJwDNMB95WzepoEG8i"
+    "/ip4/159.89.1.153/tcp/31436/ws/p2p/12D3KooWCwPGSVmQSLTRMgaU1GaK6oHXijKdFcMiCBzzKygxVcXL",
+    "/dns4/l-boot-1.kapex.network/tcp/31436/ws/p2p/12D3KooWNpTmqisnMwdAUtjRHCxdb6EQcymdwQvdQFNuFfgBX1K3"
   ],
   "telemetryEndpoints": [
     [
@@ -18,7 +19,7 @@
     "tokenDecimals": 12,
     "tokenSymbol": "LEGO"
   },
-  "relay_chain": "rococo-local",
+  "relay_chain": "rococo",
   "para_id": 2000,
   "consensusEngine": null,
   "codeSubstitutes": {},
