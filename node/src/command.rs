@@ -23,9 +23,23 @@ use std::{io::Write, net::SocketAddr};
 
 fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, String> {
 	Ok(match id {
+		// Standard Parachain
 		"dev" => Box::new(chain_spec::development_config()),
 		"template-rococo" => Box::new(chain_spec::local_testnet_config()),
-		"" | "local" => Box::new(chain_spec::local_testnet_config()),
+		"local" => Box::new(chain_spec::local_testnet_config()),
+		
+		// Totem specific
+		// Lego Testnet (Rococo and Rococo Local)
+		"lego" => Box::new(chain_spec::lego_config()?),
+		// Wapex Testnet (Westend)
+		"wapex" => Box::new(chain_spec::wapex_config()?),
+		// Kapex Live (Polkadot)
+		"" | "kapex" => Box::new(chain_spec::kapex_config()?),
+		
+		// Embeded Polkadot and Polkadot Testnets
+		"rococo-local" => Box::new(chain_spec::rococo_local_config()?),
+		"westend" => Box::new(chain_spec::westend_config()?),
+		"polkadot" => Box::new(chain_spec::polkadot_config()?),
 		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 	})
 }

@@ -10,6 +10,27 @@ use sp_runtime::traits::{IdentifyAccount, Verify};
 pub type ChainSpec =
 	sc_service::GenericChainSpec<totem_parachain_runtime::GenesisConfig, Extensions>;
 
+pub type DummyChainSpec = sc_service::GenericChainSpec<(), Extensions>;
+
+// #[cfg(not(feature = "polkadot-native"))]
+pub type LegoChainSpec = DummyChainSpec;
+
+// #[cfg(not(feature = "westend-native"))]
+pub type WapexChainSpec = DummyChainSpec;
+
+// #[cfg(not(feature = "rococo-native"))]
+pub type KapexChainSpec = DummyChainSpec;
+
+// #[cfg(not(feature = "polkadot-native"))]
+pub type PolkadotChainSpec = DummyChainSpec;
+
+// #[cfg(not(feature = "westend-native"))]
+pub type WestendChainSpec = DummyChainSpec;
+
+// #[cfg(not(feature = "rococo-native"))]
+pub type RococoChainSpec = DummyChainSpec;
+
+
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
 
@@ -59,6 +80,31 @@ where
 /// The input must be a tuple of individual keys (a single arg for now since we have just one key).
 pub fn template_session_keys(keys: AuraId) -> totem_parachain_runtime::SessionKeys {
 	totem_parachain_runtime::SessionKeys { aura: keys }
+}
+
+pub fn lego_config() -> Result<LegoChainSpec, String> {
+	LegoChainSpec::from_json_bytes(&include_bytes!("../../res/lego/lego-parachain-raw.json")[..])
+}
+
+pub fn wapex_config() -> Result<WapexChainSpec, String> {
+	WapexChainSpec::from_json_bytes(&include_bytes!("../../res/wapex/wapex-parachain-raw.json")[..])
+}
+
+pub fn kapex_config() -> Result<KapexChainSpec, String> {
+	KapexChainSpec::from_json_bytes(&include_bytes!("../../res/kapex/kapex-parachain-raw.json")[..])
+}
+
+pub fn polkadot_config() -> Result<PolkadotChainSpec, String> {
+	PolkadotChainSpec::from_json_bytes(&include_bytes!("../../res/polkadot/polkadot.json")[..])
+}
+
+
+pub fn westend_config() -> Result<WestendChainSpec, String> {
+	WestendChainSpec::from_json_bytes(&include_bytes!("../../res/westend/westend.json")[..])
+}
+
+pub fn rococo_local_config() -> Result<RococoChainSpec, String> {
+	RococoChainSpec::from_json_bytes(&include_bytes!("../../res/rococo-local/rococo-local-totem.json")[..])
 }
 
 pub fn development_config() -> ChainSpec {
