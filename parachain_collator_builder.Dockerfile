@@ -45,7 +45,7 @@ COPY --from=builder /totem-parachains/target/release/totem-parachain-collator /u
 
 RUN useradd -m -u 1000 -U -s /bin/sh -d /totem-parachains totemadmin && \
 mkdir -p /totem-parachains/.local/share/totem-parachain-collator && \
-chown -R totemadmin:totemadmin /totem/.local/share && \
+chown -R totemadmin:totemadmin /totem-parachains/.local/share && \
 ln -s /totem-parachains/.local/share /data && \
 # rm -rf /usr/bin /usr/sbin && \
 /usr/local/bin/totem-parachain-collator --version

@@ -3,7 +3,7 @@
   "id": "local_testnet",
   "chainType": "Local",
   "bootNodes": [
-    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWMidCRXu53eq3emCJYJqk8L8PsbvzEbuqsBJYLGjH3kEM"
+    "/ip4/127.0.0.1/tcp/30333/p2p/12D3KooWKcbJiU54TyxoBPxJqJnMWeY5Du6JtgNeKHTh4P2idKvY"
   ],
   "telemetryEndpoints": null,
   "protocolId": "template-local",
