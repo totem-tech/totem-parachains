@@ -1,22 +1,58 @@
-# Substrate Cumulus Parachain Template
+# Totem Parachain Repository
 
-A new [Cumulus](https://github.com/paritytech/cumulus/)-based Substrate node, ready for hacking ☁️..
+**This repo contains the code for the Totem Parachain Networks, Lego (intended for Rococo Relaychain - both local and Parity Hosted), Wapex (intended Westend Test Relaychain) and Kapex (intended for Polkadot Live Network).**
 
-This project is originally a fork of the
-[Substrate Node Template](https://github.com/substrate-developer-hub/substrate-node-template)
-modified to include dependencies required for registering this node as a **parathread** or
-**parachain** to a **relay chain**.
+It is currently aligned with `Polkadot v0.9.16`
 
-The stand-alone version of this template is hosted on the
-[Substrate Devhub Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template/)
-for each release of Polkadot. It is generated directly to the upstream
-[Parachain Template in Cumulus](https://github.com/paritytech/cumulus/tree/master/parachain-template)
-at each release branch using the
-[Substrate Template Generator](https://github.com/paritytech/substrate-template-generator/).
+The project is a direct fork of the [Substrate Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template) modified for use with Totem Balances and Transaction Payment pallets which are reliant on the core Accounting Engine developed by the Totem Development Team.
 
-👉 Learn more about parachains [here](https://wiki.polkadot.network/docs/learn-parachains), and
-parathreads [here](https://wiki.polkadot.network/docs/learn-parathreads).
+## Build Instructions
 
+This is Totem's generic parachain collator executor, but will need to be run using the appropriate chain spec raw files found in the `./res` directory.
 
-🧙 Learn about how to use this template and run your own parachain testnet for it in the
-[Devhub Cumulus Tutorial](https://docs.substrate.io/tutorials/v3/cumulus/start-relay/).
+To build the code rust binary:
+
+    cargo build --release -p totem-parachain-node
+
+To build the Docker image
+
+    docker build \
+    -t <your-tag> \
+    -f parachain_collator_builder.Dockerfile \
+    --build-arg chain=totem-parachain-node \
+    --build-arg buildtype=build .
+
+## Run the collator
+
+Running the collator node requires deciding which relaychain the node should be collating for, and obtaining an appropriate chainspec file to pass in to the execution command. Consult the Substrate Parachain Template documentation for more information. This is also the case when running a Docker container.
+
+An example is as follows (you will have to substitute the appropriate chainspecs):
+
+```shell
+#!/usr/bin/env bash
+
+docker run \
+-it \
+-p 40333:40333 \
+-p 30333:30333 \
+--name <your-node-name> \
+--pull=always \
+-v="/$(pwd)/<your-node-name>:/data" \
+totemlive/totem-parachain-collator:latest \
+parachain-collator \
+--state-cache-size=1 \
+--chain <path/to/genesis-files>lego-parachain-raw.json \
+--name "<your-node-name>" \
+--collator \
+--execution=wasm \
+--keystore-path <path/to/keystore> \
+--node-key-file <path/to/keystore/file> \
+--node-key-type 'ed25519' \
+--public-addr /ip4/<your-ip>/tcp/30333 \
+--port 30333 \
+-- \
+--chain <path/to/genesis-files>relay-chain-spec.json \
+--execution=wasm \
+--public-addr /ip4/<your-ip>/tcp/40333 \
+--port 40333
+```
