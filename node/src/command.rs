@@ -37,7 +37,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		"" | "kapex" => Box::new(chain_spec::kapex_config()?),
 		
 		// Embeded Polkadot and Polkadot Testnets
-		"rococo-local-totem" => Box::new(chain_spec::rococo_local_config()?),
+		"relaychain-local" => Box::new(chain_spec::rococo_local_config()?),
 		"westend" => Box::new(chain_spec::westend_config()?),
 		"polkadot" => Box::new(chain_spec::polkadot_config()?),
 		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
