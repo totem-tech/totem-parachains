@@ -36,10 +36,6 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		// Kapex Live (Polkadot)
 		"" | "kapex" => Box::new(chain_spec::kapex_config()?),
 		
-		// Embeded Polkadot and Polkadot Testnets
-		"relaychain-local" => Box::new(chain_spec::rococo_local_config()?),
-		"westend" => Box::new(chain_spec::westend_config()?),
-		"polkadot" => Box::new(chain_spec::polkadot_config()?),
 		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 	})
 }
@@ -57,7 +53,7 @@ impl SubstrateCli for Cli {
 		"Totem Parachain Collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relay chain node.\n\n\
-		parachain-collator <parachain-args> -- <relay-chain-args>"
+		totem-parachain-collator <parachain-args> -- <relay-chain-args>"
 			.into()
 	}
 
@@ -84,7 +80,7 @@ impl SubstrateCli for Cli {
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Totem Parachain Collator".into()
+		"Relaychainfor Totem Parachain".into()
 	}
 
 	fn impl_version() -> String {
@@ -92,10 +88,10 @@ impl SubstrateCli for RelayChainCli {
 	}
 
 	fn description() -> String {
-		"Totem Parachain Collator\n\nThe command-line arguments provided first will be \
+		"Relaychain linked to the Totem Parachain Collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relay chain node.\n\n\
-		parachain-collator <parachain-args> -- <relay-chain-args>"
+		totem-parachain-collator <parachain-args> -- <relay-chain-args>"
 			.into()
 	}
 
