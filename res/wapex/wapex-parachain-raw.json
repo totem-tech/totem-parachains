@@ -3,7 +3,7 @@
   "id": "wapex",
   "chainType": "Live",
   "bootNodes": [
-    "/dns4/w-boot-1.kapex.network/tcp/30333/ws/p2p/12D3KooWAhxe6K9RbzsGgrE3nRtSCzRbgSDYUHZgSPSRQfBx7CAV"
+    "/dns4/w-boot-1.kapex.network/tcp/31333/ws/p2p/12D3KooWAhxe6K9RbzsGgrE3nRtSCzRbgSDYUHZgSPSRQfBx7CAV"
   ],
   "telemetryEndpoints": [
     [

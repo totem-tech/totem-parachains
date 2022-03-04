@@ -4,7 +4,7 @@
   "chainType": "Local",
   "bootNodes": [
     "/ip4/159.89.1.153/tcp/31436/ws/p2p/12D3KooWCwPGSVmQSLTRMgaU1GaK6oHXijKdFcMiCBzzKygxVcXL",
-    "/dns4/l-boot-1.kapex.network/tcp/31436/ws/p2p/12D3KooWNpTmqisnMwdAUtjRHCxdb6EQcymdwQvdQFNuFfgBX1K3"
+    "/dns4/l-boot-1.kapex.network/tcp/21433/ws/p2p/12D3KooWNpTmqisnMwdAUtjRHCxdb6EQcymdwQvdQFNuFfgBX1K3"
   ],
   "telemetryEndpoints": [
     [

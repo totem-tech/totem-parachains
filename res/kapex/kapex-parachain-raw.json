@@ -3,9 +3,9 @@
   "id": "kapex",
   "chainType": "Live",
   "bootNodes": [
-    "/dns4/k-boot-1.kapex.network/tcp/30333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",
-    "/dns4/k-boot-2.kapex.network/tcp/30333/ws/p2p/12D3KooWSXS7SntFwfXkm3eTVvXqqKhpDbtrh9nPCUHvTqtjPsRU",
-    "/dns4/k-boot-3.kapex.network/tcp/30333/ws/p2p/12D3KooWJwSb4SaoW3zZMQrFhDLhHja5ZPknVapRFLuMS9o2ppmZ"
+    "/dns4/k-boot-1.kapex.network/tcp/41333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",
+    "/dns4/k-boot-2.kapex.network/tcp/42333/ws/p2p/12D3KooWSXS7SntFwfXkm3eTVvXqqKhpDbtrh9nPCUHvTqtjPsRU",
+    "/dns4/k-boot-3.kapex.network/tcp/43333/ws/p2p/12D3KooWJwSb4SaoW3zZMQrFhDLhHja5ZPknVapRFLuMS9o2ppmZ"
   ],
   "telemetryEndpoints": [
     [
