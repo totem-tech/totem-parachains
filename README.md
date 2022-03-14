@@ -2,7 +2,7 @@
 
 **This repo contains the code for the Totem Parachain Networks, Lego (intended for Rococo Relaychain - both local and Parity Hosted), Wapex (intended Westend Test Relaychain) and Kapex (intended for Polkadot Live Network).**
 
-It is currently aligned with `Polkadot v0.9.16`
+It is currently aligned with `Polkadot v0.9.17`
 
 The project is a direct fork of the [Substrate Parachain Template](https://github.com/substrate-developer-hub/substrate-parachain-template) modified for use with Totem Balances and Transaction Payment pallets which are reliant on the core Accounting Engine developed by the Totem Development Team.
 
