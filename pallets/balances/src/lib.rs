@@ -1545,6 +1545,10 @@ where
 			},
 		)?;
 
+		// Added for Totem Accounting
+		// T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
+        // .map_err(|_| ArithmeticError::Overflow)?;
+
 		// Emit transfer event.
 		Self::deposit_event(Event::Transfer {
 			from: transactor.clone(),

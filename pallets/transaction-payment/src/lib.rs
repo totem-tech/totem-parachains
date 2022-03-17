@@ -56,10 +56,11 @@ use sp_runtime::{
 		Saturating, SignedExtension, Zero,
 	},
 	transaction_validity::{
-		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction,
+		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction, InvalidTransaction,
 	},
 	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill, RuntimeDebug,
 };
+
 use sp_std::prelude::*;
 
 use frame_support::{
@@ -772,13 +773,13 @@ where
 			T::OnChargeTransaction::correct_and_deposit_fee(
 				&who, info, post_info, actual_fee, tip, imbalance,
 			)?;
-			// Totem accounting:
-			let actual_fee = T::TransactionConverter::convert(actual_fee);
-
-			if let Err(_e) = T::Accounting::account_for_fees(actual_fee, who) {
-				// This should not happen, because there is no way the fees can overflow
-				// when converting i128 -> u128
-			}
+			// // Added for Totem Accounting
+			// let actual_fee = T::TransactionConverter::convert(actual_fee);
+			// // Error should not happen, because there is no way the fees can overflow
+			// // when converting i128 -> u128
+			// // we use a custom transaction validity error for convenience.
+			// T::Accounting::account_for_fees(actual_fee, who) 
+			// 	.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(99)))?;
 		}
 		Ok(())
 	}
