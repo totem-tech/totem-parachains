@@ -170,7 +170,7 @@ use frame_support::{
 	pallet_prelude::DispatchResult,
 	traits::{
 		tokens::{fungible, BalanceStatus as Status, DepositConsequence, WithdrawConsequence},
-		Currency, ExistenceRequirement,
+		Currency, DefensiveSaturating, ExistenceRequirement,
 		ExistenceRequirement::{AllowDeath, KeepAlive},
 		Get, Imbalance, LockIdentifier, LockableCurrency, NamedReservableCurrency, OnUnbalanced,
 		ReservableCurrency, SignedImbalance, StoredMap, TryDrop, WithdrawReasons,
@@ -282,10 +282,6 @@ pub mod pallet {
 			dest: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
-			// Start Temprorary restriction on transfers for the launch of Totem Parachain.
-            let admin = origin.clone();
-            ensure_root(admin)?;
-            // End Temprorary restriction on transfers for the launch of Totem Parachain.
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
 			<Self as Currency<_>>::transfer(
@@ -323,25 +319,32 @@ pub mod pallet {
 			let new_free = if wipeout { Zero::zero() } else { new_free };
 			let new_reserved = if wipeout { Zero::zero() } else { new_reserved };
 
-			let (free, reserved) = Self::mutate_account(&who, |account| {
-				if new_free > account.free {
-					mem::drop(PositiveImbalance::<T, I>::new(new_free - account.free));
-				} else if new_free < account.free {
-					mem::drop(NegativeImbalance::<T, I>::new(account.free - new_free));
-				}
-
-				if new_reserved > account.reserved {
-					mem::drop(PositiveImbalance::<T, I>::new(new_reserved - account.reserved));
-				} else if new_reserved < account.reserved {
-					mem::drop(NegativeImbalance::<T, I>::new(account.reserved - new_reserved));
-				}
+			// First we try to modify the account's balance to the forced balance.
+			let (old_free, old_reserved) = Self::mutate_account(&who, |account| {
+				let old_free = account.free;
+				let old_reserved = account.reserved;
 
 				account.free = new_free;
 				account.reserved = new_reserved;
 
-				(account.free, account.reserved)
+				(old_free, old_reserved)
 			})?;
-			Self::deposit_event(Event::BalanceSet { who, free, reserved });
+
+			// This will adjust the total issuance, which was not done by the `mutate_account`
+			// above.
+			if new_free > old_free {
+				mem::drop(PositiveImbalance::<T, I>::new(new_free - old_free));
+			} else if new_free < old_free {
+				mem::drop(NegativeImbalance::<T, I>::new(old_free - new_free));
+			}
+
+			if new_reserved > old_reserved {
+				mem::drop(PositiveImbalance::<T, I>::new(new_reserved - old_reserved));
+			} else if new_reserved < old_reserved {
+				mem::drop(NegativeImbalance::<T, I>::new(old_reserved - new_reserved));
+			}
+
+			Self::deposit_event(Event::BalanceSet { who, free: new_free, reserved: new_reserved });
 			Ok(().into())
 		}
 
@@ -382,10 +385,6 @@ pub mod pallet {
 			dest: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
-			// Start Temprorary restriction on transfers for the launch of Totem Parachain.
-            let admin = origin.clone();
-            ensure_root(admin)?;
-            // End Temprorary restriction on transfers for the launch of Totem Parachain.
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
 			<Self as Currency<_>>::transfer(&transactor, &dest, value, KeepAlive)?;
@@ -415,9 +414,6 @@ pub mod pallet {
 			dest: <T::Lookup as StaticLookup>::Source,
 			keep_alive: bool,
 		) -> DispatchResult {
-			let admin = origin.clone();
-            ensure_root(admin)?;
-            // End Temprorary restriction on transfers for the launch of Totem Parachain.
 			use fungible::Inspect;
 			let transactor = ensure_signed(origin)?;
 			let reducible_balance = Self::reducible_balance(&transactor, keep_alive);
@@ -504,8 +500,29 @@ pub mod pallet {
 	#[pallet::getter(fn total_issuance)]
 	pub type TotalIssuance<T: Config<I>, I: 'static = ()> = StorageValue<_, T::Balance, ValueQuery>;
 
-	/// The balance of an account.
+	/// The Balances pallet example of storing the balance of an account.
 	///
+	/// # Example
+	///
+	/// ```nocompile
+	///  impl pallet_balances::Config for Runtime {
+	///    type AccountStore = StorageMapShim<Self::Account<Runtime>, frame_system::Provider<Runtime>, AccountId, Self::AccountData<Balance>>
+	///  }
+	/// ```
+	///
+	/// You can also store the balance of an account in the `System` pallet.
+	///
+	/// # Example
+	///
+	/// ```nocompile
+	///  impl pallet_balances::Config for Runtime {
+	///   type AccountStore = System
+	///  }
+	/// ```
+	///
+	/// But this comes with tradeoffs, storing account balances in the system pallet stores
+	/// `frame_system` data alongside the account data contrary to storing account balances in the
+	/// `Balances` pallet, which uses a `StorageMap` to store balances data only.
 	/// NOTE: This is only used in the case that this pallet is used to store balances.
 	#[pallet::storage]
 	pub type Account<T: Config<I>, I: 'static = ()> = StorageMap<
@@ -1512,7 +1529,7 @@ where
 						.map_err(|_| Error::<T, I>::LiquidityRestrictions)?;
 
 						// TODO: This is over-conservative. There may now be other providers, and
-						// this pallet   may not even be a provider.
+						// this pallet may not even be a provider.
 						let allow_death = existence_requirement == ExistenceRequirement::AllowDeath;
 						let allow_death =
 							allow_death && system::Pallet::<T>::can_dec_provider(transactor);
@@ -1528,9 +1545,6 @@ where
 			},
 		)?;
 
-		T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
-        .map_err(|_| ArithmeticError::Overflow)?;
-		
 		// Emit transfer event.
 		Self::deposit_event(Event::Transfer {
 			from: transactor.clone(),
@@ -1802,7 +1816,7 @@ where
 			account.reserved -= actual;
 			// defensive only: this can never fail since total issuance which is at least
 			// free+reserved fits into the same data type.
-			account.free = account.free.saturating_add(actual);
+			account.free = account.free.defensive_saturating_add(actual);
 			actual
 		}) {
 			Ok(x) => x,
@@ -1915,7 +1929,7 @@ where
 			match reserves.binary_search_by_key(id, |data| data.id) {
 				Ok(index) => {
 					// this add can't overflow but just to be defensive.
-					reserves[index].amount = reserves[index].amount.saturating_add(value);
+					reserves[index].amount = reserves[index].amount.defensive_saturating_add(value);
 				},
 				Err(index) => {
 					reserves
@@ -1948,8 +1962,8 @@ where
 
 						let remain = <Self as ReservableCurrency<_>>::unreserve(who, to_change);
 
-						// remain should always be zero but just to be defensive here
-						let actual = to_change.saturating_sub(remain);
+						// remain should always be zero but just to be defensive here.
+						let actual = to_change.defensive_saturating_sub(remain);
 
 						// `actual <= to_change` and `to_change <= amount`; qed;
 						reserves[index].amount -= actual;
@@ -1995,8 +2009,8 @@ where
 					let (imb, remain) =
 						<Self as ReservableCurrency<_>>::slash_reserved(who, to_change);
 
-					// remain should always be zero but just to be defensive here
-					let actual = to_change.saturating_sub(remain);
+					// remain should always be zero but just to be defensive here.
+					let actual = to_change.defensive_saturating_sub(remain);
 
 					// `actual <= to_change` and `to_change <= amount`; qed;
 					reserves[index].amount -= actual;
@@ -2055,12 +2069,12 @@ where
 											)?;
 
 										// remain should always be zero but just to be defensive
-										// here
-										let actual = to_change.saturating_sub(remain);
+										// here.
+										let actual = to_change.defensive_saturating_sub(remain);
 
 										// this add can't overflow but just to be defensive.
 										reserves[index].amount =
-											reserves[index].amount.saturating_add(actual);
+											reserves[index].amount.defensive_saturating_add(actual);
 
 										Ok(actual)
 									},
@@ -2075,7 +2089,7 @@ where
 
 										// remain should always be zero but just to be defensive
 										// here
-										let actual = to_change.saturating_sub(remain);
+										let actual = to_change.defensive_saturating_sub(remain);
 
 										reserves
 											.try_insert(
@@ -2098,7 +2112,7 @@ where
 						)?;
 
 						// remain should always be zero but just to be defensive here
-						to_change.saturating_sub(remain)
+						to_change.defensive_saturating_sub(remain)
 					};
 
 					// `actual <= to_change` and `to_change <= amount`; qed;

@@ -322,21 +322,28 @@ mod pallet {
                 .ok_or(Error::<T>::PostingIndexOverflow)?;
 
             // Iterate over forward keys. If error, then reverse out prior postings.
-            for (idx, key) in keys.iter().cloned().enumerate() {
-                if let Err(e) = Self::post_amounts(key, posting_index) {
-                    // Error before the value was updated. Need to reverse-out the earlier debit amount and account combination
-                    // as this has already changed in storage.
-                    for key in keys.iter().cloned().take(idx) {
-                        let reversed = Record {
-                            amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
-                            debit_credit: key.debit_credit.reverse(),
-                            ..key
-                        };
-                        Self::post_amounts(reversed, posting_index)
-                            .or(Err(Error::<T>::SystemFailure))?;
-                    }
-                    fail!(e)
-                }
+            for (_idx, key) in keys.iter().cloned().enumerate() {
+                Self::post_amounts(key, posting_index)
+                    .or(Err(Error::<T>::SystemFailure))?;
+                
+                // The folowing code pre-supposes a possible arithmetic overflow error and handles a reversal.
+                // For simplicity it has been removed as the internal blockchain currency accounting takes care of this
+                // Later when actual accounting is introduced this will need to be re-introduced.
+                                     
+                // if let Err(e) = Self::post_amounts(key, posting_index) {
+                //     // Error before the value was updated. Need to reverse-out the earlier debit amount and account combination
+                //     // as this has already changed in storage.
+                //     for key in keys.iter().cloned().take(idx) {
+                //         let reversed = Record {
+                //             amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
+                //             debit_credit: key.debit_credit.reverse(),
+                //             ..key
+                //         };
+                //         Self::post_amounts(reversed, posting_index)
+                //             .or(Err(Error::<T>::SystemFailure))?;
+                //     }
+                //     fail!(e)
+                // }
             }
 
             Ok(().into())
@@ -469,7 +476,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetwrkFeeIncome.clone()))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetworkFeeIncome.clone()))), 
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,

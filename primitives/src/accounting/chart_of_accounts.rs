@@ -1477,7 +1477,7 @@ pub enum Sales {
     /// P40_0007_C000,
     NetwrkValidationIncome,
     /// P40_0008_C000,
-    NetwrkFeeIncome,
+    NetworkFeeIncome,
     /// P40_0009_C000,
     MiscellaneousIncome,
 }

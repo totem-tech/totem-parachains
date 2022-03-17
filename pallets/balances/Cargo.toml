@@ -27,8 +27,8 @@ totem-primitives = { path = '../../primitives', default-features = false }
 [dev-dependencies]
 sp-io = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17' }
 sp-core = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17' }
-pallet-transaction-payment = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17', default-features = false }
-# pallet-transaction-payment-totem = { path = "../transaction-payment" }
+# pallet-transaction-payment = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17', default-features = false }
+pallet-transaction-payment = { path = "../transaction-payment", package = "pallet-transaction-payment-totem", default-features = false }
 
 [features]
 default = ["std"]
