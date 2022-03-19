@@ -1,10 +1,17 @@
 use super::*;
 use totem_common::converter::Converter;
 
+parameter_types! {
+	pub const MaxLedgers: u32 = 750u32;
+	pub const MaxPostings: u32 = 10_000u32;
+}
+
 impl pallet_accounting::Config for Runtime {
     type Event = Event;
     type AccountingConverter = Converter;
     type Currency = Balances;
+    type MaxLedgers = MaxLedgers;
+	type MaxPostings = MaxPostings;
 }
 
 // impl pallet_archive::Config for Runtime {

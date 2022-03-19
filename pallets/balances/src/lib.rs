@@ -282,6 +282,9 @@ pub mod pallet {
 			dest: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
+			// Totem Temporary Transfer Freeze
+			ensure_root(origin.clone())?;
+
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
 			<Self as Currency<_>>::transfer(
@@ -385,6 +388,9 @@ pub mod pallet {
 			dest: <T::Lookup as StaticLookup>::Source,
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
+			// Totem Temporary Transfer Freeze
+			ensure_root(origin.clone())?;
+			
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
 			<Self as Currency<_>>::transfer(&transactor, &dest, value, KeepAlive)?;
@@ -415,6 +421,9 @@ pub mod pallet {
 			keep_alive: bool,
 		) -> DispatchResult {
 			use fungible::Inspect;
+			// Totem Temporary Transfer Freeze
+			ensure_root(origin.clone())?;
+
 			let transactor = ensure_signed(origin)?;
 			let reducible_balance = Self::reducible_balance(&transactor, keep_alive);
 			let dest = T::Lookup::lookup(dest)?;
@@ -1546,8 +1555,8 @@ where
 		)?;
 
 		// Added for Totem Accounting
-		// T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
-        // .map_err(|_| ArithmeticError::Overflow)?;
+		T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
+        .map_err(|_| ArithmeticError::Overflow)?;
 
 		// Emit transfer event.
 		Self::deposit_event(Event::Transfer {

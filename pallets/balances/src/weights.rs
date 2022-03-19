@@ -22,9 +22,9 @@
 //! EXECUTION: Some(Wasm), WASM-EXECUTION: Compiled, CHAIN: Some("dev"), DB CACHE: 128
 
 // Executed Command:
-// target/release/substrate
+// ./target/release/totem-parachain-collator
 // benchmark
-// --chain=dev
+// --chain=lego
 // --steps=50
 // --repeat=20
 // --pallet=pallet_balances
@@ -32,8 +32,8 @@
 // --execution=wasm
 // --wasm-execution=compiled
 // --heap-pages=4096
-// --output=./frame/balances/src/weights.rs
-// --template=./.maintain/frame-weight-template.hbs
+// --output=./pallets/balances/src/weights-new.rs
+// --template=./weight-template/totem-parachain-weight.hbs
 
 
 #![cfg_attr(rustfmt, rustfmt_skip)]

@@ -140,36 +140,57 @@ mod pallet {
     /// Every accounting post gets an index.
     #[pallet::storage]
     #[pallet::getter(fn posting_number)]
-    pub type PostingNumber<T: Config> = StorageValue<_, PostingIndex, ValueQuery>;
+    pub(super) type PostingNumber<T: Config> = StorageValue<_, PostingIndex, ValueQuery>;
+    
+    /// Convenience list of posting indices for an identity
+    #[pallet::storage]
+    #[pallet::getter(fn id_ledger_posting_idx_list)]
+    pub(super) type IdLedgerPostingIdxList<T: Config> = StorageDoubleMap<
+        _, 
+        Blake2_128Concat, T::AccountId, 
+        Blake2_128Concat, Ledger,
+        BoundedVec<u128, T::MaxPostings>,
+        OptionQuery,
+    >;
+    
+    /// Convenience list of Accounts used by an identity. Useful for UI read performance
+    #[pallet::storage]
+    #[pallet::getter(fn ledger_by_id)]
+    pub(super) type LedgerById<T: Config> = StorageMap<
+        _, 
+        Blake2_128Concat, T::AccountId,
+        BoundedVec<Ledger, T::MaxLedgers>,
+        OptionQuery,
+    >;
 
     /// Accounting Balances.
     #[pallet::storage]
     #[pallet::getter(fn balance_by_ledger)]
-    pub type BalanceByLedger<T: Config> =
+    pub(super) type BalanceByLedger<T: Config> =
         StorageMap<_, Blake2_128Concat, (T::AccountId, Ledger), LedgerBalance>;
 
     /// Detail of the accounting posting (for Audit).
     #[pallet::storage]
     #[pallet::getter(fn posting_detail)]
-    pub type PostingDetail<T: Config> = StorageNMap<
+    pub(super) type PostingDetail<T: Config> = StorageNMap<
         _,
         (
             Key<Blake2_128Concat, T::AccountId>,
             Key<Blake2_128Concat, Ledger>,
             Key<Twox64Concat, PostingIndex>,
         ),
-        Record<T::AccountId, T::Hash, T::BlockNumber>,
+        Detail<T::AccountId, T::Hash, T::BlockNumber>,
     >;
 
     /// Yay! Totem!
     #[pallet::storage]
     #[pallet::getter(fn global_ledger)]
-    pub type GlobalLedger<T: Config> = StorageMap<_, Blake2_128Concat, Ledger, LedgerBalance>;
+    pub(super) type GlobalLedger<T: Config> = StorageMap<_, Blake2_128Concat, Ledger, LedgerBalance>;
 
     /// Address to book the sales tax to and the tax jurisdiction (Experimental, may be deprecated in future).
     #[pallet::storage]
     #[pallet::getter(fn taxes_by_jurisdiction)]
-    pub type TaxesByJurisdiction<T: Config> =
+    pub(super) type TaxesByJurisdiction<T: Config> =
         StorageMap<_, Blake2_128Concat, (T::AccountId, T::AccountId), LedgerBalance>;
 
     // TODO
@@ -183,6 +204,15 @@ mod pallet {
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
             + Convert<[u8; 32], Self::AccountId>;
         type Currency: Currency<Self::AccountId>;
+        
+        /// The maximum nr of Ledgers.
+		#[pallet::constant]
+		type MaxLedgers: Get<u32>;
+
+        /// The maximum nr of Postings per AccountId.
+		#[pallet::constant]
+		type MaxPostings: Get<u32>;
+
     }
 
     #[pallet::error]
@@ -242,17 +272,29 @@ mod pallet {
             key: Record<T::AccountId, T::Hash, T::BlockNumber>,
             posting_index: PostingIndex,
         ) -> DispatchResultWithPostInfo {
-            let balance_key = (key.primary_party.clone(), key.ledger);
-            let posting_key = (key.primary_party.clone(), key.ledger, posting_index);
+            let balance_key = (key.primary_party.clone(), key.ledger.clone());
+            let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
+            
+            let detail = Detail {
+                counterparty: key.counterparty.clone(),
+                amount: key.amount.clone(),
+                debit_credit: key.debit_credit,
+                reference_hash: key.reference_hash,
+                changed_on_blocknumber: key.changed_on_blocknumber,
+                applicable_period_blocknumber: key.applicable_period_blocknumber,
+            };
+
             // !! Warning !!
             // Values could feasibly overflow, with no visibility on other accounts. In this event this function returns an error.
             // Reversals must occur in the parent function (i.e. that calls this function).
             // As all values passed to this function are already signed +/- we only need to sum to the previous balance and check for overflow
             // Updates are only made to storage once tests below are passed for debits or credits.
+            
             let new_balance = Self::balance_by_ledger(&balance_key)
                 .ok_or(Error::<T>::BalanceByLedgerFetching)?
                 .checked_add(key.amount)
                 .ok_or(Error::<T>::BalanceValueOverflow)?;
+            
             let new_global_balance = Self::global_ledger(&key.ledger)
                 .ok_or(Error::<T>::GlobalLedgerFetching)?
                 .checked_add(key.amount)
@@ -261,7 +303,7 @@ mod pallet {
             PostingNumber::<T>::put(posting_index);
             // Todo?
             BalanceByLedger::<T>::insert(&balance_key, new_balance);
-            PostingDetail::<T>::insert(&posting_key, key.clone());
+            PostingDetail::<T>::insert(&posting_key, detail);
             GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
 
             Self::deposit_event(Event::LegderUpdate(
@@ -317,14 +359,24 @@ mod pallet {
         fn handle_multiposting_amounts(
             keys: &[Record<T::AccountId, T::Hash, T::BlockNumber>],
         ) -> DispatchResultWithPostInfo {
-            let posting_index = Self::posting_number()
-                .checked_add(1)
-                .ok_or(Error::<T>::PostingIndexOverflow)?;
+
+            // Set initial value for posting index
+            let mut posting_index: PostingIndex = 1;
+            // Only need to increment, if it exists, else this the the very first record (with value 1).
+            if <PostingNumber<T>>::exists() {
+                posting_index = Self::posting_number()
+                    .checked_add(1)
+                    .ok_or(Error::<T>::PostingIndexOverflow)?;
+            };
 
             // Iterate over forward keys. If error, then reverse out prior postings.
-            for (_idx, key) in keys.iter().cloned().enumerate() {
-                Self::post_amounts(key, posting_index)
-                    .or(Err(Error::<T>::SystemFailure))?;
+            // for (_idx, key) in keys.iter().cloned().enumerate() {
+            
+            // Totem Temp attempt to fix long running transaction by just posting without checks
+            // for key in keys.iter().cloned() {
+            //     Self::post_amounts(key, posting_index)
+            //     .or(Err(Error::<T>::SystemFailure))?;
+            // Totem end
                 
                 // The folowing code pre-supposes a possible arithmetic overflow error and handles a reversal.
                 // For simplicity it has been removed as the internal blockchain currency accounting takes care of this
@@ -344,7 +396,8 @@ mod pallet {
                 //     }
                 //     fail!(e)
                 // }
-            }
+
+            // }
 
             Ok(().into())
         }
@@ -378,7 +431,7 @@ mod pallet {
                 Record {
                     primary_party: from.clone(),
                     counterparty: to.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: decrease_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash,
@@ -388,7 +441,7 @@ mod pallet {
                 Record {
                     primary_party: from.clone(),
                     counterparty: to.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::DirectorsLoanAccount.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::DirectorsLoanAccount))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash,
@@ -398,7 +451,7 @@ mod pallet {
                 Record {
                     primary_party: to.clone(),
                     counterparty: from.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash,
@@ -408,7 +461,7 @@ mod pallet {
                 Record {
                     primary_party: to.clone(),
                     counterparty: from.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::MiscellaneousIncome.clone()))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::MiscellaneousIncome))), 
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash,
@@ -446,7 +499,7 @@ mod pallet {
                 Record {
                     primary_party: payer.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: decrease_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -456,7 +509,7 @@ mod pallet {
                 Record {
                     primary_party: payer.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::AdministrationCost(_0030_::NetworkTransactionFees.clone())))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::AdministrationCost(_0030_::NetworkTransactionFees)))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -466,7 +519,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: payer.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -476,7 +529,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetworkFeeIncome.clone()))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetworkFeeIncome))),
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -507,7 +560,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: loser.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: decrease_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -517,7 +570,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: loser.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::CostOfGoodsSold(Cogs::CryptoBurnWriteDown.clone())))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::CostOfGoodsSold(Cogs::CryptoBurnWriteDown)))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -547,7 +600,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: author.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: decrease_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -557,7 +610,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: author.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::Commissions(_0009_::NetwrkValidationReward.clone())))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OperatingExpenses::Commissions(_0009_::NetwrkValidationReward)))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -567,7 +620,7 @@ mod pallet {
                 Record {
                     primary_party: author.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance.clone()))),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -577,7 +630,7 @@ mod pallet {
                 Record {
                     primary_party: author.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetwrkValidationIncome.clone()))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetwrkValidationIncome))), 
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,

@@ -19,9 +19,9 @@ substrate-build-script-utils = { git = "https://github.com/paritytech/substrate"
 name = "totem-parachain-collator"
 path = "src/main.rs"
 
-# [features]
-# runtime-benchmarks = ["parachain-template-runtime/runtime-benchmarks"]
-# try-runtime = [ "parachain-template-runtime/try-runtime" ]
+[features]
+runtime-benchmarks = ["totem-parachain-runtime/runtime-benchmarks"]
+try-runtime = [ "totem-parachain-runtime/try-runtime" ]
 
 [dependencies]
 clap = { version = "3.1", features = ["derive"] }
@@ -36,7 +36,6 @@ jsonrpc-core = "18.0.0"
 
 # Local Dependencies
 totem-parachain-runtime = { path = "../runtime" }
-# lego-runtime = { path = '../runtime' }
 # parachains-common = { path = "../../parachains-common" }
 
 # Substrate Dependencies

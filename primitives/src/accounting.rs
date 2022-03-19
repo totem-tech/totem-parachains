@@ -93,6 +93,16 @@ pub struct Record<AccountId, Hash, BlockNumber> {
     pub applicable_period_blocknumber: BlockNumber,
 }
 
+#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
+pub struct Detail<AccountId, Hash, BlockNumber> {
+    pub counterparty: AccountId,
+    pub amount: LedgerBalance,
+    pub debit_credit: Indicator,
+    pub reference_hash: Hash,
+    pub changed_on_blocknumber: BlockNumber,
+    pub applicable_period_blocknumber: BlockNumber,
+}
+
 // Implementations
 
 impl EncodeLike<Indicator> for bool {}
