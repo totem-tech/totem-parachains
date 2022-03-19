@@ -38,7 +38,7 @@
 mod chart_of_accounts;
 // pub use chart_of_accounts::{Ledger, {CurrentAssets, Sales, OperatingExpenses, _0030_, B,A,P,I,X,Cogs,Commissions,_0009_}};
 pub use chart_of_accounts::{Ledger, *};
-    
+
 use crate::LedgerBalance;
 use frame_support::{dispatch::EncodeLike, pallet_prelude::*};
 use scale_info::TypeInfo;
@@ -47,27 +47,28 @@ use sp_std::prelude::*;
 
 /// Main Totem accounting trait.
 pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
-    type PostingIndex: Member + Copy + Into<u128> + Encode + Decode + Eq;
+	type PostingIndex: Member + Copy + Into<u128> + Encode + Decode + Eq;
+	type Error;
 
-    fn handle_multiposting_amounts(
-        keys: &[Record<AccountId, Hash, BlockNumber>],
-    ) -> DispatchResultWithPostInfo;
+	fn handle_multiposting_amounts(
+		keys: &[Record<AccountId, Hash, BlockNumber>],
+	) -> Result<(), Self::Error>;
 
-    fn account_for_simple_transfer(
-        from: AccountId,
-        to: AccountId,
-        amount: CoinAmount,
-    ) -> DispatchResultWithPostInfo;
+	fn account_for_simple_transfer(
+		from: AccountId,
+		to: AccountId,
+		amount: CoinAmount,
+	) -> Result<(), Self::Error>;
 
-    fn account_for_fees(fee: CoinAmount, payer: AccountId) -> DispatchResultWithPostInfo;
-    fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> DispatchResultWithPostInfo;
-    fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> DispatchResultWithPostInfo;
+	fn account_for_fees(fee: CoinAmount, payer: AccountId) -> Result<(), Self::Error>;
+	fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> Result<(), Self::Error>;
+	fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> Result<(), Self::Error>;
 
-    fn get_escrow_account() -> AccountId;
-    
-    fn get_netfees_account() -> AccountId;
+	fn get_escrow_account() -> AccountId;
 
-    fn get_pseudo_random_hash(s: AccountId, r: AccountId) -> Hash;
+	fn get_netfees_account() -> AccountId;
+
+	fn get_pseudo_random_hash(s: AccountId, r: AccountId) -> Hash;
 }
 
 /// Debit or Credit Indicator
@@ -75,32 +76,32 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 #[derive(MaxEncodedLen, Clone, Decode, Encode, Copy, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Indicator {
-    /// Debit
-    Debit = 0,
-    /// Credit
-    Credit = 1,
+	/// Debit
+	Debit = 0,
+	/// Credit
+	Credit = 1,
 }
 
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
 pub struct Record<AccountId, Hash, BlockNumber> {
-    pub primary_party: AccountId,
-    pub counterparty: AccountId,
-    pub ledger: Ledger,
-    pub amount: LedgerBalance,
-    pub debit_credit: Indicator,
-    pub reference_hash: Hash,
-    pub changed_on_blocknumber: BlockNumber,
-    pub applicable_period_blocknumber: BlockNumber,
+	pub primary_party: AccountId,
+	pub counterparty: AccountId,
+	pub ledger: Ledger,
+	pub amount: LedgerBalance,
+	pub debit_credit: Indicator,
+	pub reference_hash: Hash,
+	pub changed_on_blocknumber: BlockNumber,
+	pub applicable_period_blocknumber: BlockNumber,
 }
 
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
 pub struct Detail<AccountId, Hash, BlockNumber> {
-    pub counterparty: AccountId,
-    pub amount: LedgerBalance,
-    pub debit_credit: Indicator,
-    pub reference_hash: Hash,
-    pub changed_on_blocknumber: BlockNumber,
-    pub applicable_period_blocknumber: BlockNumber,
+	pub counterparty: AccountId,
+	pub amount: LedgerBalance,
+	pub debit_credit: Indicator,
+	pub reference_hash: Hash,
+	pub changed_on_blocknumber: BlockNumber,
+	pub applicable_period_blocknumber: BlockNumber,
 }
 
 // Implementations
@@ -108,59 +109,56 @@ pub struct Detail<AccountId, Hash, BlockNumber> {
 impl EncodeLike<Indicator> for bool {}
 
 impl Indicator {
-    pub fn reverse(self) -> Self {
-        match self {
-            Self::Debit => Self::Credit,
-            Self::Credit => Self::Debit,
-        }
-    }
+	pub fn reverse(self) -> Self {
+		match self {
+			Self::Debit => Self::Credit,
+			Self::Credit => Self::Debit,
+		}
+	}
 }
 
 #[cfg(any(test, feature = "mock"))]
 impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNumber, CoinAmount>
-    for ()
+	for ()
 {
-    type PostingIndex = u128;
+	type PostingIndex = u128;
+	type Error = ();
 
-    fn handle_multiposting_amounts(
-        _fwd: &[Record<AccountId, Hash, BlockNumber>],
-    ) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn handle_multiposting_amounts(
+		_fwd: &[Record<AccountId, Hash, BlockNumber>],
+	) -> Result<(), Self::Error> {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn account_for_simple_transfer(
-        _from: AccountId,
-        _to: AccountId,
-        _amount: CoinAmount,
-    ) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn account_for_simple_transfer(
+		_from: AccountId,
+		_to: AccountId,
+		_amount: CoinAmount,
+	) -> Result<(), Self::Error> {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn account_for_fees(_f: CoinAmount, _p: AccountId) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn account_for_fees(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
-    
-    fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> DispatchResultWithPostInfo {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn get_escrow_account() -> AccountId {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn get_escrow_account() -> AccountId {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn get_netfees_account() -> AccountId {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn get_netfees_account() -> AccountId {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 }

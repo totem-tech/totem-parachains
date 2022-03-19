@@ -271,7 +271,7 @@ mod pallet {
         fn post_amounts(
             key: Record<T::AccountId, T::Hash, T::BlockNumber>,
             posting_index: PostingIndex,
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Error<T>> {
             let balance_key = (key.primary_party.clone(), key.ledger.clone());
             let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
             
@@ -349,6 +349,7 @@ mod pallet {
         T: pallet_timestamp::Config,
     {
         type PostingIndex = PostingIndex;
+        type Error = Error<T>;
 
         /// The Totem Accounting Recipes are constructed using this function which handles posting to multiple accounts.
         /// It is exposed to other modules as a trait
@@ -358,7 +359,7 @@ mod pallet {
         /// Obviously the last posting does not need a reversal for if it errors, then it was not posted in the first place.
         fn handle_multiposting_amounts(
             keys: &[Record<T::AccountId, T::Hash, T::BlockNumber>],
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Self::Error> {
 
             // Set initial value for posting index
             let mut posting_index: PostingIndex = 1;
@@ -421,7 +422,7 @@ mod pallet {
             from: T::AccountId,
             to: T::AccountId,
             amount: CurrencyBalanceOf<T>,
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Self::Error> {
             let reference_hash = Self::get_pseudo_random_hash(from.clone(), to.clone());
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
@@ -479,7 +480,7 @@ mod pallet {
         fn account_for_fees(
             fee: CurrencyBalanceOf<T>,
             payer: T::AccountId,
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Self::Error> {
             // Take the fee amount and convert for use with accounting. Fee is of type T::Balance which is u128.
             // As amount will always be positive, convert for use in accounting
             let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
@@ -545,7 +546,7 @@ mod pallet {
         fn account_for_burnt_fees(
             fee: CurrencyBalanceOf<T>,
             loser: T::AccountId,
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Self::Error> {
             let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
@@ -586,7 +587,7 @@ mod pallet {
         fn distribute_fees_rewards(
             fee: CurrencyBalanceOf<T>,
             author: T::AccountId,
-        ) -> DispatchResultWithPostInfo {
+        ) -> Result<(), Self::Error> {
             let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
