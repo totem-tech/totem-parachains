@@ -40,7 +40,7 @@ mod chart_of_accounts;
 pub use chart_of_accounts::{Ledger, *};
 
 use crate::LedgerBalance;
-use frame_support::{dispatch::EncodeLike, pallet_prelude::*};
+use frame_support::{dispatch::{DispatchResult, EncodeLike}, pallet_prelude::*};
 use scale_info::TypeInfo;
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
@@ -48,21 +48,20 @@ use sp_std::prelude::*;
 /// Main Totem accounting trait.
 pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 	type PostingIndex: Member + Copy + Into<u128> + Encode + Decode + Eq;
-	type Error;
 
 	fn handle_multiposting_amounts(
 		keys: &[Record<AccountId, Hash, BlockNumber>],
-	) -> Result<(), Self::Error>;
+	) -> DispatchResult;
 
 	fn account_for_simple_transfer(
 		from: AccountId,
 		to: AccountId,
 		amount: CoinAmount,
-	) -> Result<(), Self::Error>;
+	) -> DispatchResult;
 
-	fn account_for_fees(fee: CoinAmount, payer: AccountId) -> Result<(), Self::Error>;
-	fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> Result<(), Self::Error>;
-	fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> Result<(), Self::Error>;
+	fn account_for_fees(fee: CoinAmount, payer: AccountId) -> DispatchResult;
+	fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> DispatchResult;
+	fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> DispatchResult;
 
 	fn get_escrow_account() -> AccountId;
 
@@ -122,11 +121,10 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	for ()
 {
 	type PostingIndex = u128;
-	type Error = ();
 
 	fn handle_multiposting_amounts(
 		_fwd: &[Record<AccountId, Hash, BlockNumber>],
-	) -> Result<(), Self::Error> {
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
@@ -134,19 +132,19 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		_from: AccountId,
 		_to: AccountId,
 		_amount: CoinAmount,
-	) -> Result<(), Self::Error> {
+	) -> Result {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn account_for_fees(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+	fn account_for_fees(_f: CoinAmount, _p: AccountId) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+	fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> Result<(), Self::Error> {
+	fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 

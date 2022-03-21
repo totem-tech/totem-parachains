@@ -38,10 +38,11 @@
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
+/// ChangesInInventories
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum ChangesInInventories {
+pub enum CII {
     /// P50_0001_D000,
     RawMaterials,
     /// P50_0001_D001,
@@ -53,8 +54,8 @@ pub enum ChangesInInventories {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum Cogs {
-    ChangesInInventories(ChangesInInventories),
+pub enum COGS {
+    ChangesInInventories(CII),
     /// P50_0001_D003,
     PurchasesDirectMaterialCosts,
     /// P50_0001_D004,
@@ -64,7 +65,7 @@ pub enum Cogs {
     /// P50_0001_D006,
     PurchasesReturnsAndAllowances,
     /// P50_0001_D007,
-    PurchasedIscount,
+    PurchaseDiscount,
     /// P50_0001_D008,
     /// P50_0001_D009,
     InventoryWriteDown,
@@ -96,7 +97,7 @@ pub enum _0002_ {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum PropertyPlantEquipment {
+pub enum PPE {
     /// P50_0003_D001,
     /// B12_1001_D000,
     /// B12_1002_C000,
@@ -166,7 +167,7 @@ pub enum _0003_ {
     GovernmentGrants,
     /// P50_0003_D015,
     NonCapitalProjectExpense,
-    Depreciation(PropertyPlantEquipment),
+    Depreciation(PPE),
     Amortization(IntangibleAssetList),
     /// P50_0003_D014,
     GainLossMiscellaneousSales,
@@ -183,22 +184,7 @@ pub enum _0004_ {
     /// P50_0004_D002,
     Samples,
 }
-/// Warranties
-#[allow(non_camel_case_types)]
-#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
-#[scale_info(capture_docs = "always")]
-pub enum _0005_ {
-    /// P50_0005_D000,
-    Warranties,
-}
-/// Tax Corporation Tax
-#[allow(non_camel_case_types)]
-#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
-#[scale_info(capture_docs = "always")]
-pub enum _0006_ {
-    /// P50_0006_D000,
-    CorporationTax,
-}
+
 /// Tax Fines And Penalties
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -864,7 +850,7 @@ pub enum _0038_ {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum _1001_ {
+pub enum OMC {
     /// P51_1001_D000,
     ITMiscellaneous,
     /// P51_1001_D001,
@@ -1201,8 +1187,8 @@ pub enum CurrentAssetsCrypto {
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum FixedAssets {
-    PropPlantEquip(PropertyPlantEquipment),
-    AccumulatedDepreciation(PropertyPlantEquipment),
+    PropPlantEquip(PPE),
+    AccumulatedDepreciation(PPE),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1231,10 +1217,11 @@ pub enum OtherReceivables {
     /// B14_3009_D002,
     Other,
 }
+/// Investments In third parties
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum InvestmentIn {
+pub enum II {
     /// B14_3001_D000,
     /// B14_3007_C001,
     Subsidiaries,
@@ -1251,7 +1238,7 @@ pub enum InvestmentIn {
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum NonCurrentAssets {
-    InvestmentIn(InvestmentIn),
+    InvestmentIn(II),
     /// B14_3005_D000,
     EquitySecuritiesFVOCI,
     /// B14_3005_D001,
@@ -1267,7 +1254,7 @@ pub enum NonCurrentAssets {
     ConvertibleBondsFVTPL,
     OtherReceivables(OtherReceivables),
     FinancialInstruments(Derivatives),
-    ImpairmentLossOn(InvestmentIn),
+    ImpairmentLossOn(II),
     ImpairmentOfFixedAssets,
 }
 #[allow(non_camel_case_types)]
@@ -1447,7 +1434,7 @@ pub enum OtherReserves {
     /// B33_3005_C000,
     EquityCompOfConvertibleBonds,
     /// B33_3006_C000,
-    AssetRevaluationReserve(PropertyPlantEquipment),
+    AssetRevaluationReserve(PPE),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1533,9 +1520,9 @@ pub enum OtherIncome {
 #[scale_info(capture_docs = "always")]
 pub enum OtherOperatingIncome {
     /// P42_1001_C000,
-    ShareOfProfitLossOf(InvestmentIn),
+    ShareOfProfitLossOf(II),
     /// P42_1002_C000,
-    GainLossDisposal(PropertyPlantEquipment),
+    GainLossDisposal(PPE),
     /// P42_1003_C000,
     GainLossDiscontinuedOperations,
 }
@@ -1554,7 +1541,7 @@ pub enum OtherComprehensiveIncome {
     /// P43_2004_C000,
     ReclassificationAdjustments,
     /// P43_2005_C000,
-    RevaluationGains(PropertyPlantEquipment),
+    RevaluationGains(PPE),
     /// P43_2006_C000,
     /// P43_2006_C001,
     /// P43_2006_C002,
@@ -1575,9 +1562,9 @@ pub enum OtherComprehensiveIncome {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum OperatingExpenses {
+pub enum OPEX {
     /// _0001_(Cogs),
-    CostOfGoodsSold(Cogs),
+    CostOfGoodsSold(COGS),
     /// _0002_(_0002_),
     ChargesInOut(_0002_),
     /// _0003_(_0003_),
@@ -1585,9 +1572,9 @@ pub enum OperatingExpenses {
     /// _0004_(_0004_),
     FieldTrials(_0004_),
     /// _0005_(_0005_),
-    Warranties(_0005_),
+    Warranties,
     /// _0006_(_0006_),
-    TaxCorporationTax(_0006_),
+    CorporationTax,
     /// _0007_(_0007_),
     TaxFinesPenalties(_0007_),
     /// _0008_(_0008_),
@@ -1651,14 +1638,14 @@ pub enum OperatingExpenses {
     /// _0038_(_0038_),
     Provisions(_0038_),
     /// _0039_(_0039_),
-    WriteOff(PropertyPlantEquipment),
+    WriteOff(PPE),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum OtherOperatingExpenses {
     /// _1001_(_1001_),
-    OtherMiscellaneousCharges(_1001_),
+    MiscellaneousCharges(OMC),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1746,7 +1733,7 @@ pub enum I {
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum X {
-    OperatingExpenses(OperatingExpenses),
+    OperatingExpenses(OPEX),
     OtherOperatingExpenses(OtherOperatingExpenses),
     PersonnelCosts(PersonnelCosts),
     FinanceCosts(FinanceCosts),

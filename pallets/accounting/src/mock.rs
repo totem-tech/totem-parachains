@@ -72,19 +72,19 @@ impl Posting for Test {
     fn handle_multiposting_amounts(
         // keys: Vec<Record<AccountId, Hash, BlockNumber, Self::Account, Self::LedgerBalance>>,
         keys: Vec<Record<AccountId, Ledger, Self::LedgerBalance, Indicator, Hash, BlockNumber>>,
-    ) -> DispatchResultWithPostInfo {
+    ) -> DispatchResult {
         unimplemented!()
     }
 
-    fn account_for_fees(f: CoinAmount, p: AccountId) -> DispatchResultWithPostInfo {
+    fn account_for_fees(f: CoinAmount, p: AccountId) -> DispatchResult {
         unimplemented!()
     }
 
-    fn account_for_burnt_fees(f: CoinAmount, p: AccountId) -> DispatchResultWithPostInfo {
+    fn account_for_burnt_fees(f: CoinAmount, p: AccountId) -> DispatchResult {
         unimplemented!()
     }
     
-    fn distribute_fees_rewards(f: CoinAmount, p: AccountId) -> DispatchResultWithPostInfo {
+    fn distribute_fees_rewards(f: CoinAmount, p: AccountId) -> DispatchResult {
         unimplemented!()
     }
 
@@ -103,7 +103,7 @@ impl Posting for Test {
 
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
-    pub const SS58Prefix: u16 = 2007;
+    pub const SS58Prefix: u8 = 42;
 }
 impl system::Config for Test {
     type BaseCallFilter = ();

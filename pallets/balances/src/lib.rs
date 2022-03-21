@@ -200,7 +200,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
-	pub trait Config<I: 'static = ()>: frame_system::Config {
+	pub trait Config<I: 'static = ()>: frame_system::Config + pallet_accounting::Config {
 		/// The balance of an account.
 		type Balance: Parameter
 			+ Member
@@ -283,7 +283,7 @@ pub mod pallet {
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
 			// Totem Temporary Transfer Freeze
-			ensure_root(origin.clone())?;
+			// ensure_root(origin.clone())?;
 
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
@@ -389,7 +389,7 @@ pub mod pallet {
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
 			// Totem Temporary Transfer Freeze
-			ensure_root(origin.clone())?;
+			// ensure_root(origin.clone())?;
 			
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
@@ -422,7 +422,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			use fungible::Inspect;
 			// Totem Temporary Transfer Freeze
-			ensure_root(origin.clone())?;
+			// ensure_root(origin.clone())?;
 
 			let transactor = ensure_signed(origin)?;
 			let reducible_balance = Self::reducible_balance(&transactor, keep_alive);
@@ -502,6 +502,8 @@ pub mod pallet {
 		DeadAccount,
 		/// Number of named reserves exceed MaxReserves
 		TooManyReserves,
+		/// Totem Accounting Error
+		Accounting,
 	}
 
 	/// The total units issued in the system.
@@ -1554,16 +1556,23 @@ where
 			},
 		)?;
 
-		// Added for Totem Accounting
-		T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
-        .map_err(|_| ArithmeticError::Overflow)?;
-
 		// Emit transfer event.
 		Self::deposit_event(Event::Transfer {
 			from: transactor.clone(),
 			to: dest.clone(),
 			amount: value,
 		});
+
+		// Added for Totem Accounting
+		match <T::Accounting as Posting<T::AccountId, T::Hash, T::BlockNumber, T::Balance>>::account_for_simple_transfer(transactor.clone(), dest.clone(), value) {
+			Ok(_) => (),
+			Err(e) => {
+				return Err(e);
+			},
+		}
+
+		// T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
+        // .map_err(|_| ArithmeticError::Overflow)?;
 
 		Ok(())
 	}

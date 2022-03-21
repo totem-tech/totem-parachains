@@ -56,7 +56,7 @@ use sp_runtime::{
 		Saturating, SignedExtension, Zero,
 	},
 	transaction_validity::{
-		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction, InvalidTransaction,
+		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction,
 	},
 	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill, RuntimeDebug,
 };
@@ -263,7 +263,7 @@ pub mod pallet {
 	pub struct Pallet<T>(_);
 
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + pallet_accounting::Config {
 		/// Handler for withdrawing, refunding and depositing the transaction fee.
 		/// Transaction fees are withdrawn before the transaction is executed.
 		/// After the transaction was executed the transaction weight can be
