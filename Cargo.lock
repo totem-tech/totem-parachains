@@ -10353,6 +10353,7 @@ dependencies = [
  "substrate-frame-rpc-system",
  "substrate-prometheus-endpoint",
  "totem-parachain-runtime",
+ "totem-primitives",
  "try-runtime-cli",
  "xcm",
 ]

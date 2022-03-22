@@ -1555,6 +1555,9 @@ where
 				.map(|(_, maybe_dust_cleaner)| maybe_dust_cleaner)
 			},
 		)?;
+		
+		// Added for Totem Accounting
+		T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)?;
 
 		// Emit transfer event.
 		Self::deposit_event(Event::Transfer {
@@ -1562,17 +1565,6 @@ where
 			to: dest.clone(),
 			amount: value,
 		});
-
-		// Added for Totem Accounting
-		match <T::Accounting as Posting<T::AccountId, T::Hash, T::BlockNumber, T::Balance>>::account_for_simple_transfer(transactor.clone(), dest.clone(), value) {
-			Ok(_) => (),
-			Err(e) => {
-				return Err(e);
-			},
-		}
-
-		// T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)
-        // .map_err(|_| ArithmeticError::Overflow)?;
 
 		Ok(())
 	}

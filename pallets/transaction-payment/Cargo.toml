@@ -48,5 +48,6 @@ std = [
 	"sp-std/std",
 	"frame-support/std",
 	"frame-system/std",
+	"pallet-accounting/std",
 ]
 try-runtime = ["frame-support/try-runtime"]

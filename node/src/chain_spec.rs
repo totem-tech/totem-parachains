@@ -6,6 +6,8 @@ use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
+use totem_primitives::{LedgerBalance};
+
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec =
 	sc_service::GenericChainSpec<totem_parachain_runtime::GenesisConfig, Extensions>;
@@ -116,6 +118,8 @@ pub fn development_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				// Totem Accounting Opening Balances
+				Vec::new(),
 				1000.into(),
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 			)
@@ -172,6 +176,8 @@ pub fn local_testnet_config() -> ChainSpec {
 					get_account_id_from_seed::<sr25519::Public>("Eve//stash"),
 					get_account_id_from_seed::<sr25519::Public>("Ferdie//stash"),
 				],
+				// Totem Accounting Opening Balances
+				Vec::new(),
 				1000.into(),
 				get_account_id_from_seed::<sr25519::Public>("Alice"),
 			)
@@ -197,6 +203,7 @@ pub fn local_testnet_config() -> ChainSpec {
 fn testnet_genesis(
 	invulnerables: Vec<(AccountId, AuraId)>,
 	endowed_accounts: Vec<AccountId>,
+	opening_balances: Vec<(AccountId, LedgerBalance)>,
 	id: ParaId,
 	root_key: AccountId,
 ) -> totem_parachain_runtime::GenesisConfig {
@@ -209,6 +216,9 @@ fn testnet_genesis(
 		sudo: totem_parachain_runtime::SudoConfig { key: Some(root_key) },
 		balances: totem_parachain_runtime::BalancesConfig {
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
+		},
+		accounting: totem_parachain_runtime::AccountingConfig {
+			opening_balances: opening_balances.iter().cloned().map(|(acc, bal)| (acc, bal)).collect(),
 		},
 		parachain_info: totem_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: totem_parachain_runtime::CollatorSelectionConfig {

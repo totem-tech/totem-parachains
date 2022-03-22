@@ -84,7 +84,22 @@
       "auraExt": null,
       "polkadotXcm": {
         "safeXcmVersion": 2
-      }
+      },
+      "accounting": {
+        "openingBalances": [
+          [
+            "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
+            2541818000000000000
+          ],
+          [
+            "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            20000000000000000
+          ],
+          [
+            "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            20000000000000000
+          ]
+        ]
     }
   }
 }

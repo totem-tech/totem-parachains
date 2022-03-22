@@ -99,13 +99,12 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        storage::{Key, KeyPrefixIterator},
-        traits::Currency,
+        storage::{ Key, KeyPrefixIterator },
+        traits::{ Currency, StorageVersion },
         dispatch::DispatchResult,
     };
     use frame_system::pallet_prelude::*;
-
-    use sp_runtime::traits::{Convert, Hash};
+    use sp_runtime::traits::{Convert, Hash, Zero};
     use sp_std::prelude::*;
 
     use totem_common::TryConvert;
@@ -134,8 +133,12 @@ mod pallet {
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
     #[pallet::generate_store(trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     /// Every accounting post gets an index.
@@ -197,6 +200,59 @@ mod pallet {
     // TODO
     // Quantities Accounting
     // Depreciation (calculated everytime there is a transaction so as not to overwork the runtime) - sets "last seen block" to calculate the delta for depreciation
+
+    // The genesis config type.
+    // The Balances here should be exactly the same as configured in the Balances Pallet
+	#[pallet::genesis_config]
+	pub struct GenesisConfig<T: Config> {
+		pub opening_balances: Vec<(T::AccountId, LedgerBalance)>,
+	}
+
+	// The default value for the genesis config type.
+	#[cfg(feature = "std")]
+	impl<T: Config> Default for GenesisConfig<T> {
+		fn default() -> Self {
+			Self { opening_balances: Default::default() }
+		}
+	}
+
+	// The build of genesis for the pallet.
+    // Ensure that duplicate balances are not added
+    // The Internal Balances for the accounts will be added using the 
+	#[pallet::genesis_build]
+	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+		fn build(&self) {
+            
+            let debit: Indicator = Indicator::Debit;
+            let input = *b"TotemsOpeningBalancesGenesisHash";
+            let reference_hash: T::Hash = T::Hashing::hash(input.encode().as_slice());
+            let block_number: T::BlockNumber = 0u32.into();
+            let posting_index: PostingIndex = 0;
+            let ledger: Ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
+            let total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
+
+            <PostingNumber<T>>::put(&posting_index);
+            <GlobalLedger::<T>>::insert(&ledger, total);
+
+            for (a, b) in &self.opening_balances {
+                // create balance key for account
+                let account_balance_key = (a.clone(), ledger.clone());
+                let posting_key = (a.clone(), ledger.clone(), posting_index);
+
+                let detail = Detail {
+                    counterparty: a.clone(),
+                    amount: b.clone(),
+                    debit_credit: debit,
+                    reference_hash: reference_hash,
+                    changed_on_blocknumber: block_number,
+                    applicable_period_blocknumber: block_number,
+                };
+
+                <BalanceByLedger::<T>>::insert(&account_balance_key, b);                
+                <PostingDetail::<T>>::insert(&posting_key, detail);
+			}
+		}
+	}
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
@@ -261,12 +317,6 @@ mod pallet {
             LedgerBalance,
             PostingIndex,
         ),
-        Arrived,
-        Setkeys,
-        Finished,
-        InMultiposting,
-        Detailset,
-        Balanceset,
     }
 
     impl<T: Config> Pallet<T> {
@@ -371,8 +421,6 @@ mod pallet {
         fn handle_multiposting_amounts(
             keys: &[Record<T::AccountId, T::Hash, T::BlockNumber>],
         ) -> DispatchResult {
-
-            Self::deposit_event(Event::InMultiposting);
             // Set initial value for posting index
             let mut posting_index: PostingIndex = 1;
             // Only need to increment, if it exists, else this the the very first record (with value 1).
@@ -385,49 +433,28 @@ mod pallet {
                 }
             };
 
-            for key in keys.clone().iter() {
-                // create an array for later use with the reversal records
-
-                match Self::post_amounts(key.clone(), posting_index) {
-                    Ok(_) => {
-                    // Here we build the reversal records used if ever there is an error
-                    // let reversed = Record {
-                    //                 amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
-                    //                 debit_credit: key.debit_credit.reverse(),
-                    //                 ..key
-                    //             };
-                    // Push this record to an array for later use
-                        ();
-                    },
-                    Err(e) => {
-                        // If ever there is an error iterate over the reversal records to reverse out the changes
-                        // and then return with the error
-                        fail!(e)
-                    },
+            // Iterate over forward keys. If error, then reverse out prior postings.
+            for (idx, key) in keys.iter().cloned().enumerate() {
+                if let Err(e) = Self::post_amounts(key, posting_index) {
+                    // (Un)likely error before the value was updated. 
+                    // Need to reverse-out the earlier postings to storage just in case
+                    // it has changed in storage already
+                    if idx > 1 {
+                        for key in keys.iter().cloned().take(idx - 1) {
+                            let reversed = Record {
+                                // Reversal should never cause an overflow - check nevertheless
+                                amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
+                                debit_credit: key.debit_credit.reverse(),
+                                ..key
+                            };
+                            // If this fails it would be serious. This is not expected to fail.
+                            Self::post_amounts(reversed, posting_index)
+                                .or(Err(Error::<T>::SystemFailure))?;
+                        }
+                    }
+                    fail!(e)
                 }
             }
-
-            // // Iterate over forward keys. If error, then reverse out prior postings.
-            // for (idx, key) in keys.iter().cloned().enumerate() {
-            //     // The folowing code pre-supposes a possible arithmetic overflow error and handles a reversal.
-            //     // For simplicity it has been removed as the internal blockchain currency accounting takes care of this
-            //     // Later when actual accounting is introduced this will need to be re-introduced.
-                                     
-            //     if let Err(e) = Self::post_amounts(key, posting_index) {
-            //         // Error before the value was updated. Need to reverse-out the earlier debit amount and account combination
-            //         // as this has already changed in storage.
-            //         for key in keys.iter().cloned().take(idx) {
-            //             let reversed = Record {
-            //                 amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
-            //                 debit_credit: key.debit_credit.reverse(),
-            //                 ..key
-            //             };
-            //             Self::post_amounts(reversed, posting_index)
-            //                 .or(Err(Error::<T>::SystemFailure))?;
-            //         }
-            //         fail!(e)
-            //     }
-            // }
 
             Ok(())
         }
@@ -498,10 +525,12 @@ mod pallet {
                     applicable_period_blocknumber: current_block_dupe,
                 },
             ];
-            match Self::handle_multiposting_amounts(&keys) {
-                Ok(_) => (),
-                Err(e) => fail!(e),
-            }
+            // match Self::handle_multiposting_amounts(&keys) {
+            //     Ok(_) => (),
+            //     Err(e) => fail!(e),
+            // }
+            Self::handle_multiposting_amounts(&keys)?;
+
             Ok(())
         }
 
@@ -570,10 +599,7 @@ mod pallet {
                 },
             ];
 
-            match Self::handle_multiposting_amounts(&keys) {
-                Ok(_) => (),
-                Err(e) => fail!(e),
-            }
+            Self::handle_multiposting_amounts(&keys)?;
             
             Ok(())
         }
@@ -616,10 +642,7 @@ mod pallet {
                 },
             ];
 
-            match Self::handle_multiposting_amounts(&keys) {
-                Ok(_) => (),
-                Err(e) => fail!(e),
-            }
+            Self::handle_multiposting_amounts(&keys)?;
             
             Ok(())
         }
@@ -681,10 +704,7 @@ mod pallet {
                 },
             ];
 
-            match Self::handle_multiposting_amounts(&keys) {
-                Ok(_) => (),
-                Err(e) => fail!(e),
-            }
+            Self::handle_multiposting_amounts(&keys)?;
 
             Ok(())
         }
@@ -702,3 +722,26 @@ mod pallet {
         }
     }
 }
+
+// Record {
+//     primary_party: payer.clone(),
+//     counterparty: netfee_address.clone(),
+//     ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+//     amount: decrease_amount,
+//     debit_credit: Indicator::Credit,
+//     reference_hash: fee_hash,
+//     changed_on_blocknumber: current_block,
+//     applicable_period_blocknumber: current_block_dupe,
+// },
+
+// let detail = Detail {
+//     counterparty: key.counterparty.clone(),
+//     amount: key.amount.clone(),
+//     debit_credit: key.debit_credit,
+//     reference_hash: key.reference_hash,
+//     changed_on_blocknumber: key.changed_on_blocknumber,
+//     applicable_period_blocknumber: key.applicable_period_blocknumber,
+// };
+
+// let balance_key = (key.primary_party.clone(), key.ledger.clone());
+// let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);

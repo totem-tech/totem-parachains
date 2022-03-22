@@ -511,7 +511,7 @@ construct_runtime!(
 		// TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
 
 		// Totem
-		Accounting: pallet_accounting::{Pallet, Call, Storage, Event<T>} = 40,
+		Accounting: pallet_accounting::{Pallet, Call, Storage, Event<T>, Config<T>} = 40,
 		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
 		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
 		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,

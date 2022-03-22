@@ -12,7 +12,7 @@
 # This will provide ther WASM blob that needs to be added to the readable chainspec
 #______________________________________________________________#
 
-# ./target/release/totem-parachain-collator build-spec --chain local > ./res/chainspec-for-wasm.json
+# ./target/release/totem-parachain-collator build-spec --chain local > ./res/chainspec-for-wasm-new.json
 
 #______________________________________________________________#
 # Once the chain specific details have been added the file must be renamed according to the specific chain and placed in the appropriate directory. 

@@ -36,6 +36,7 @@ jsonrpc-core = "18.0.0"
 
 # Local Dependencies
 totem-parachain-runtime = { path = "../runtime" }
+totem-primitives = { path = '../primitives', default-features = false }
 # parachains-common = { path = "../../parachains-common" }
 
 # Substrate Dependencies
