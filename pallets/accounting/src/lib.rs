@@ -149,10 +149,9 @@ mod pallet {
     /// Convenience list of posting indices for an identity
     #[pallet::storage]
     #[pallet::getter(fn id_ledger_posting_idx_list)]
-    pub type IdLedgerPostingIdxList<T: Config> = StorageDoubleMap<
+    pub type IdLedgerPostingIdxList<T: Config> = StorageMap<
         _, 
-        Blake2_128Concat, T::AccountId, 
-        Blake2_128Concat, Ledger,
+        Blake2_128Concat, (T::AccountId, Ledger),
         BoundedVec<u128, T::MaxPostings>,
         OptionQuery,
     >;
@@ -354,6 +353,9 @@ mod pallet {
 				Some(b) => {
                     let new_balance = b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
                     BalanceByLedger::<T>::insert(&balance_key, new_balance);
+                    // Maintain a unique list of posting indices per accountId
+                    IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.retain(|i| i != &posting_index)});
+                    IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.push(posting_index)});
                 },
 			};
             
@@ -364,6 +366,10 @@ mod pallet {
                     GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
                 },
 			};
+            
+            // Maintain a unique list of ledgers used by an accountId
+            LedgerById::<T>::mutate(&key.primary_party, |v| v.retain(|h| h != &key.ledger));
+            LedgerById::<T>::mutate(&key.primary_party, |v| v.push(key.ledger));
 
             PostingNumber::<T>::put(posting_index);
             PostingDetail::<T>::insert(&posting_key, detail);
