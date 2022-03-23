@@ -289,6 +289,8 @@ mod pallet {
         SystemFailure,
         /// Overflow error, amount too big.
         AmountOverflow,
+        /// Too many postings
+        TooManyPostings,
     }
 
     #[pallet::hooks]
@@ -354,8 +356,47 @@ mod pallet {
                     let new_balance = b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
                     BalanceByLedger::<T>::insert(&balance_key, new_balance);
                     // Maintain a unique list of posting indices per accountId
-                    IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.retain(|i| i != &posting_index)});
-                    IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.push(posting_index)});
+                    // IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.retain(|i| i != &posting_index)});
+                    // IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.push(posting_index)});
+
+                    
+                    
+                    IdLedgerPostingIdxList::<T>::mutate(|v| {
+                        v.retain(|h| h != &posting_index);
+                    });
+
+                    // let num_proposals = Proposals::<T, I>::mutate(|proposals| {
+                    //     proposals.retain(|h| h != &proposal_hash);
+                    //     proposals.len() + 1 // calculate weight based on original length
+                    // });
+
+
+					<IdLedgerPostingIdxList<T>>::try_mutate(|v| {
+						v.try_push(posting_index)
+						 .map_err(|_| Error::<T>::TooManyPostings)?;
+					})?;
+
+                    // let active_proposals =
+					// <Proposals<T, I>>::try_mutate(|proposals| -> Result<usize, DispatchError> {
+					// 	proposals
+					// 		.try_push(proposal_hash)
+					// 		.map_err(|_| Error::<T, I>::TooManyProposals)?;
+					// 	Ok(proposals.len())
+					// })?;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
                 },
 			};
             
