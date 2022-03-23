@@ -149,21 +149,23 @@ mod pallet {
     /// Convenience list of posting indices for an identity
     #[pallet::storage]
     #[pallet::getter(fn id_ledger_posting_idx_list)]
-    pub type IdLedgerPostingIdxList<T: Config> = StorageMap<
+    pub type IdLedgerPostingIdxList<T: Config> = StorageDoubleMap<
         _, 
         Blake2_128Concat, (T::AccountId, Ledger),
-        BoundedVec<u128, T::MaxPostings>,
-        OptionQuery,
+        Blake2_128Concat, PostingIndex,
+        (),
+        ValueQuery,
     >;
     
     /// Convenience list of Accounts used by an identity. Useful for UI read performance
     #[pallet::storage]
     #[pallet::getter(fn ledger_by_id)]
-    pub type LedgerById<T: Config> = StorageMap<
+    pub type LedgerById<T: Config> = StorageDoubleMap<
         _, 
         Blake2_128Concat, T::AccountId,
-        BoundedVec<Ledger, T::MaxLedgers>,
-        OptionQuery,
+        Blake2_128Concat, Ledger,
+        (),
+        ValueQuery,
     >;
 
     /// Accounting Balances.
@@ -232,12 +234,12 @@ mod pallet {
 
             <PostingNumber<T>>::put(&posting_index);
             <GlobalLedger::<T>>::insert(&ledger, total);
-
+            
             for (a, b) in &self.opening_balances {
                 // create balance key for account
                 let account_balance_key = (a.clone(), ledger.clone());
                 let posting_key = (a.clone(), ledger.clone(), posting_index);
-
+                
                 let detail = Detail {
                     counterparty: a.clone(),
                     amount: b.clone(),
@@ -246,7 +248,9 @@ mod pallet {
                     changed_on_blocknumber: block_number,
                     applicable_period_blocknumber: block_number,
                 };
-
+                
+                <LedgerById::<T>>::insert(&a, &ledger, ());
+                <IdLedgerPostingIdxList::<T>>::insert(&account_balance_key, &posting_index, ());
                 <BalanceByLedger::<T>>::insert(&account_balance_key, b);                
                 <PostingDetail::<T>>::insert(&posting_key, detail);
 			}
@@ -260,15 +264,6 @@ mod pallet {
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
             + Convert<[u8; 32], Self::AccountId>;
         type Currency: Currency<Self::AccountId>;
-        
-        /// The maximum nr of Ledgers.
-		#[pallet::constant]
-		type MaxLedgers: Get<u32>;
-
-        /// The maximum nr of Postings per AccountId.
-		#[pallet::constant]
-		type MaxPostings: Get<u32>;
-
     }
 
     #[pallet::error]
@@ -334,69 +329,31 @@ mod pallet {
         ) -> DispatchResult {
             let balance_key = (key.primary_party.clone(), key.ledger.clone());
             let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
-            
+            let abs_amount: LedgerBalance =  key.amount.clone().abs();
             let detail = Detail {
                 counterparty: key.counterparty.clone(),
-                amount: key.amount.clone(),
+                amount: abs_amount,
                 debit_credit: key.debit_credit,
                 reference_hash: key.reference_hash,
                 changed_on_blocknumber: key.changed_on_blocknumber,
                 applicable_period_blocknumber: key.applicable_period_blocknumber,
             };
-
+            
+            // Maintain a unique list of ledgers used by an accountId
+            LedgerById::<T>::insert(&key.primary_party, &key.ledger, ());
+            // Maintain a unique list of posting indices per accountId and ledger
+            IdLedgerPostingIdxList::<T>::insert(&balance_key, &posting_index, ());
+            
             // !! Warning !!
             // Values could feasibly overflow, with no visibility on other accounts. In this event this function returns an error.
             // Reversals must occur in the parent function (i.e. that calls this function).
             // As all values passed to this function are already signed +/- we only need to sum to the previous balance and check for overflow
-            // Updates are only made to storage once tests below are passed for debits or credits.
-            
+            // Updates are only made to storage once tests below are passed for debits or credits.            
 			match <BalanceByLedger<T>>::get(&balance_key) {
 				None => BalanceByLedger::<T>::insert(&balance_key, key.amount.clone()),
 				Some(b) => {
                     let new_balance = b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
                     BalanceByLedger::<T>::insert(&balance_key, new_balance);
-                    // Maintain a unique list of posting indices per accountId
-                    // IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.retain(|i| i != &posting_index)});
-                    // IdLedgerPostingIdxList::<T>::mutate(&balance_key, |v| {v.push(posting_index)});
-
-                    
-                    
-                    IdLedgerPostingIdxList::<T>::mutate(|v| {
-                        v.retain(|h| h != &posting_index);
-                    });
-
-                    // let num_proposals = Proposals::<T, I>::mutate(|proposals| {
-                    //     proposals.retain(|h| h != &proposal_hash);
-                    //     proposals.len() + 1 // calculate weight based on original length
-                    // });
-
-
-					<IdLedgerPostingIdxList<T>>::try_mutate(|v| {
-						v.try_push(posting_index)
-						 .map_err(|_| Error::<T>::TooManyPostings)?;
-					})?;
-
-                    // let active_proposals =
-					// <Proposals<T, I>>::try_mutate(|proposals| -> Result<usize, DispatchError> {
-					// 	proposals
-					// 		.try_push(proposal_hash)
-					// 		.map_err(|_| Error::<T, I>::TooManyProposals)?;
-					// 	Ok(proposals.len())
-					// })?;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                 },
 			};
             
@@ -407,10 +364,6 @@ mod pallet {
                     GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
                 },
 			};
-            
-            // Maintain a unique list of ledgers used by an accountId
-            LedgerById::<T>::mutate(&key.primary_party, |v| v.retain(|h| h != &key.ledger));
-            LedgerById::<T>::mutate(&key.primary_party, |v| v.push(key.ledger));
 
             PostingNumber::<T>::put(posting_index);
             PostingDetail::<T>::insert(&posting_key, detail);
