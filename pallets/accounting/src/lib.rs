@@ -166,18 +166,17 @@ mod pallet {
             let reference_hash: T::Hash = T::Hashing::hash(input.encode().as_slice());
             let block_number: T::BlockNumber = 0u32.into();
             let posting_index: PostingIndex = 0;
+            // Reserves is a Debit Balance Account
             let mint_to: Ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
+            // Reserves is a Credit Balance Account
             let account_for: Ledger = Ledger::BalanceSheet(B::Equity(E::NetworkReserves));
-            
-            let increase_total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
-            let decrease_total = -increase_total.clone();
+            let total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
             
             <PostingNumber<T>>::put(&posting_index);
-            <GlobalLedger::<T>>::insert(&mint_to, increase_total);
-            <GlobalLedger::<T>>::insert(&account_for, decrease_total);
+            <GlobalLedger::<T>>::insert(&mint_to, total.clone());
+            <GlobalLedger::<T>>::insert(&account_for, total);
             
             for (address, balance) in &self.opening_balances {
-                // create balance key for account
                 let account_balance_key_debit = (address.clone(), mint_to.clone());
                 let account_balance_key_credit = (address.clone(), account_for.clone());
                 
@@ -198,12 +197,9 @@ mod pallet {
                     changed_on_blocknumber: block_number,
                     applicable_period_blocknumber: block_number,
                 };
-
-                let increase_amount = balance;
-                let decrease_amount = -increase_amount.clone();
                 
-                <BalanceByLedger::<T>>::insert(&address, &mint_to, increase_amount);
-                <BalanceByLedger::<T>>::insert(&address, &account_for, decrease_amount);
+                <BalanceByLedger::<T>>::insert(&address, &mint_to, balance.clone());
+                <BalanceByLedger::<T>>::insert(&address, &account_for, balance);
                 <PostingDetail::<T>>::insert(&account_balance_key_debit, &posting_index, detail_debit);
                 <PostingDetail::<T>>::insert(&account_balance_key_credit, &posting_index, detail_credit);
 			}
