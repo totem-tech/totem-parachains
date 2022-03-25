@@ -37,7 +37,32 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
-
+/// Blockchain Specific Functionality - Expenses
+#[allow(non_camel_case_types)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[scale_info(capture_docs = "always")]
+pub enum TXOUT {
+    /// Used for generalised network transactions
+    NetworkTransaction,
+    /// Used to distribute the crowdloan funds
+    Crowdloan,
+    /// P50_0030_D000,
+    NetworkTransactionFees,
+    /// P50_0009_D003,
+    NetworkValidationReward,
+}
+/// Blockchain Specific Functionality - Receipts
+#[allow(non_camel_case_types)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[scale_info(capture_docs = "always")]
+pub enum TXIN {
+    /// Used for generalised network transactions
+    TransactionReceipt,
+    /// P40_0007_C000,
+    NetworkValidationIncome,
+    /// P40_0008_C000,
+    NetworkFeeIncome,
+}
 /// ChangesInInventories
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -234,8 +259,6 @@ pub enum _0009_ {
     IntercompanyExpense,
     /// P50_0009_D002,
     IntercompanyIncome,
-    /// P50_0009_D003,
-    NetwrkValidationReward,
 }
 /// Marketing Programs
 #[allow(non_camel_case_types)]
@@ -718,8 +741,8 @@ pub enum RecoveredExpenses {
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum _0030_ {
-    /// P50_0030_D000,
-    NetworkTransactionFees,
+    /// Blockchain specific expense classification
+    Blockchain(TXOUT),
     /// P50_0030_D001,
     BankCharges,
     /// P50_0030_D002,
@@ -1461,12 +1484,10 @@ pub enum Sales {
     FreightBillable,
     /// P40_0006_C000,
     CommissionBillable,
-    /// P40_0007_C000,
-    NetwrkValidationIncome,
-    /// P40_0008_C000,
-    NetworkFeeIncome,
     /// P40_0009_C000,
     MiscellaneousIncome,
+    /// Chain specific income types
+    Blockchain(TXIN),
 }
 /// Other Income Interest Income
 #[allow(non_camel_case_types)]
@@ -1518,7 +1539,7 @@ pub enum OtherIncome {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum OtherOperatingIncome {
+pub enum OOPIN {
     /// P42_1001_C000,
     ShareOfProfitLossOf(II),
     /// P42_1002_C000,
@@ -1529,7 +1550,7 @@ pub enum OtherOperatingIncome {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum OtherComprehensiveIncome {
+pub enum OCI {
     /// P43_2001_C000,
     DebtInstr,
     /// P43_2001_C001,
@@ -1622,7 +1643,7 @@ pub enum OPEX {
     /// _0029_(_0029_),
     LegalFees(_0029_),
     /// _0030_(_0030_),
-    AdministrationCost(_0030_),
+    AdminCosts(_0030_),
     /// _0031_(_0031_),
     BadDebts(_0031_),
     /// _0032_(_0032_),
@@ -1643,7 +1664,7 @@ pub enum OPEX {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum OtherOperatingExpenses {
+pub enum OOPEX {
     /// _1001_(_1001_),
     MiscellaneousCharges(OMC),
 }
@@ -1717,6 +1738,8 @@ pub enum E {
     CapitalStock(CapitalStock),
     OtherReserves(OtherReserves),
     RetainedEarnings(RetainedEarnings),
+    /// A special type of equity for the creation of the internal currency.
+    NetworkReserves,
 }
 /// Income
 #[allow(non_camel_case_types)]
@@ -1725,8 +1748,8 @@ pub enum E {
 pub enum I {
     Sales(Sales),
     OtherIncome(OtherIncome),
-    OtherOperatingIncome(OtherOperatingIncome),
-    OtherComprehensiveIncome(OtherComprehensiveIncome),
+    OtherOperatingIncome(OOPIN),
+    OtherComprehensiveIncome(OCI),
 }
 /// Expenses
 #[allow(non_camel_case_types)]
@@ -1734,7 +1757,7 @@ pub enum I {
 #[scale_info(capture_docs = "always")]
 pub enum X {
     OperatingExpenses(OPEX),
-    OtherOperatingExpenses(OtherOperatingExpenses),
+    OtherOperatingExpenses(OOPEX),
     PersonnelCosts(PersonnelCosts),
     FinanceCosts(FinanceCosts),
 }

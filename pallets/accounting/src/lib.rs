@@ -37,52 +37,23 @@
 
 //! The main Totem Global Accounting Ledger
 //!
-//! It handles all the ledger postings.
-//! The account number follows the chart of accounts definitions and is constructed as a concatenation of:
-//!
-//! * Financial Statement Type Number int length 1 (Mainly Balance Sheet, Profit and Loss, and Memorandum)
-//! * Account Category Number int length 1 (Mainly Assets, liabilities, Equity, Revenue and Expense, and non-balance sheet)
-//! * Account Category Group number int length 1 (e.g. grouping expenses: operating expense, other opex, personnel costs)
-//! * Accounting Group Nr concatenation of int length 4 + int length 4. The first four digits incrementing within the Category Group (e.g. range 1000-1999) for individual Accounting Group values
-//! associated with the Category Group Number. The second four digits incrementing within the group (e.g. range 10001000-10001999) for individual Accounting Groups within the group itself.
-//! * The last 4 ints are the Accounting Subgroup Number which specify where the value is posted.
-//!
-//! For example 250500120000011
-//! Statement Type: Profit and Loss (2)
-//! Account Category: Expenses (5)
-//! Account Category Grp: Operating Expenses (0),
-//! Accounting Group: Services (50012000),
-//! Accounting Subgroup: Technical Assitance (0011)
-//!
-//! In other accounting systems there are further values hierarchically below the subgroup (for example if you have multiple bank accounts), but this is not necessary in Totem as this is
-//! replaced by the notion of Identity. The key takeaway is that everything in Totem is a property of an Identity
-//!
-//! For example in reporting Amount_ou may drill down to the detail in a heirarchical report like this:
-//! 110100010000000 Balance Sheet > Assets > Current Assets > Bank Current > CitiCorp Account (Identity)
-//! 110100010000000 Balance Sheet > Assets > Current Assets > Bank Current > Bank of America Account (Identity)
-//! Here the Ledger Account has a 1:n relationship to the identities, and therefore aggregates results
-//!
-//! In fact this is just the rearrangement of the attributes or properties of an individual identity
-//! CitiCorp Account (Identity) has properties > Bank Current > Current Assets > Assets > Balance Sheet > 110100010000000
-//! Bank of America Account (Identity) has properties > Bank Current > Current Assets > Assets > Balance Sheet > 110100010000000
-//! Here the Identity has a 1:1 relationship to its properties defined in the account number that is being posted to
-//!
 //! # Totem Live Accounting Primitives
 //!
-//! * All entities operating on the Totem Live Accounting network have XTX as the Functional Currency. This cannot be changed.
+//! * All entities operating on the Totem Live Accounting network have KAPEX as the Functional Currency. This cannot be changed.
 //! * All accounting is carried out on Accrual basis.
-//! * Accounting periods close every block, although entities are free to choose a specific block for longer periods (month/year close is a nominated block number, periods are defined by  block number ranges)
+//! * Accounting periods will close every block, although entities are free to choose a specific block for longer periods (month/year close is a nominated block number)
+//! * Periods are defined by block number ranges
 //! * In order to facilitate expense recognistion for example the period in which the transaction is recorded, may not necessrily be the period in which the
 //! transaction is recognised) adjustments must specify the period(block number or block range) to which they relate. By default the transaction block number and the period block number are identical on first posting.
 //!
 //! # Curency Types
 //!
 //! The UI provides spot rate for live results for Period close reporting (also known as Reporting Currency or Presentation Currency), which is supported byt the exchange rates module.
-//! General rules for Currency conversion at Period Close follow GAAP rules and are carried out as follows:
-//! * Revenue recognition in the period when they occur, and expenses recognised (including asset consumption) in the same period as the revenue to which they relate
-//! is recognised.
+//! General rules for Currency conversion at Period Close follow IFRS rules and are carried out as follows:
+//! * Revenue recognition in the period when they occur, 
+//! * Expenses recognised (including asset consumption) in the same period as the revenue to which they relate.
 //! * All other expenses are recognised in the period in which they occur.
-//! * Therefore the currency conversion for revenue and related expenses is calculated at the spot rate for the period (block) in which they are recognised.
+//! * Therefore the currency conversion for revenue and related expenses is calculated at the spot rate for the period (block number) in which they are recognised.
 //! * All other currency conversions are made at the rate for the period close. The UI can therefore present the correct conversions for any given value at any point in time.
 
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -99,7 +70,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        storage::{ Key, KeyPrefixIterator },
+        storage::{ KeyPrefixIterator },
         traits::{ Currency, StorageVersion },
         dispatch::DispatchResult,
     };
@@ -108,24 +79,6 @@ mod pallet {
     use sp_std::prelude::*;
 
     use totem_common::TryConvert;
-    // use totem_primitives::accounting::{
-    //     Indicator, 
-    //     Posting, 
-    //     Record, 
-    //     Ledger,
-    //     B, 
-    //     A, 
-    //     P, 
-    //     I, 
-    //     X, 
-    //     CurrentAssets,
-    //     Sales,
-    //     OperatingExpenses,
-    //     Cogs,
-    //     Commissions,
-    //     _0009_, 
-    //     _0030_,
-    // };
     use totem_primitives::accounting::*;
     
     use totem_primitives::{LedgerBalance, PostingIndex};
@@ -141,69 +94,57 @@ mod pallet {
     #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
-    /// Every accounting post gets an index.
+    /// The posting index is used to identify a group of related accounting entries
+    /// It provides unicity when used in combination with AccountId and Ledger for obtaining a detailed accounting entry
+    /// It is also a counter for the number of accounting entries made in the entire system
     #[pallet::storage]
     #[pallet::getter(fn posting_number)]
-    pub type PostingNumber<T: Config> = StorageValue<_, PostingIndex, ValueQuery>;
-    
-    /// Convenience list of posting indices for an identity
-    #[pallet::storage]
-    #[pallet::getter(fn id_ledger_posting_idx_list)]
-    pub type IdLedgerPostingIdxList<T: Config> = StorageDoubleMap<
+    pub type PostingNumber<T: Config> = StorageValue<
         _, 
-        Blake2_128Concat, (T::AccountId, Ledger),
-        Blake2_128Concat, PostingIndex,
-        (),
-        ValueQuery,
-    >;
-    
-    /// Convenience list of Accounts used by an identity. Useful for UI read performance
-    #[pallet::storage]
-    #[pallet::getter(fn ledger_by_id)]
-    pub type LedgerById<T: Config> = StorageDoubleMap<
-        _, 
-        Blake2_128Concat, T::AccountId,
-        Blake2_128Concat, Ledger,
-        (),
-        ValueQuery,
+        PostingIndex, 
+        ValueQuery
     >;
 
-    /// Accounting Balances.
+    /// Accounting Balances for each account by the ledgers that it uses.
+    /// Keys: AccountId, Ledger
+    /// Will select all ledgers and balances used by an AccountId when
+    /// only the AccountId is used to query storage 
     #[pallet::storage]
     #[pallet::getter(fn balance_by_ledger)]
-    pub type BalanceByLedger<T: Config> =
-        StorageMap<_, Blake2_128Concat, (T::AccountId, Ledger), LedgerBalance>;
+    pub type BalanceByLedger<T: Config> = StorageDoubleMap<
+        _, 
+        Blake2_128Concat, T::AccountId, 
+        Blake2_128Concat, Ledger,
+        LedgerBalance,
+        >;
 
-    /// Detail of the accounting posting (for Audit).
+    /// Detail of the accounting entry.
+    /// Keys: AccountId, Ledger, Posting Index
+    /// Will select all accounting entries for a given AccountId and Ledger combination when
+    /// only these keys are used to query storage 
     #[pallet::storage]
     #[pallet::getter(fn posting_detail)]
-    pub type PostingDetail<T: Config> = StorageNMap<
+    pub type PostingDetail<T: Config> = StorageDoubleMap<
         _,
-        (
-            Key<Blake2_128Concat, T::AccountId>,
-            Key<Blake2_128Concat, Ledger>,
-            Key<Twox64Concat, PostingIndex>,
-        ),
+        Blake2_128Concat, (T::AccountId, Ledger),
+        Blake2_128Concat, PostingIndex,
         Detail<T::AccountId, T::Hash, T::BlockNumber>,
     >;
 
     /// Yay! Totem!
+    /// A global ledger providing a global overview of the entire state of the accounting
+    /// across all ledgers. It does not provide the detail of the posting, just the balances. 
     #[pallet::storage]
     #[pallet::getter(fn global_ledger)]
-    pub type GlobalLedger<T: Config> = StorageMap<_, Blake2_128Concat, Ledger, LedgerBalance>;
-
-    /// Address to book the sales tax to and the tax jurisdiction (Experimental, may be deprecated in future).
-    #[pallet::storage]
-    #[pallet::getter(fn taxes_by_jurisdiction)]
-    pub type TaxesByJurisdiction<T: Config> =
-        StorageMap<_, Blake2_128Concat, (T::AccountId, T::AccountId), LedgerBalance>;
-
-    // TODO
-    // Quantities Accounting
-    // Depreciation (calculated everytime there is a transaction so as not to overwork the runtime) - sets "last seen block" to calculate the delta for depreciation
+    pub type GlobalLedger<T: Config> = StorageMap<
+        _, 
+        Blake2_128Concat, Ledger, 
+        LedgerBalance,
+        ValueQuery,
+    >;
 
     // The genesis config type.
-    // The Balances here should be exactly the same as configured in the Balances Pallet
+    // The Balances here should be exactly the same as configured in the Balances Pallet to set the opening balances correctly
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config> {
 		pub opening_balances: Vec<(T::AccountId, LedgerBalance)>,
@@ -217,42 +158,54 @@ mod pallet {
 		}
 	}
 
-	// The build of genesis for the pallet.
-    // Ensure that duplicate balances are not added
-    // The Internal Balances for the accounts will be added using the 
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
             
-            let debit: Indicator = Indicator::Debit;
             let input = *b"TotemsOpeningBalancesGenesisHash";
             let reference_hash: T::Hash = T::Hashing::hash(input.encode().as_slice());
             let block_number: T::BlockNumber = 0u32.into();
             let posting_index: PostingIndex = 0;
-            let ledger: Ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
-            let total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
-
-            <PostingNumber<T>>::put(&posting_index);
-            <GlobalLedger::<T>>::insert(&ledger, total);
+            let mint_to: Ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
+            let account_for: Ledger = Ledger::BalanceSheet(B::Equity(E::NetworkReserves));
             
-            for (a, b) in &self.opening_balances {
+            let increase_total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
+            let decrease_total = -increase_total.clone();
+            
+            <PostingNumber<T>>::put(&posting_index);
+            <GlobalLedger::<T>>::insert(&mint_to, increase_total);
+            <GlobalLedger::<T>>::insert(&account_for, decrease_total);
+            
+            for (address, balance) in &self.opening_balances {
                 // create balance key for account
-                let account_balance_key = (a.clone(), ledger.clone());
-                let posting_key = (a.clone(), ledger.clone(), posting_index);
+                let account_balance_key_debit = (address.clone(), mint_to.clone());
+                let account_balance_key_credit = (address.clone(), account_for.clone());
                 
-                let detail = Detail {
-                    counterparty: a.clone(),
-                    amount: b.clone(),
-                    debit_credit: debit,
+                let detail_debit = Detail {
+                    counterparty: address.clone(),
+                    amount: balance.clone(),
+                    debit_credit: Indicator::Debit,
                     reference_hash: reference_hash,
                     changed_on_blocknumber: block_number,
                     applicable_period_blocknumber: block_number,
                 };
+  
+                let detail_credit = Detail {
+                    counterparty: address.clone(),
+                    amount: balance.clone(),
+                    debit_credit: Indicator::Credit,
+                    reference_hash: reference_hash,
+                    changed_on_blocknumber: block_number,
+                    applicable_period_blocknumber: block_number,
+                };
+
+                let increase_amount = balance;
+                let decrease_amount = -increase_amount.clone();
                 
-                <LedgerById::<T>>::insert(&a, &ledger, ());
-                <IdLedgerPostingIdxList::<T>>::insert(&account_balance_key, &posting_index, ());
-                <BalanceByLedger::<T>>::insert(&account_balance_key, b);                
-                <PostingDetail::<T>>::insert(&posting_key, detail);
+                <BalanceByLedger::<T>>::insert(&address, &mint_to, increase_amount);
+                <BalanceByLedger::<T>>::insert(&address, &account_for, decrease_amount);
+                <PostingDetail::<T>>::insert(&account_balance_key_debit, &posting_index, detail_debit);
+                <PostingDetail::<T>>::insert(&account_balance_key_credit, &posting_index, detail_credit);
 			}
 		}
 	}
@@ -291,18 +244,18 @@ mod pallet {
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
-    #[pallet::call]
-    impl<T: Config> Pallet<T> {
-        #[pallet::weight(0/*TODO*/)]
-        pub fn opening_balance(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-            todo!()
-        }
+    // #[pallet::call]
+    // impl<T: Config> Pallet<T> {
+    //     #[pallet::weight(0/*TODO*/)]
+    //     pub fn opening_balance(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+    //         todo!()
+    //     }
 
-        #[pallet::weight(0/*TODO*/)]
-        pub fn adjustment(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-            todo!()
-        }
-    }
+    //     #[pallet::weight(0/*TODO*/)]
+    //     pub fn adjustment(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+    //         todo!()
+    //     }
+    // }
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -317,18 +270,21 @@ mod pallet {
 
     impl<T: Config> Pallet<T> {
         /// Basic posting function (warning! can cause imbalance if not called with corresponding debit or credit entries)
-        /// The reason why this is a simple function is that (for example) one debit posting may correspond with one or many credit
+        /// The reason why this is a simple function is that one debit posting may or may not correspond with one or many credit
         /// postings and vice-versa. For example a debit to Accounts Receivable is the gross invoice amount, which could correspond with
         /// a credit to liabilities for the sales tax amount and a credit to revenue for the net invoice amount. The sum of both credits being
         /// equal to the single debit in accounts receivable, but only one posting needs to be made to that account, and two posting for the others.
         /// The Totem Accounting Recipes are constructed using this simple function.
-        /// The second Blocknumber is for re-targeting the entry in the accounts, i.e. for adjustments prior to or after the current period (generally accruals).
+        /// The applicable_period_blocknumber is for re-targeting the entry in the accounts, i.e. for adjustments prior to or after the current period (generally accruals).
+        /// It is also used for reporting purposes. 
+        /// The changed_on_blocknumber is used to facilitate audit, but is not technically needed as a full archive node could also provide this information from the state
+        /// changes apparent in every block.
         fn post_amounts(
             key: Record<T::AccountId, T::Hash, T::BlockNumber>,
             posting_index: PostingIndex,
         ) -> DispatchResult {
             let balance_key = (key.primary_party.clone(), key.ledger.clone());
-            let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
+            // let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
             let abs_amount: LedgerBalance =  key.amount.clone().abs();
             let detail = Detail {
                 counterparty: key.counterparty.clone(),
@@ -339,34 +295,28 @@ mod pallet {
                 applicable_period_blocknumber: key.applicable_period_blocknumber,
             };
             
-            // Maintain a unique list of ledgers used by an accountId
-            LedgerById::<T>::insert(&key.primary_party, &key.ledger, ());
-            // Maintain a unique list of posting indices per accountId and ledger
-            IdLedgerPostingIdxList::<T>::insert(&balance_key, &posting_index, ());
-            
             // !! Warning !!
             // Values could feasibly overflow, with no visibility on other accounts. In this event this function returns an error.
             // Reversals must occur in the parent function (i.e. that calls this function).
             // As all values passed to this function are already signed +/- we only need to sum to the previous balance and check for overflow
             // Updates are only made to storage once tests below are passed for debits or credits.            
-			match <BalanceByLedger<T>>::get(&balance_key) {
-				None => BalanceByLedger::<T>::insert(&balance_key, key.amount.clone()),
+			match <BalanceByLedger<T>>::get(&key.primary_party, &key.ledger) {
+				None => BalanceByLedger::<T>::insert(&key.primary_party, &key.ledger, key.amount.clone()),
 				Some(b) => {
                     let new_balance = b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
-                    BalanceByLedger::<T>::insert(&balance_key, new_balance);
+                    BalanceByLedger::<T>::insert(&key.primary_party, &key.ledger, new_balance);
                 },
 			};
             
-			match <GlobalLedger<T>>::get(&key.ledger) {
-                None => GlobalLedger::<T>::insert(&key.ledger, key.amount.clone()),
-				Some(b) => {
-                    let new_global_balance = b.checked_add(key.amount).ok_or(Error::<T>::GlobalBalanceValueOverflow)?;
+            if let Some(new_global_balance) = <GlobalLedger<T>>::get(&key.ledger)
+                .checked_add(key.amount) {
                     GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
-                },
-			};
+            } else {
+                GlobalLedger::<T>::insert(&key.ledger, key.amount.clone());
+            }; 
 
             PostingNumber::<T>::put(posting_index);
-            PostingDetail::<T>::insert(&posting_key, detail);
+            PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
             
             Self::deposit_event(Event::LegderUpdate(
                 key.primary_party,
@@ -376,18 +326,6 @@ mod pallet {
             ));
 
             Ok(())
-        }
-
-        pub fn get_accounts(_account_id: T::AccountId) -> KeyPrefixIterator<Ledger> {
-            //<PostingDetail<T>>::iter_key_prefix((&account_id,))
-            todo!("See https://github.com/paritytech/substrate/issues/5319")
-        }
-
-        pub fn get_posting_item(
-            account_id: T::AccountId,
-            account: Ledger,
-        ) -> KeyPrefixIterator<PostingIndex> {
-            <PostingDetail<T>>::iter_key_prefix((&account_id, &account))
         }
 
         /// Return a pair of:
@@ -497,7 +435,7 @@ mod pallet {
                 Record {
                     primary_party: from.clone(),
                     counterparty: to.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::DirectorsLoanAccount))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkTransaction))))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash,
@@ -517,7 +455,7 @@ mod pallet {
                 Record {
                     primary_party: to.clone(),
                     counterparty: from.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::MiscellaneousIncome))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::TransactionReceipt)))), 
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash,
@@ -525,10 +463,7 @@ mod pallet {
                     applicable_period_blocknumber: current_block_dupe,
                 },
             ];
-            // match Self::handle_multiposting_amounts(&keys) {
-            //     Ok(_) => (),
-            //     Err(e) => fail!(e),
-            // }
+
             Self::handle_multiposting_amounts(&keys)?;
 
             Ok(())
@@ -570,7 +505,7 @@ mod pallet {
                 Record {
                     primary_party: payer.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdministrationCost(_0030_::NetworkTransactionFees)))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkTransactionFees))))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -590,7 +525,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetworkFeeIncome))),
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkFeeIncome)))),
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -605,6 +540,7 @@ mod pallet {
         }
         
         /// This function handles burnt fee amounts when the fee rewards distribution fails.
+        /// Related to the asset_tx_payment pallet HandleCredit
         fn account_for_burnt_fees(
             fee: CurrencyBalanceOf<T>,
             loser: T::AccountId,
@@ -647,7 +583,8 @@ mod pallet {
             Ok(())
         }
 
-        /// This function takes is used in the asset transaction payment pallet to payout validators and account for their gains.
+        /// This function takes is used to payout validators and account for their gains.
+        /// Related to the asset_tx_payment pallet
         fn distribute_fees_rewards(
             fee: CurrencyBalanceOf<T>,
             author: T::AccountId,
@@ -675,7 +612,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: author.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Commissions(_0009_::NetwrkValidationReward)))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkValidationReward))))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: fee_hash,
@@ -695,7 +632,7 @@ mod pallet {
                 Record {
                     primary_party: author.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::NetwrkValidationIncome))), 
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkValidationIncome)))), 
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
@@ -713,7 +650,7 @@ mod pallet {
             let input = (
                 (sender, recipient),
                 pallet_timestamp::Pallet::<T>::get(),
-                // sp_io::offchain::random_seed(),
+                sp_io::offchain::random_seed(),
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );
@@ -722,26 +659,3 @@ mod pallet {
         }
     }
 }
-
-// Record {
-//     primary_party: payer.clone(),
-//     counterparty: netfee_address.clone(),
-//     ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-//     amount: decrease_amount,
-//     debit_credit: Indicator::Credit,
-//     reference_hash: fee_hash,
-//     changed_on_blocknumber: current_block,
-//     applicable_period_blocknumber: current_block_dupe,
-// },
-
-// let detail = Detail {
-//     counterparty: key.counterparty.clone(),
-//     amount: key.amount.clone(),
-//     debit_credit: key.debit_credit,
-//     reference_hash: key.reference_hash,
-//     changed_on_blocknumber: key.changed_on_blocknumber,
-//     applicable_period_blocknumber: key.applicable_period_blocknumber,
-// };
-
-// let balance_key = (key.primary_party.clone(), key.ledger.clone());
-// let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
