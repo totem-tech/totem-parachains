@@ -103,7 +103,7 @@ impl Posting for Test {
 
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
-    pub const SS58Prefix: u8 = 42;
+    pub const SS58Prefix: u8 = 200;
 }
 impl system::Config for Test {
     type BaseCallFilter = ();
