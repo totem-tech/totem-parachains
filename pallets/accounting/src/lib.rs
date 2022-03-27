@@ -70,7 +70,6 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        storage::{ KeyPrefixIterator },
         traits::{ Currency, StorageVersion },
         dispatch::DispatchResult,
     };
@@ -217,24 +216,14 @@ mod pallet {
 
     #[pallet::error]
     pub enum Error<T> {
-        /// Error fetching the balance by ledger.
-        BalanceByLedgerFetching,
-        /// Error fetching the global ledger.
-        GlobalLedgerFetching,
         /// Posting index overflowed.
         PostingIndexOverflow,
         /// Balance Value overflowed.
         BalanceValueOverflow,
-        /// Global Balance Value overflowed.
-        GlobalBalanceValueOverflow,
-        /// Failure in multiposting
-        MultipostingFailure,
         /// System failure in Account Posting.
         SystemFailure,
         /// Overflow error, amount too big.
         AmountOverflow,
-        /// Too many postings
-        TooManyPostings,
     }
 
     #[pallet::hooks]
@@ -535,112 +524,113 @@ mod pallet {
             Ok(())
         }
         
-        /// This function handles burnt fee amounts when the fee rewards distribution fails.
-        /// Related to the asset_tx_payment pallet HandleCredit
-        fn account_for_burnt_fees(
-            fee: CurrencyBalanceOf<T>,
-            loser: T::AccountId,
-        ) -> DispatchResult {
-            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
-            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
-            let current_block_dupe = current_block; // Applicable period for accounting
+        // SUSPENDED until the ASSET_TX_PAYMENT Pallet introduced.
+        // /// This function handles burnt fee amounts when the fee rewards distribution fails.
+        // /// Related to the asset_tx_payment pallet HandleCredit
+        // fn account_for_burnt_fees(
+        //     fee: CurrencyBalanceOf<T>,
+        //     loser: T::AccountId,
+        // ) -> DispatchResult {
+        //     let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
+        //     let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+        //     let current_block_dupe = current_block; // Applicable period for accounting
 
-            let fee_hash: T::Hash = Self::get_pseudo_random_hash(loser.clone(), loser.clone());
+        //     let fee_hash: T::Hash = Self::get_pseudo_random_hash(loser.clone(), loser.clone());
 
-            let netfee_address: T::AccountId = Self::get_netfees_account();
+        //     let netfee_address: T::AccountId = Self::get_netfees_account();
 
-            // this is a single adjustment on the network fees account keeping the current balance correct,
-            // but also indicating 
-            let keys = [
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: loser.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-                    amount: decrease_amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: loser.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::CostOfGoodsSold(COGS::CryptoBurnWriteDown)))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-            ];
+        //     // this is a single adjustment on the network fees account keeping the current balance correct,
+        //     // but also indicating 
+        //     let keys = [
+        //         Record {
+        //             primary_party: netfee_address.clone(),
+        //             counterparty: loser.clone(),
+        //             ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+        //             amount: decrease_amount,
+        //             debit_credit: Indicator::Credit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //         Record {
+        //             primary_party: netfee_address.clone(),
+        //             counterparty: loser.clone(),
+        //             ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::CostOfGoodsSold(COGS::CryptoBurnWriteDown)))),
+        //             amount: increase_amount,
+        //             debit_credit: Indicator::Debit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //     ];
 
-            Self::handle_multiposting_amounts(&keys)?;
+        //     Self::handle_multiposting_amounts(&keys)?;
             
-            Ok(())
-        }
+        //     Ok(())
+        // }
 
-        /// This function takes is used to payout validators and account for their gains.
-        /// Related to the asset_tx_payment pallet
-        fn distribute_fees_rewards(
-            fee: CurrencyBalanceOf<T>,
-            author: T::AccountId,
-        ) -> DispatchResult {
-            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
-            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
-            let current_block_dupe = current_block; // Applicable period for accounting
+        // /// This function takes is used to payout validators and account for their gains.
+        // /// Related to the asset_tx_payment pallet
+        // fn distribute_fees_rewards(
+        //     fee: CurrencyBalanceOf<T>,
+        //     author: T::AccountId,
+        // ) -> DispatchResult {
+        //     let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
+        //     let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+        //     let current_block_dupe = current_block; // Applicable period for accounting
 
-            let fee_hash: T::Hash = Self::get_pseudo_random_hash(author.clone(), author.clone());
+        //     let fee_hash: T::Hash = Self::get_pseudo_random_hash(author.clone(), author.clone());
 
-            let netfee_address: T::AccountId = Self::get_netfees_account();
+        //     let netfee_address: T::AccountId = Self::get_netfees_account();
 
-            // This handles the payout to the block author
-            let keys = [
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: author.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-                    amount: decrease_amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: author.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkValidationReward))))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: author.clone(),
-                    counterparty: netfee_address.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: author.clone(),
-                    counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkValidationIncome)))), 
-                    amount: increase_amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-            ];
+        //     // This handles the payout to the block author
+        //     let keys = [
+        //         Record {
+        //             primary_party: netfee_address.clone(),
+        //             counterparty: author.clone(),
+        //             ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+        //             amount: decrease_amount,
+        //             debit_credit: Indicator::Credit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //         Record {
+        //             primary_party: netfee_address.clone(),
+        //             counterparty: author.clone(),
+        //             ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkValidationReward))))),
+        //             amount: increase_amount,
+        //             debit_credit: Indicator::Debit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //         Record {
+        //             primary_party: author.clone(),
+        //             counterparty: netfee_address.clone(),
+        //             ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+        //             amount: increase_amount,
+        //             debit_credit: Indicator::Debit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //         Record {
+        //             primary_party: author.clone(),
+        //             counterparty: netfee_address.clone(),
+        //             ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkValidationIncome)))), 
+        //             amount: increase_amount,
+        //             debit_credit: Indicator::Credit,
+        //             reference_hash: fee_hash,
+        //             changed_on_blocknumber: current_block,
+        //             applicable_period_blocknumber: current_block_dupe,
+        //         },
+        //     ];
 
-            Self::handle_multiposting_amounts(&keys)?;
+        //     Self::handle_multiposting_amounts(&keys)?;
 
-            Ok(())
-        }
+        //     Ok(())
+        // }
 
         fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
             let input = (

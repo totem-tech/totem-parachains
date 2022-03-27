@@ -60,8 +60,8 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 	) -> DispatchResult;
 
 	fn account_for_fees(fee: CoinAmount, payer: AccountId) -> DispatchResult;
-	fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> DispatchResult;
-	fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> DispatchResult;
+	// fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> DispatchResult;
+	// fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> DispatchResult;
 
 	fn get_escrow_account() -> AccountId;
 
@@ -140,13 +140,13 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> DispatchResult {
-		unimplemented!("Used as a mock, shouldn't be called")
-	}
+	// fn account_for_burnt_fees(_f: CoinAmount, _p: AccountId) -> DispatchResult {
+	// 	unimplemented!("Used as a mock, shouldn't be called")
+	// }
 
-	fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> DispatchResult {
-		unimplemented!("Used as a mock, shouldn't be called")
-	}
+	// fn distribute_fees_rewards(_f: CoinAmount, _p: AccountId) -> DispatchResult {
+	// 	unimplemented!("Used as a mock, shouldn't be called")
+	// }
 
 	fn get_escrow_account() -> AccountId {
 		unimplemented!("Used as a mock, shouldn't be called")
