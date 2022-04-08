@@ -36,7 +36,8 @@
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
 use codec::{Decode, Encode, MaxEncodedLen};
-use scale_info::TypeInfo;
+use frame_support::{dispatch::TypeInfo};
+// use scale_info::TypeInfo;
 /// Blockchain Specific Functionality - Expenses
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]

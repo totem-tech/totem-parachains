@@ -1,7 +1,7 @@
 use crate::{
 	chain_spec,
 	cli::{Cli, RelayChainCli, Subcommand},
-	service::{new_partial, TemplateRuntimeExecutor},
+	service::{new_partial, TotemParachainRuntimeExecutor},
 };
 use codec::Encode;
 use cumulus_client_service::genesis::generate_genesis_block;
@@ -80,7 +80,7 @@ impl SubstrateCli for Cli {
 
 impl SubstrateCli for RelayChainCli {
 	fn impl_name() -> String {
-		"Relaychainfor Totem Parachain".into()
+		"Relaychain for Totem Parachain".into()
 	}
 
 	fn impl_version() -> String {
@@ -132,7 +132,7 @@ macro_rules! construct_async_run {
 		runner.async_run(|$config| {
 			let $components = new_partial::<
 				RuntimeApi,
-				TemplateRuntimeExecutor,
+				TotemParachainRuntimeExecutor,
 				_
 			>(
 				&$config,
@@ -245,7 +245,7 @@ pub fn run() -> Result<()> {
 			if cfg!(feature = "runtime-benchmarks") {
 				let runner = cli.create_runner(cmd)?;
 
-				runner.sync_run(|config| cmd.run::<Block, TemplateRuntimeExecutor>(config))
+				runner.sync_run(|config| cmd.run::<Block, TotemParachainRuntimeExecutor>(config))
 			} else {
 				Err("Benchmarking wasn't enabled when building the node. \
 				You can enable it with `--features runtime-benchmarks`."
@@ -262,7 +262,7 @@ pub fn run() -> Result<()> {
 						.map_err(|e| format!("Error: {:?}", e))?;
 
 				runner.async_run(|config| {
-					Ok((cmd.run::<Block, TemplateRuntimeExecutor>(config), task_manager))
+					Ok((cmd.run::<Block, TotemParachainRuntimeExecutor>(config), task_manager))
 				})
 			} else {
 				Err("Try-runtime must be enabled by `--features try-runtime`.".into())
@@ -270,6 +270,7 @@ pub fn run() -> Result<()> {
 		},
 		None => {
 			let runner = cli.create_runner(&cli.run.normalize())?;
+			let collator_options = cli.run.collator_options();
 
 			runner.run_node_until_exit(|config| async move {
 				let para_id = chain_spec::Extensions::try_get(&*config.chain_spec)
@@ -302,7 +303,7 @@ pub fn run() -> Result<()> {
 				info!("Parachain genesis state: {}", genesis_state);
 				info!("Is collating: {}", if config.role.is_authority() { "yes" } else { "no" });
 
-				crate::service::start_parachain_node(config, polkadot_config, id)
+				crate::service::start_parachain_node(config, polkadot_config, collator_options, id)
 					.await
 					.map(|r| r.0)
 					.map_err(Into::into)
@@ -441,5 +442,9 @@ impl CliConfiguration<Self> for RelayChainCli {
 		chain_spec: &Box<dyn ChainSpec>,
 	) -> Result<Option<sc_telemetry::TelemetryEndpoints>> {
 		self.base.base.telemetry_endpoints(chain_spec)
+	}
+
+	fn node_name(&self) -> Result<String> {
+		self.base.base.node_name()
 	}
 }

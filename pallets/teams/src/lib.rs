@@ -53,7 +53,7 @@ mod pallet {
     use totem_primitives::teams::{DeletedProject, ProjectStatus, Validating};
 
     #[pallet::pallet]
-    #[pallet::generate_store(trait Store)]
+    #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
     /// Status of the project.

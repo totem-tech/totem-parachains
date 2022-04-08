@@ -91,7 +91,7 @@ mod pallet {
     };
 
     #[pallet::pallet]
-    #[pallet::generate_store(trait Store)]
+    #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
     /// Bonsai Storage.

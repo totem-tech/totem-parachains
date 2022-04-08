@@ -48,8 +48,8 @@ pub mod teams;
 pub mod timekeeping;
 pub mod transfer;
 
-use frame_support::{dispatch::EncodeLike, pallet_prelude::*};
-use scale_info::TypeInfo;
+use frame_support::{dispatch::{ EncodeLike, TypeInfo }, pallet_prelude::*};
+// use scale_info::TypeInfo;
 use sp_std::vec::Vec;
 
 /// Balance on an account can be negative.

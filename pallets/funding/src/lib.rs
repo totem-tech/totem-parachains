@@ -49,7 +49,7 @@ mod pallet {
     use totem_primitives::Set;
 
     #[pallet::pallet]
-    #[pallet::generate_store(trait Store)]
+    #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
     /// Defines if the transfer mechanism is open yet.

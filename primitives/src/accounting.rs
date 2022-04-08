@@ -40,8 +40,8 @@ mod chart_of_accounts;
 pub use chart_of_accounts::{Ledger, *};
 
 use crate::LedgerBalance;
-use frame_support::{dispatch::{DispatchResult, EncodeLike}, pallet_prelude::*};
-use scale_info::TypeInfo;
+use frame_support::{dispatch::{ DispatchResult, EncodeLike, TypeInfo }, pallet_prelude::*};
+// use scale_info::TypeInfo;
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
 

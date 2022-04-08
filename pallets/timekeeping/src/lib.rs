@@ -68,7 +68,7 @@ mod pallet {
     use totem_primitives::{teams::Validating as ProjectValidating, timekeeping::*};
 
     #[pallet::pallet]
-    #[pallet::generate_store(trait Store)]
+    #[pallet::generate_store(pub(super) trait Store)]
     pub struct Pallet<T>(_);
 
     /// Project owner sends project ref to worker address (AccountId is the Worker).

@@ -47,7 +47,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-use codec::{Decode, Encode};
+use codec::{Decode, Encode, MaxEncodedLen};
 use scale_info::TypeInfo;
 
 use sp_runtime::{
@@ -60,7 +60,6 @@ use sp_runtime::{
 	},
 	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill, RuntimeDebug,
 };
-
 use sp_std::prelude::*;
 
 use frame_support::{
@@ -234,7 +233,7 @@ type BalanceOf<T> = <<T as Config>::OnChargeTransaction as OnChargeTransaction<T
 // }
 
 /// Storage releases of the pallet.
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo)]
+#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, TypeInfo, MaxEncodedLen)]
 enum Releases {
 	/// Original version of the pallet.
 	V1Ancient,
@@ -259,7 +258,7 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
-	#[pallet::without_storage_info]
+	// #[pallet::without_storage_info]
 	pub struct Pallet<T>(_);
 
 	#[pallet::config]
@@ -319,10 +318,9 @@ pub mod pallet {
 
 	#[pallet::extra_constants]
 	impl<T: Config> Pallet<T> {
-		// TODO: rename to snake case after https://github.com/paritytech/substrate/issues/8826 fixed.
-		#[allow(non_snake_case)]
+		#[pallet::constant_name(WeightToFee)]
 		/// The polynomial that is applied in order to derive fee from weight.
-		fn WeightToFee() -> Vec<WeightToFeeCoefficient<BalanceOf<T>>> {
+		fn weight_to_fee_polynomial() -> Vec<WeightToFeeCoefficient<BalanceOf<T>>> {
 			T::WeightToFee::polynomial().to_vec()
 		}
 	}
