@@ -20,11 +20,11 @@ codec = { package = "parity-scale-codec", version = "2.2.0", default-features = 
 scale-info = { version = "1.0", default-features = false, features = ["derive"] }
 totem-primitives = { path = '../../primitives', default-features = false }
 # primitives
-sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17', default-features = false }
-sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17', default-features = false }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
 # frame
-frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", branch = 'polkadot-v0.9.17', default-features = false }
-frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.17', default-features = false }
+frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", branch = 'polkadot-v0.9.18', default-features = false }
+frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
 
 [dev-dependencies]
 
