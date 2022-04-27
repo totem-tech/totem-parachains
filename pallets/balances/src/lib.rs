@@ -283,7 +283,7 @@ pub mod pallet {
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
 			// Totem Temporary Transfer Freeze
-			// ensure_root(origin.clone())?;
+			ensure_root(origin.clone())?;
 
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
@@ -389,7 +389,7 @@ pub mod pallet {
 			#[pallet::compact] value: T::Balance,
 		) -> DispatchResultWithPostInfo {
 			// Totem Temporary Transfer Freeze
-			// ensure_root(origin.clone())?;
+			ensure_root(origin.clone())?;
 			
 			let transactor = ensure_signed(origin)?;
 			let dest = T::Lookup::lookup(dest)?;
@@ -422,7 +422,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			use fungible::Inspect;
 			// Totem Temporary Transfer Freeze
-			// ensure_root(origin.clone())?;
+			ensure_root(origin.clone())?;
 
 			let transactor = ensure_signed(origin)?;
 			let reducible_balance = Self::reducible_balance(&transactor, keep_alive);
