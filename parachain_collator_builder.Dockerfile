@@ -10,14 +10,17 @@
 # --build-arg package=totem-parachain-node \
 # --build-arg buildtype=check .
 
-# docker build \
-# -t totemlive/totem-parachain:local \
-# -f parachain_collator_builder.Dockerfile \
-# --build-arg package=totem-parachain-node \
-# --build-arg buildtype=build .
+docker build \
+-t totemlive/totem-parachain:local \
+-f parachain_collator_builder.Dockerfile \
+--build-arg package=totem-parachain-node \
+--build-arg buildtype=build .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
-FROM docker.io/paritytech/ci-linux:production as builder
+# FROM docker.io/paritytech/ci-linux:production as builder
+# This is pegged to a version, because some change was introduced after this date which caused this Docker build to fail compiling 
+# with this error `error: failed to run custom build command for librocksdb-sys v0.6.1+6.28.2`
+FROM docker.io/paritytech/ci-linux:c391e6e6-20220426 as builder
 ARG package
 ARG buildtype
 
