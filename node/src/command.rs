@@ -288,7 +288,8 @@ pub fn run() -> Result<()> {
 					AccountIdConversion::<polkadot_primitives::v0::AccountId>::into_account(&id);
 
 				let state_version =
-					RelayChainCli::native_runtime_version(&config.chain_spec).state_version();
+					// RelayChainCli::native_runtime_version(&config.chain_spec).state_version();
+					Cli::native_runtime_version(&config.chain_spec).state_version();
 				let block: Block = generate_genesis_block(&config.chain_spec, state_version)
 					.map_err(|e| format!("{:?}", e))?;
 				let genesis_state = format!("0x{:?}", HexDisplay::from(&block.header().encode()));
