@@ -10,11 +10,11 @@
 # --build-arg package=totem-parachain-node \
 # --build-arg buildtype=check .
 
-docker build \
--t totemlive/totem-parachain:local \
--f parachain_collator_builder.Dockerfile \
---build-arg package=totem-parachain-node \
---build-arg buildtype=build .
+# docker build \
+# -t totemlive/totem-parachain:local \
+# -f parachain_collator_builder.Dockerfile \
+# --build-arg package=totem-parachain-node \
+# --build-arg buildtype=build .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
 # FROM docker.io/paritytech/ci-linux:production as builder
