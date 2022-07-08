@@ -56,4 +56,4 @@ EXPOSE 30333 9933 9944 9615 40333 9934 9945 9616
 
 VOLUME ["/data"]
 
-CMD /usr/local/bin/totem-parachain-collator
+ENTRYPOINT ["/usr/local/bin/totem-parachain-collator"]
