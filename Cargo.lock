@@ -5221,21 +5221,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-archive"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "totem-primitives",
-]
-
-[[package]]
 name = "pallet-aura"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.18#fc3fd073d3a0acf9933c3994b660ebd7b5833f65"
@@ -5400,21 +5385,6 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-bonsai"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-runtime",
- "sp-std",
- "totem-common",
- "totem-primitives",
 ]
 
 [[package]]
@@ -5587,37 +5557,6 @@ dependencies = [
  "sp-npos-elections",
  "sp-runtime",
  "sp-std",
-]
-
-[[package]]
-name = "pallet-escrow"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "log",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-runtime",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
-name = "pallet-funding"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-std",
- "totem-common",
- "totem-primitives",
 ]
 
 [[package]]
@@ -5849,36 +5788,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-orders"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-runtime",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
-name = "pallet-prefunding"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
 name = "pallet-preimage"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.18#fc3fd073d3a0acf9933c3994b660ebd7b5833f65"
@@ -6062,35 +5971,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-teams"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
-name = "pallet-timekeeping"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
- "sp-core",
- "sp-io",
- "sp-runtime",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.18#fc3fd073d3a0acf9933c3994b660ebd7b5833f65"
@@ -6188,19 +6068,6 @@ dependencies = [
  "smallvec",
  "sp-core",
  "sp-io",
- "sp-runtime",
- "sp-std",
- "totem-primitives",
-]
-
-[[package]]
-name = "pallet-transfer"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "parity-scale-codec",
- "scale-info",
  "sp-runtime",
  "sp-std",
  "totem-primitives",
