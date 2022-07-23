@@ -39,12 +39,14 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use pallet::*;
-
 #[frame_support::pallet]
 mod pallet {
 
-    use frame_support::{fail, pallet_prelude::*};
+    use frame_support::{
+        fail, 
+        pallet_prelude::*,
+        traits::StorageVersion,
+    };
     use frame_system::pallet_prelude::*;
 
     use sp_std::prelude::*;
@@ -52,8 +54,13 @@ mod pallet {
     use totem_common::StorageMapExt;
     use totem_primitives::teams::{DeletedProject, ProjectStatus, Validating};
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     /// Status of the project.
@@ -71,13 +78,13 @@ mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn project_hash_owner)]
     pub type ProjectHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
-
+    
     /// List of owned projects.
     #[pallet::storage]
     #[pallet::getter(fn owner_projects_list)]
     pub type OwnerProjectsList<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::Hash>>;
-
+    StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::Hash>>;
+    
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;

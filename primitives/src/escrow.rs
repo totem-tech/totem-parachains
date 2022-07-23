@@ -35,14 +35,13 @@
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
-use codec::MaxEncodedLen;
 use frame_support::{
     pallet_prelude::*,
     traits::{Currency, LockIdentifier},
 };
 use scale_info::TypeInfo;
 
-#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, MaxEncodedLen, TypeInfo)]
+#[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo)]
 pub enum Reason {
     Escrowing,
 }
@@ -74,6 +73,8 @@ pub trait EscrowableCurrency<AccountId> {
     fn remove_lock(id: LockIdentifier, who: &AccountId) -> Result<(), TotemLocksError>;
 }
 
+#[derive(Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[scale_info(capture_docs = "always")]
 pub enum TotemLocksError {
     /// There is no enough place remaining to add a lock for this account.
     NoPlaceRemaining,

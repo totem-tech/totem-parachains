@@ -44,12 +44,12 @@ pub use pallet::*;
 #[frame_support::pallet]
 mod pallet {
 
-    use codec::{Decode, Encode, MaxEncodedLen};
+    use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{Currency, ExistenceRequirement::KeepAlive, LockIdentifier, WithdrawReasons},
+        traits::{Currency, ExistenceRequirement::KeepAlive, LockIdentifier, WithdrawReasons, StorageVersion},
     };
     use frame_system::pallet_prelude::*;
 
@@ -61,8 +61,13 @@ mod pallet {
     type EscrowableBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::without_storage_info]    
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::storage]
@@ -99,7 +104,8 @@ mod pallet {
     /// The Totem version of single lock on a balance.
     /// There can be many of these on an account and they "overlap",
     /// so the same balance is frozen by multiple locks.
-    #[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, MaxEncodedLen, TypeInfo)]
+    #[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo)]
+    #[scale_info(capture_docs = "always")]
     pub struct EscrowedAmount<Balance, BlockNumber> {
         /// The amount which the free balance may not drop below when this lock is in effect.
         pub amount: Balance,

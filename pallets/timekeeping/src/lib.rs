@@ -59,7 +59,12 @@ pub use pallet::*;
 #[frame_support::pallet]
 mod pallet {
 
-    use frame_support::{fail, pallet_prelude::*, sp_runtime::traits::Hash};
+    use frame_support::{
+        fail, 
+        pallet_prelude::*, 
+        sp_runtime::traits::Hash,
+        traits::StorageVersion,
+    };
     use frame_system::pallet_prelude::*;
 
     use sp_std::prelude::*;
@@ -67,8 +72,13 @@ mod pallet {
     use totem_common::StorageMapExt;
     use totem_primitives::{teams::Validating as ProjectValidating, timekeeping::*};
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     /// Project owner sends project ref to worker address (AccountId is the Worker).

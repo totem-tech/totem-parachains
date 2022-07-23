@@ -77,7 +77,11 @@ pub use pallet::*;
 #[frame_support::pallet]
 mod pallet {
 
-    use frame_support::{fail, pallet_prelude::*};
+    use frame_support::{
+        fail, 
+        pallet_prelude::*,
+        traits::StorageVersion,
+    };
     use frame_system::pallet_prelude::*;
 
     use sp_runtime::traits::{Convert, Hash};
@@ -90,8 +94,13 @@ mod pallet {
         RecordType,
     };
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);    
+
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     /// Bonsai Storage.

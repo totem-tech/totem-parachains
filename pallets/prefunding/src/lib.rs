@@ -59,7 +59,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{Currency, ExistenceRequirement, LockIdentifier},
+        traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion},
     };
     use frame_system::pallet_prelude::*;
 
@@ -81,8 +81,13 @@ mod pallet {
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+    #[pallet::without_storage_info]
     #[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     /// Bonsai Storage.
@@ -538,7 +543,7 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::B1010005_0000000D, // debit  increase 110100050000000 Prefunding Account
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::EscrowDeposit))), // debit increase Escrow Account
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: prefunding_hash,
@@ -548,7 +553,7 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::B1010004_0000000D, // credit decrease 110100040000000 XTX Balance
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))), // credit decrease Internal Balance
                     amount: decrease_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: prefunding_hash,
@@ -557,20 +562,10 @@ mod pallet {
                 },
                 PostingRecord {
                     primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::C6060002_0000000D, // debit  increase 360600020000000 Runtime Ledger by Module
+                    counterparty: recipient.clone(), // party that this is intended for
+                    ledger: Ledger::ControlAccounts(ControlAccounts::EscrowedFundsControl), // debit increase amount to escrow account
                     amount: increase_amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: prefunding_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::C6060006_0000000D, // debit  increase 360600060000000 Runtime Ledger Control
-                    amount: increase_amount,
-                    debit_credit: Indicator::Credit,
+                    debit_credit: Indicator::Debit,
                     reference_hash: prefunding_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -629,8 +624,8 @@ mod pallet {
                 // Seller
                 PostingRecord {
                     primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::B1010008_0000000D, // Debit  increase 110100080000000	Accounts receivable (Sales Control Account or Trade Debtor's Account)
+                    counterparty: recipient.clone(),
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))), // Credit increase Income
                     amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: ref_hash,
@@ -639,8 +634,8 @@ mod pallet {
                 },
                 PostingRecord {
                     primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::P4040001_0000000C, // Credit increase 240400010000000	Product or Service Sales
+                    counterparty: recipient.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Debit increase Accounts receivable non-related parties
                     amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
@@ -649,20 +644,10 @@ mod pallet {
                 },
                 PostingRecord {
                     primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::C6060001_0000000D, // Debit  increase 360600010000000	Sales Ledger by Payer
+                    counterparty: recipient.clone(),
+                    ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl), // Debit increase Accounts receivable (Sales Control Account or Trade Debtor's Account)
                     amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: ref_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::C6060005_0000000D, // Debit  increase 360600050000000	Sales Ledger Control
-                    amount,
-                    debit_credit: Indicator::Credit,
+                    debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -670,8 +655,8 @@ mod pallet {
                 // Buyer
                 PostingRecord {
                     primary_party: recipient.clone(),
-                    counterparty: recipient.clone(),
-                    ledger: Ledger::B2020003_0000000C, // Credit increase 120200030000000	Accounts payable
+                    counterparty: who.clone(),
+                    ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Debit increase purchase control
                     amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
@@ -680,28 +665,8 @@ mod pallet {
                 },
                 PostingRecord {
                     primary_party: recipient.clone(),
-                    counterparty: recipient.clone(),
-                    ledger: Ledger::P5050012_0000013D, // Debit  increase 250500120000013	Labour
-                    amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: ref_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: recipient.clone(),
-                    counterparty: recipient.clone(),
-                    ledger: Ledger::C6060003_0000000D, // Debit  increase 360600030000000	Purchase Ledger by Vendor
-                    amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: ref_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: recipient.clone(),
-                    counterparty: recipient.clone(),
-                    ledger: Ledger::C6060007_0000000D, // Debit  increase 360600070000000	Purchase Ledger Control
+                    counterparty: who.clone(),
+                    ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayableTradeCreditors(Parties::NonRelatedParties)))), // Debit increase Accounts payable non-related parties
                     amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: ref_hash,

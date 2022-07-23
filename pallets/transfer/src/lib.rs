@@ -52,7 +52,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{Currency, ExistenceRequirement},
+        traits::{Currency, ExistenceRequirement, StorageVersion},
     };
     use frame_system::pallet_prelude::*;
     use totem_primitives::bonsai::Storing;
@@ -61,7 +61,12 @@ mod pallet {
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
+    /// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
+
     #[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+    #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
     #[pallet::config]
