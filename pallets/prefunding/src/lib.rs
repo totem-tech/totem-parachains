@@ -342,7 +342,7 @@ mod pallet {
                     &s,
                     amount,
                     d,
-                    Reason::Escrowing,
+                    Reason::Escrow,
                 )
                 .or(Err(Error::<T>::LockFailed))?;
             } else {

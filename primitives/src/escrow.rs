@@ -43,7 +43,7 @@ use scale_info::TypeInfo;
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, TypeInfo)]
 pub enum Reason {
-    Escrowing,
+    Escrow,
 }
 
 /// A currency whose accounts can have liquidity restrictions.
