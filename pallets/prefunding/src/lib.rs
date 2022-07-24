@@ -68,7 +68,7 @@ mod pallet {
 
     use totem_common::{StorageMapExt, TryConvert};
     use totem_primitives::{
-        accounting::{Indicator, Ledger, Posting, Record as PostingRecord},
+        accounting::{Record as PostingRecord, *},
         escrow::{EscrowableCurrency, Reason},
         prefunding::*,
         ComparisonAmounts, LedgerBalance,
@@ -530,7 +530,7 @@ mod pallet {
                 fail!(Error::<T>::ShortDeadline);
             }
             let prefunded = (amount, deadline.clone());
-            let owners = (who.clone(), true, recipient, false);
+            let owners = (who.clone(), true, recipient.clone(), false);
             // manage the deposit
             if let Err(_) =
                 Self::set_prefunding(who.clone(), increase_amount, deadline, prefunding_hash, uid)
@@ -543,8 +543,8 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::EscrowDeposit))), // debit increase Escrow Account
-                    amount: increase_amount,
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))), // credit decrease Internal Balance
+                    amount: decrease_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: prefunding_hash,
                     changed_on_blocknumber: current_block,
@@ -553,8 +553,8 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))), // credit decrease Internal Balance
-                    amount: decrease_amount,
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::EscrowDeposit))), // debit increase Escrow Account
+                    amount: increase_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: prefunding_hash,
                     changed_on_blocknumber: current_block,
@@ -618,16 +618,16 @@ mod pallet {
             // As amount will always be positive, convert for use in accounting
             let current_block = frame_system::Pallet::<T>::block_number();
             let current_block_dupe = frame_system::Pallet::<T>::block_number();
-
+            
             // Keys for posting
             let keys = [
                 // Seller
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: recipient.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))), // Credit increase Income
+                    ledger: Ledger::ProfitLoss(P::Income(I::OtherIncome(OtherIncome::InterestIncome(InterestIncome::TradeReceivables)))), // Debit increase Trade Receivables
                     amount,
-                    debit_credit: Indicator::Credit,
+                    debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -635,9 +635,9 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: recipient.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Debit increase Accounts receivable non-related parties
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Credit increase Accounts receivable non-related parties
                     amount,
-                    debit_credit: Indicator::Debit,
+                    debit_credit: Indicator::Credit,
                     reference_hash: ref_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -656,7 +656,17 @@ mod pallet {
                 PostingRecord {
                     primary_party: recipient.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Debit increase purchase control
+                    ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayable(Parties::NonRelatedParties)))), // Credit increase Accounts payable non-related parties
+                    amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                PostingRecord {
+                    primary_party: recipient.clone(),
+                    counterparty: who.clone(),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Services(Services::Labour)))), // Debit increase Trade payable non-related parties
                     amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
@@ -666,9 +676,9 @@ mod pallet {
                 PostingRecord {
                     primary_party: recipient.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayableTradeCreditors(Parties::NonRelatedParties)))), // Debit increase Accounts payable non-related parties
+                    ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Debit increase purchase control
                     amount,
-                    debit_credit: Indicator::Credit,
+                    debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -721,14 +731,24 @@ mod pallet {
                         Self::increase_decrease_amounts(prefunded_amount)?;
                     let current_block = frame_system::Pallet::<T>::block_number();
                     let current_block_dupe = frame_system::Pallet::<T>::block_number();
-
+                    
                     // Keys for posting
                     let keys = [
                         // Buyer
                         PostingRecord {
                             primary_party: who.clone(),
                             counterparty: who.clone(),
-                            ledger: Ledger::B2020003_0000000C, // 120200030000000	Debit  decrease Accounts payable
+                            ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayable(Parties::NonRelatedParties)))), // Debit decrease Accounts payable non-related parties
+                            amount: decrease_amount,
+                            debit_credit: Indicator::Debit,
+                            reference_hash: ref_hash,
+                            changed_on_blocknumber: current_block,
+                            applicable_period_blocknumber: current_block_dupe,
+                        },
+                        PostingRecord {
+                            primary_party: who.clone(),
+                            counterparty: who.clone(),
+                            ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Credit decrease purchase control
                             amount: decrease_amount,
                             debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
@@ -738,9 +758,9 @@ mod pallet {
                         PostingRecord {
                             primary_party: who.clone(),
                             counterparty: who.clone(),
-                            ledger: Ledger::B1010005_0000000D, // 110100050000000	Credit decrease Totem Runtime Deposit (Escrow)
+                            ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::EscrowDeposit))), // credit decrease Escrow Account
                             amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
+                            debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
                             changed_on_blocknumber: current_block,
                             applicable_period_blocknumber: current_block_dupe,
@@ -748,39 +768,9 @@ mod pallet {
                         PostingRecord {
                             primary_party: who.clone(),
                             counterparty: who.clone(),
-                            ledger: Ledger::C6060002_0000000D, // 360600020000000	Credit decrease Runtime Ledger by Module
+                            ledger: Ledger::ControlAccounts(ControlAccounts::EscrowedFundsControl), // credit decrease amount to escrow account
                             amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
-                            reference_hash: ref_hash,
-                            changed_on_blocknumber: current_block,
-                            applicable_period_blocknumber: current_block_dupe,
-                        },
-                        PostingRecord {
-                            primary_party: who.clone(),
-                            counterparty: who.clone(),
-                            ledger: Ledger::C6060006_0000000D, // 360600060000000	Credit decrease Runtime Ledger Control
-                            amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
-                            reference_hash: ref_hash,
-                            changed_on_blocknumber: current_block,
-                            applicable_period_blocknumber: current_block_dupe,
-                        },
-                        PostingRecord {
-                            primary_party: who.clone(),
-                            counterparty: who.clone(),
-                            ledger: Ledger::C6060003_0000000D, // 360600030000000	Credit decrease Purchase Ledger by Vendor
-                            amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
-                            reference_hash: ref_hash,
-                            changed_on_blocknumber: current_block,
-                            applicable_period_blocknumber: current_block_dupe,
-                        },
-                        PostingRecord {
-                            primary_party: who.clone(),
-                            counterparty: who.clone(),
-                            ledger: Ledger::C6060007_0000000D, // 360600070000000	Credit decrease Purchase Ledger Control
-                            amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
+                            debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
                             changed_on_blocknumber: current_block,
                             applicable_period_blocknumber: current_block_dupe,
@@ -789,8 +779,18 @@ mod pallet {
                         PostingRecord {
                             primary_party: details.clone(),
                             counterparty: details.clone(),
-                            ledger: Ledger::B1010004_0000000D, // 110100040000000	Debit  increase XTX Balance
+                            ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))), // debit increase Internal Balance
                             amount: increase_amount,
+                            debit_credit: Indicator::Debit,
+                            reference_hash: ref_hash,
+                            changed_on_blocknumber: current_block,
+                            applicable_period_blocknumber: current_block_dupe,
+                        },
+                        PostingRecord {
+                            primary_party: details.clone(),
+                            counterparty: details.clone(),
+                            ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Debit decrease Accounts receivable non-related parties
+                            amount: decrease_amount,
                             debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
                             changed_on_blocknumber: current_block,
@@ -799,29 +799,9 @@ mod pallet {
                         PostingRecord {
                             primary_party: details.clone(),
                             counterparty: details.clone(),
-                            ledger: Ledger::B1010008_0000000D, // 110100080000000	Credit decrease Accounts receivable (Sales Control Account or Trade Debtor's Account)
+                            ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl), // Credit decrease Accounts receivable (Sales Control Account or Trade Debtor's Account)
                             amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
-                            reference_hash: ref_hash,
-                            changed_on_blocknumber: current_block,
-                            applicable_period_blocknumber: current_block_dupe,
-                        },
-                        PostingRecord {
-                            primary_party: details.clone(),
-                            counterparty: details.clone(),
-                            ledger: Ledger::C6060001_0000000D, // 360600010000000	Credit decrease Sales Ledger by Payer
-                            amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
-                            reference_hash: ref_hash,
-                            changed_on_blocknumber: current_block,
-                            applicable_period_blocknumber: current_block_dupe,
-                        },
-                        PostingRecord {
-                            primary_party: details.clone(),
-                            counterparty: details.clone(),
-                            ledger: Ledger::C6060005_0000000D, // 360600050000000	Credit decrease Sales Ledger Control
-                            amount: decrease_amount,
-                            debit_credit: Indicator::Debit,
+                            debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
                             changed_on_blocknumber: current_block,
                             applicable_period_blocknumber: current_block_dupe,

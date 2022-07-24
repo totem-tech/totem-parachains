@@ -337,7 +337,7 @@ pub enum _0011_ {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum _0012_ {
+pub enum Services {
     /// P50_0012_D000,
     MiscellaneousService,
     /// P50_0012_D001,
@@ -1298,7 +1298,7 @@ pub enum CurrentLiabilities {
     SalesTaxbyJurisdict,
     /// B20_0002_C000,
     FederalStateTaxByJurisdict,
-    AccountsPayableTradeCreditors(Parties),
+    AccountsPayable(Parties),
     ShortTermLoansPayable(Parties),
     CurrentPortionOfLongTermDebtNonTrade(Parties),
     /// B20_0004_C000,
@@ -1494,7 +1494,7 @@ pub enum Sales {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum _1002_ {
+pub enum InterestIncome {
     /// P41_1002_C000,
     FinAssetsMeasuredAmortisedCost,
     /// P41_1002_C001,
@@ -1515,7 +1515,7 @@ pub enum OtherIncome {
     /// P41_1001_C000,
     RoyaltyIncome,
     /// Other Income Interest Income
-    IntrestIncome(_1002_),
+    InterestIncome(InterestIncome),
     /// P41_1002_C005,
     DebtInvestmentsMeasuredFVOCI,
     /// P41_1003_C000,
@@ -1607,8 +1607,8 @@ pub enum OPEX {
     MarketingPrograms(_0010_),
     /// _0011_(_0011_),
     ConsultingFees(_0011_),
-    /// _0012_(_0012_),
-    Services(_0012_),
+    /// _0012_(Services),
+    Services(Services),
     /// _0013_(_0013_),
     TravelExpenses(_0013_),
     /// _0014_(_0014_),
