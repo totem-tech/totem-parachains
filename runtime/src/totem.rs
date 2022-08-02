@@ -41,7 +41,8 @@ impl pallet_orders::Config for Runtime {
 
 impl pallet_prefunding::Config for Runtime {
     type Event = Event;
-    type Currency = pallet_balances::Pallet<Self>;
+    // type Currency = pallet_balances::Pallet<Self>;
+    type Currency = Balances;
     type PrefundingConverter = Converter;
     type Accounting = pallet_accounting::Pallet<Self>;
     type Escrowable = pallet_escrow::Pallet<Self>;
@@ -58,6 +59,7 @@ impl pallet_timekeeping::Config for Runtime {
 
 impl pallet_transfer::Config for Runtime {
     type Event = Event;
-    type Currency = pallet_balances::Pallet<Self>;
+    // type Currency = pallet_balances::Pallet<Self>;
+    type Currency = Balances;
     type Bonsai = pallet_bonsai::Pallet<Self>;
 }
