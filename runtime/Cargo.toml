@@ -29,7 +29,7 @@ pallet-balances-totem = { default-features = false, path = '../pallets/balances'
 pallet-archive = { default-features = false, path = '../pallets/archive' }
 pallet-bonsai = { default-features = false, path = '../pallets/bonsai' }
 pallet-escrow = { default-features = false, path = '../pallets/escrow' }
-pallet-funding = { default-features = false, path = '../pallets/funding' }
+# pallet-funding = { default-features = false, path = '../pallets/funding' }
 pallet-orders = { default-features = false, path = '../pallets/orders' }
 pallet-prefunding = { default-features = false, path = '../pallets/prefunding' }
 pallet-teams = { default-features = false, path = '../pallets/teams' }

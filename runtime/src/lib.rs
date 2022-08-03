@@ -510,7 +510,7 @@ construct_runtime!(
 		Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
 		Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
 		Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
-		Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
+		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
 		Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
 		Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
 		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
