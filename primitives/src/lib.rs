@@ -41,7 +41,7 @@ pub mod accounting;
 pub mod archive;
 pub mod bonsai;
 pub mod escrow;
-pub mod funding;
+// pub mod funding;
 pub mod orders;
 pub mod prefunding;
 pub mod teams;

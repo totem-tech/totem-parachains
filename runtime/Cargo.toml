@@ -26,16 +26,16 @@ smallvec = "1.6.1"
 totem-common = { default-features = false, path = '../common' }
 pallet-accounting = { default-features = false, path = '../pallets/accounting' }
 pallet-balances-totem = { default-features = false, path = '../pallets/balances' }
-# pallet-archive = { default-features = false, path = '../pallets/archive' }
-# pallet-bonsai = { default-features = false, path = '../pallets/bonsai' }
-# pallet-escrow = { default-features = false, path = '../pallets/escrow' }
+pallet-archive = { default-features = false, path = '../pallets/archive' }
+pallet-bonsai = { default-features = false, path = '../pallets/bonsai' }
+pallet-escrow = { default-features = false, path = '../pallets/escrow' }
 # pallet-funding = { default-features = false, path = '../pallets/funding' }
-# pallet-orders = { default-features = false, path = '../pallets/orders' }
-# pallet-prefunding = { default-features = false, path = '../pallets/prefunding' }
-# pallet-teams = { default-features = false, path = '../pallets/teams' }
-# pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
+pallet-orders = { default-features = false, path = '../pallets/orders' }
+pallet-prefunding = { default-features = false, path = '../pallets/prefunding' }
+pallet-teams = { default-features = false, path = '../pallets/teams' }
+pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
 pallet-transaction-payment = { default-features = false, path = '../pallets/transaction-payment', package = 'pallet-transaction-payment-totem' }
-# pallet-transfer = { default-features = false, path = '../pallets/transfer' }
+pallet-transfer = { default-features = false, path = '../pallets/transfer' }
 
 # Substrate Dependencies
 ## Substrate Primitive Dependencies
