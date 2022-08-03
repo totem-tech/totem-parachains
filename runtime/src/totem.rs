@@ -9,14 +9,14 @@ impl pallet_accounting::Config for Runtime {
 
 impl pallet_archive::Config for Runtime {
     type Event = Event;
-    type Timekeeping = pallet_timekeeping::Pallet<Self>;
+    type Timekeeping = Timekeeping;
 }
 
 impl pallet_bonsai::Config for Runtime {
     type Event = Event;
-    type Orders = pallet_orders::Pallet<Self>;
-    type Projects = pallet_teams::Pallet<Self>;
-    type Timekeeping = pallet_timekeeping::Pallet<Self>;
+    type Orders = Orders;
+    type Projects = Teams;
+    type Timekeeping = Timekeeping;
     type BonsaiConverter = Converter;
 }
 
@@ -32,10 +32,10 @@ impl pallet_funding::Config for Runtime {
 
 impl pallet_orders::Config for Runtime {
     type Event = Event;
-    type Accounting = pallet_accounting::Pallet<Self>;
-    type Prefunding = pallet_prefunding::Pallet<Self>;
+    type Accounting = Accounting;
+    type Prefunding = Prefunding;
     type Currency = Balances;
-    type Bonsai = pallet_bonsai::Pallet<Self>;
+    type Bonsai = Bonsai;
     type OrdersConverter = Converter;
 }
 
@@ -44,8 +44,8 @@ impl pallet_prefunding::Config for Runtime {
     // type Currency = pallet_balances::Pallet<Self>;
     type Currency = Balances;
     type PrefundingConverter = Converter;
-    type Accounting = pallet_accounting::Pallet<Self>;
-    type Escrowable = pallet_escrow::Pallet<Self>;
+    type Accounting = Accounting;
+    type Escrowable = Escrow;
 }
 
 impl pallet_teams::Config for Runtime {
@@ -61,5 +61,5 @@ impl pallet_transfer::Config for Runtime {
     type Event = Event;
     // type Currency = pallet_balances::Pallet<Self>;
     type Currency = Balances;
-    type Bonsai = pallet_bonsai::Pallet<Self>;
+    type Bonsai = Bonsai;
 }
