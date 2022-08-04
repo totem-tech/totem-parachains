@@ -70,7 +70,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{ Currency, StorageVersion },
+        traits::{ Currency, StorageVersion, Randomness },
         dispatch::DispatchResult,
     };
     use frame_system::pallet_prelude::*;
