@@ -361,8 +361,9 @@ mod pallet {
 
         /// Generate a reference from a hash.
         fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
-            let tuple = (sender.clone, recipient); 
-            let (randomValue, _) = T::RandomThing::random(&sender);
+            let tuple = (sender.clone, recipient);
+            let senderEncoded = sender.encode();
+            let (randomValue, _) = T::RandomThing::random(&senderEncoded);
             let input = (
                 tuple,
                 pallet_timestamp::Pallet::<T>::get(),
