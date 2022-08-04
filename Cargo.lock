@@ -5605,21 +5605,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "pallet-funding"
-version = "1.1.0"
-dependencies = [
- "frame-support",
- "frame-system",
- "pallet-timestamp",
- "parity-scale-codec",
- "scale-info",
- "serde",
- "sp-std",
- "totem-common",
- "totem-primitives",
-]
-
-[[package]]
 name = "pallet-gilt"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.18#fc3fd073d3a0acf9933c3994b660ebd7b5833f65"
