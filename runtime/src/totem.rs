@@ -5,7 +5,7 @@ impl pallet_accounting::Config for Runtime {
     type Event = Event;
     type AccountingConverter = Converter;
     type Currency = Balances;
-    type RandomThing = RandomCollectiveFlip;
+    type RandomThing = RandomnessCollectiveFlip;
 }
 
 impl pallet_archive::Config for Runtime {
@@ -46,7 +46,7 @@ impl pallet_prefunding::Config for Runtime {
     type PrefundingConverter = Converter;
     type Accounting = Accounting;
     type Escrowable = Escrow;
-    type RandomThing = RandomCollectiveFlip;
+    type RandomThing = RandomnessCollectiveFlip;
 }
 
 impl pallet_teams::Config for Runtime {
