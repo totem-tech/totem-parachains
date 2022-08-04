@@ -25,7 +25,7 @@ totem-common = { path = '../../common', default-features = false }
 totem-primitives = { path = '../../primitives', default-features = false }
 # primitives
 sp-arithmetic = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
-sp-io = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
+# sp-io = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
 sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
 sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.18', default-features = false }
 
@@ -45,7 +45,7 @@ std = [
     'totem-common/std',
     'totem-primitives/std',
     'sp-arithmetic/std',
-    'sp-io/std',
+    # 'sp-io/std',
     'sp-runtime/std',
     'sp-std/std',
     'scale-info/std',

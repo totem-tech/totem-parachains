@@ -70,7 +70,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{ Currency, StorageVersion },
+        traits::{ Currency, StorageVersion, Randomness },
         dispatch::DispatchResult,
     };
     use frame_system::pallet_prelude::*;
@@ -212,6 +212,7 @@ mod pallet {
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
             + Convert<[u8; 32], Self::AccountId>;
         type Currency: Currency<Self::AccountId>;
+        type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
     }
 
     #[pallet::error]
@@ -633,10 +634,14 @@ mod pallet {
         // }
 
         fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
+            let tuple = (sender.clone(), recipient);
+            let sender_encoded = sender.encode();
+            let (random_value, _) = T::RandomThing::random(&sender_encoded);
             let input = (
-                (sender, recipient),
+                tuple,
                 pallet_timestamp::Pallet::<T>::get(),
-                sp_io::offchain::random_seed(),
+                random_value,
+                // sp_io::offchain::random_seed(),
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );
