@@ -59,7 +59,7 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion},
+        traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion, Randomness},
     };
     use frame_system::pallet_prelude::*;
 
@@ -137,6 +137,7 @@ mod pallet {
             Self::BlockNumber,
             CurrencyBalanceOf<Self>,
         >;
+        type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
     }
 
     #[pallet::error]
@@ -360,11 +361,12 @@ mod pallet {
 
         /// Generate a reference from a hash.
         fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
-            let tuple = (sender, recipient);
+            let tuple = (sender.clone, recipient); 
+            let (randomValue, _) = T::RandomThing::random(&sender);
             let input = (
                 tuple,
                 pallet_timestamp::Pallet::<T>::get(),
-                sp_io::offchain::random_seed(),
+                randomValue,
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );
