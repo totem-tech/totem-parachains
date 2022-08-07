@@ -230,21 +230,21 @@ mod pallet {
             // then check that the supplied hash is owned by the signer of the transaction
             match e {
                 RecordType::Teams => {
-                    ensure!(T::Projects::is_project_owner(o, k), Error::<T>::NotTransactionOwner),
+                    ensure!(T::Projects::is_project_owner(o, k), Error::<T>::NotTransactionOwner);
                     // if false == T::Projects::is_project_owner(o, k) {
                         // Self::deposit_event(Event::ErrorRecordOwner(t));
                         // return Err("You cannot add a record you do not own");
                         // }
                 }
                 RecordType::Timekeeping => {
-                    ensure!(T::Timekeeping::is_time_record_owner(o, k), Error::<T>::NotTransactionOwner),
+                    ensure!(T::Timekeeping::is_time_record_owner(o, k), Error::<T>::NotTransactionOwner);
                     // if false == T::Timekeeping::is_time_record_owner(o, k) {
                         // Self::deposit_event(Event::ErrorRecordOwner(t));
                         // return Err("You cannot add a record you do not own");
                         // }
                 }
                     RecordType::Orders => {
-                    ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner),
+                    ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner;
                     // if false == T::Orders::is_order_party(o, k) {
                     //     Self::deposit_event(Event::ErrorRecordOwner(t));
                     //     return Err("You cannot add a record you do not own");
