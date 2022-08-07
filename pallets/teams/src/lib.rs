@@ -129,6 +129,7 @@ mod pallet {
             origin: OriginFor<T>,
             project_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            let who = ensure_signed(origin)?;
             // Check that the project does not exist
             ensure!(
                 !ProjectHashStatus::<T>::contains_key(project_hash),
@@ -142,7 +143,6 @@ mod pallet {
             );
 
             // proceed to store project
-            let who = ensure_signed(origin)?;
             let project_status: ProjectStatus = 0;
 
             // TODO limit nr of Projects per Account.
@@ -162,17 +162,16 @@ mod pallet {
             origin: OriginFor<T>,
             project_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            // check transaction is signed.
+            let changer: T::AccountId = ensure_signed(origin)?;
+            
             ensure!(
                 ProjectHashStatus::<T>::contains_key(project_hash),
                 Error::<T>::ProjectDoesNotExist
             );
-
             // get project by hash
             let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
                 .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
-
-            // check transaction is signed.
-            let changer: T::AccountId = ensure_signed(origin)?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
@@ -221,6 +220,7 @@ mod pallet {
             new_owner: T::AccountId,
             project_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            let changer: T::AccountId = ensure_signed(origin)?;
             ensure!(
                 ProjectHashStatus::<T>::contains_key(project_hash),
                 Error::<T>::ProjectDoesNotExist
@@ -230,7 +230,6 @@ mod pallet {
             let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
                 .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
 
-            let changer: T::AccountId = ensure_signed(origin)?;
             let changed_by: T::AccountId = changer.clone();
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
