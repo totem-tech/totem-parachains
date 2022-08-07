@@ -45,7 +45,6 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
         pallet_prelude::*,
         traits::StorageVersion,
     };
@@ -299,7 +298,7 @@ mod pallet {
             // Can only reopen a project that is in status "closed"
             let project_status: ProjectStatus = match Self::project_hash_status(project_hash) {
                 Some(500) => 100,
-                _ => fail!(Error::<T>::StatusWrong),
+                _ => return Err(Error::<T>::StatusWrong),
                 // None => return Err("Project has no status"),
             };
 
@@ -374,19 +373,19 @@ mod pallet {
                 0 | 100 => {
                     // can set 200, 300, 400, 500
                     match proposed_project_status {
-                        0 | 100 => fail!(Error::<T>::StatusWrong),
+                        0 | 100 => return Err(Error::<T>::StatusWrong),
                         200 | 300 | 400 | 500 => (),
-                        _ => fail!(Error::<T>::StatusCannotApply),
+                        _ => return Err(Error::<T>::StatusCannotApply),
                     };
                 }
                 200 | 300 | 500 => {
                     // only set 100
                     match proposed_project_status {
                         100 => (),
-                        _ => fail!(Error::<T>::StatusCannotApply),
+                        _ => return Err(Error::<T>::StatusCannotApply),
                     };
                 }
-                _ => fail!(Error::<T>::StatusCannotApply),
+                _ => return Err(Error::<T>::StatusCannotApply),
             };
 
             let allowed_project_status: ProjectStatus = proposed_project_status.into();

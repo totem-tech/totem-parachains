@@ -68,7 +68,6 @@ pub use pallet::*;
 mod pallet {
     
     use frame_support::{
-        fail,
         pallet_prelude::*,
         traits::{ Currency, StorageVersion, Randomness },
         dispatch::DispatchResult,
@@ -351,9 +350,7 @@ mod pallet {
             if <PostingNumber<T>>::exists() {
                 posting_index = match Self::posting_number().checked_add(1) {
                     Some(i) => i,
-                    None => {
-                        fail!(Error::<T>::PostingIndexOverflow)
-                    },
+                    None => return Err(Error::<T>::PostingIndexOverflow),
                 }
             };
 
@@ -376,7 +373,7 @@ mod pallet {
                                 .or(Err(Error::<T>::SystemFailure))?;
                         }
                     }
-                    fail!(e)
+                    return Err(e)
                 }
             }
 

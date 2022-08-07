@@ -60,7 +60,6 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
         pallet_prelude::*, 
         sp_runtime::traits::Hash,
         traits::StorageVersion,
@@ -280,9 +279,9 @@ mod pallet {
 
             // ensure that the project has not already been assigned to the worker, and that they have accepted already
             let status_tuple_key = (project_hash, worker.clone());
-
+            // TODO this should be changed for an enum
             if let Some(status) = Self::worker_projects_backlog_status(&status_tuple_key) {
-                fail!(match status {
+                return Err(match status {
                     true => Error::<T>::WorkerAlreadyAcceptedProject,
                     false => Error::<T>::WorkerAlreadyAssigned,
                 });
@@ -357,8 +356,8 @@ mod pallet {
                     // Worker confirms acceptance of project assignment. This effectively is an agreement that
                     // the project owner will accept time bookings from the worker as long as the project is still active.
                     Some(false) => Self::store_worker_acceptance(project_hash, who)?,
-                    Some(true) => fail!(Error::<T>::WorkerAlreadyAcceptedProject),
-                    None => fail!(Error::<T>::WorkerNotAssigned),
+                    Some(true) => return Err(Error::<T>::WorkerAlreadyAcceptedProject),
+                    None => return Err(Error::<T>::WorkerNotAssigned),
                 };
             } else {
                 match Self::worker_projects_backlog_status(&status_tuple_key) {
@@ -382,8 +381,8 @@ mod pallet {
                             |project_invites_list| project_invites_list.retain(|h| h != &who),
                         )?;
                     }
-                    Some(true) => fail!(Error::<T>::WorkerNotAssigned),
-                    None => fail!(Error::<T>::WorkerNotAssigned),
+                    Some(true) => return Err(Error::<T>::WorkerNotAssigned),
+                    None => return Err(Error::<T>::WorkerNotAssigned),
                 };
             }
 
@@ -543,9 +542,9 @@ mod pallet {
                             old_time_record.submit_status = proposed_new_status;
                         }
                         // not appropriate to set these codes here. Other specific functions exist.
-                        _ => fail!(Error::<T>::StatusNotImplementedOr),
+                        _ => return Err(Error::<T>::StatusNotImplementedOr),
                     },
-                    StatusOfTimeRecord::Submitted => fail!(Error::<T>::StatusAlreadySubmitted),
+                    StatusOfTimeRecord::Submitted => return Err(Error::<T>::StatusAlreadySubmitted),
                     StatusOfTimeRecord::Disputed | StatusOfTimeRecord::Rejected => {
                         // The existing record is rejected or disputed. The sender is therefore attempting to change the
                         // record. Only the worker can change the record.
@@ -577,7 +576,7 @@ mod pallet {
                                 old_time_record.submit_status = proposed_new_status
                             } // Resubmitted.
                             // not appropriate to set these codes here. Other specific functions exist.
-                            _ => fail!(Error::<T>::StatusCannotBeSetHere),
+                            _ => return Err(Error::<T>::StatusCannotBeSetHere),
                         }
 
                         // TODO remove any submitted reason codes.
@@ -603,11 +602,11 @@ mod pallet {
                                 old_time_record.submit_status = proposed_new_status
                             } // Draft to submitted.
                             // not appropriate to set these codes here. Other specific functions exist.
-                            _ => fail!(Error::<T>::StatusCannotBeSetHere),
+                            _ => return Err(Error::<T>::StatusCannotBeSetHere),
                         }
                     }
-                    StatusOfTimeRecord::Invoiced => fail!(Error::<T>::TimeRecordAlreadyInvoiced),
-                    StatusOfTimeRecord::Blocked => fail!(Error::<T>::TimeBlocked),
+                    StatusOfTimeRecord::Invoiced => return Err(Error::<T>::TimeRecordAlreadyInvoiced),
+                    StatusOfTimeRecord::Blocked => return Err(Error::<T>::TimeBlocked),
                 };
 
                 Self::update_time_record(
@@ -661,7 +660,7 @@ mod pallet {
             let proposed_new_status = status_of_record.clone();
 
             match changing_time_record.submit_status {
-                StatusOfTimeRecord::Draft => fail!(Error::<T>::TimeRecordNotFinalised),
+                StatusOfTimeRecord::Draft => return Err(Error::<T>::TimeRecordNotFinalised),
                 StatusOfTimeRecord::Submitted => match proposed_new_status {
                     StatusOfTimeRecord::Disputed
                     | StatusOfTimeRecord::Rejected
@@ -674,16 +673,16 @@ mod pallet {
                         changing_time_record.submit_status = proposed_new_status;
                     }
                     StatusOfTimeRecord::Draft | StatusOfTimeRecord::Invoiced => {
-                        fail!(Error::<T>::TimeRecordCannotChange)
+                        return Err(Error::<T>::TimeRecordCannotChange)
                     }
-                    StatusOfTimeRecord::Submitted => fail!(Error::<T>::StatusNotImplemented),
+                    StatusOfTimeRecord::Submitted => return Err(Error::<T>::StatusNotImplemented),
                 },
                 // The existing record is in a state that cannot be changed by the project owner.
                 StatusOfTimeRecord::Disputed
                 | StatusOfTimeRecord::Rejected
                 | StatusOfTimeRecord::Accepted
                 | StatusOfTimeRecord::Invoiced
-                | StatusOfTimeRecord::Blocked => fail!(Error::<T>::ProjectCannotBeChanged),
+                | StatusOfTimeRecord::Blocked => return Err(Error::<T>::ProjectCannotBeChanged),
             };
 
             ProjectFirstSeen::<T>::insert(

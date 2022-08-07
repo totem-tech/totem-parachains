@@ -47,7 +47,6 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
         pallet_prelude::*,
         traits::StorageVersion,
     };
@@ -115,7 +114,7 @@ mod pallet {
                         ));
                     }
                 }
-                _ => fail!("Unknown or unimplemented record type. Cannot archive record"),
+                _ => return Err("Unknown or unimplemented record type. Cannot archive record"),
             }
 
             Ok(().into())

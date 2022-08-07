@@ -50,7 +50,6 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail,
         pallet_prelude::*,
         traits::{Currency, ExistenceRequirement, StorageVersion},
     };
@@ -99,7 +98,7 @@ mod pallet {
             if let Err(_) =
                 T::Currency::transfer(&from, &to, amount, ExistenceRequirement::KeepAlive)
             {
-                fail!(Error::<T>::ErrorDuringTransfer);
+                return Err(Error::<T>::ErrorDuringTransfer);
             }
 
             T::Bonsai::end_tx(tx_uid)?;

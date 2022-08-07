@@ -57,7 +57,7 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail,
+        ensure,
         pallet_prelude::*,
         traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion, Randomness},
     };
@@ -322,9 +322,10 @@ mod pallet {
             _u: T::Hash,
         ) -> DispatchResultWithPostInfo {
             // Prepare make sure we are not taking the deposit again
-            if ReferenceStatus::<T>::contains_key(&h) {
-                fail!(Error::<T>::HashExists);
-            }
+            ensure!(!ReferenceStatus::<T>::contains_key(&h), Error::<T>::HashExists);
+            // if ReferenceStatus::<T>::contains_key(&h) {
+            //     return Err(Error::<T>::HashExists);
+            // }
 
             // You cannot prefund any amount unless you have at least at balance of 1618 units + the amount you want to prefund
             // Ensure that the funds can be subtracted from sender's balance without causing the account to be destroyed by the existential deposit
@@ -347,7 +348,7 @@ mod pallet {
                 )
                 .or(Err(Error::<T>::LockFailed))?;
             } else {
-                fail!(Error::<T>::InsufficientPreFunds);
+                return Err(Error::<T>::InsufficientPreFunds);
             }
 
             Ok(().into())
@@ -431,20 +432,21 @@ mod pallet {
             _u: T::Hash,
         ) -> DispatchResultWithPostInfo {
             use LockStatus::*;
-
-            if Self::reference_valid(h) == false {
-                fail!(Error::<T>::HashDoesNotExist);
-            }
-
-            if Self::check_ref_beneficiary(o.clone(), h) == false {
-                fail!(Error::<T>::NotOwner);
-            }
+            ensure!(Self::reference_valid(h), Error::<T>::HashDoesNotExist);
+            // if Self::reference_valid(h) == false {
+                //     return Err(Error::<T>::HashDoesNotExist);
+                // }
+                
+            ensure!(Self::check_ref_beneficiary(o.clone(), h), Error::<T>::NotOwner);
+            // if Self::check_ref_beneficiary(o.clone(), h) == false {
+            //     return Err(Error::<T>::NotOwner);
+            // }
 
             // TODO this should return the details otherwise there is second read later in the process
             match Self::get_release_state(h) {
                 // submitted, but not yet accepted
-                (Locked, Unlocked) => fail!(Error::<T>::NotApproved),
-                (Locked, Locked) => fail!(Error::<T>::FundsInPlay),
+                (Locked, Unlocked) => return Err(Error::<T>::NotApproved),
+                (Locked, Locked) => return Err(Error::<T>::FundsInPlay),
                 // Owner has approved now get status of hash. Only allow if invoiced.
                 // Note handling the account posting is done outside of this function
                 (Unlocked, Locked) => {
@@ -467,14 +469,14 @@ mod pallet {
                                 prefunding.0,
                                 ExistenceRequirement::KeepAlive,
                             ) {
-                                fail!("Error during transfer")
+                                return Err("Error during transfer")
                             }
                         }
-                        _ => fail!("Only allowed when status is Invoiced"),
+                        _ => return Err("Only allowed when status is Invoiced"),
                     }
                 }
                 // Owner has been given permission by beneficiary to release funds
-                (Unlocked, Unlocked) => fail!(Error::<T>::NotAllowed1),
+                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed1),
             }
 
             Ok(().into())
@@ -491,7 +493,7 @@ mod pallet {
         /// Settles invoice by updates to various relevant accounts and transfer of funds.
         #[allow(dead_code)/*TODO use it */]
         fn settle_unfunded_invoice() -> DispatchResultWithPostInfo {
-            fail!("TODO")
+            return Err("TODO")
         }
 
         /// Return a pair of:
@@ -529,16 +531,19 @@ mod pallet {
             // 48 hours is the minimum deadline. This is the minimum amountof time before the money can be reclaimed
             let minimum_deadline: T::BlockNumber = current_block
                 + <T::PrefundingConverter as Convert<u32, T::BlockNumber>>::convert(11520_u32);
-            if deadline < minimum_deadline {
-                fail!(Error::<T>::ShortDeadline);
-            }
+            
+            ensure!(deadline >= minimum_deadline, Error::<T>::ShortDeadline);
+            // if deadline < minimum_deadline {
+            //     return Err(Error::<T>::ShortDeadline);
+            // }
+
             let prefunded = (amount, deadline.clone());
             let owners = (who.clone(), true, recipient.clone(), false);
             // manage the deposit
             if let Err(_) =
                 Self::set_prefunding(who.clone(), increase_amount, deadline, prefunding_hash, uid)
             {
-                fail!(Error::<T>::PrefundNotSet);
+                return Err(Error::<T>::PrefundNotSet);
             }
 
             // Deposit taken at this point. Note that if an error occurs beyond here we need to remove the locked funds.
@@ -576,7 +581,7 @@ mod pallet {
             ];
 
             if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                fail!(Error::<T>::InAccounting1);
+                return Err(Error::<T>::InAccounting1);
             }
 
             // Record Prefunding ownership and status
@@ -590,7 +595,7 @@ mod pallet {
 
             // Submitted, Locked by sender.
             if let Err(_) = Self::set_ref_status(prefunding_hash, 1) {
-                fail!(Error::<T>::SettingStatus1);
+                return Err(Error::<T>::SettingStatus1);
             }
 
             Self::deposit_event(Event::PrefundingCompleted(uid));
@@ -610,9 +615,10 @@ mod pallet {
             uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
             // Validate that the hash is indeed assigned to the seller
-            if Self::check_ref_beneficiary(who.clone(), ref_hash) == false {
-                fail!(Error::<T>::NotAllowed2);
-            }
+            ensure!(Self::check_ref_beneficiary(who.clone(), ref_hash), Error::<T>::NotAllowed2);
+            // if Self::check_ref_beneficiary(who.clone(), ref_hash) == false {
+            //     return Err(Error::<T>::NotAllowed2);
+            // }
 
             // Amount CAN be negative - this is therefore not an Invoice but a Credit Note!
             // The account postings are identical to an invoice, however we must also handle the refund immediately if possible.
@@ -689,13 +695,13 @@ mod pallet {
             ];
 
             if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                fail!(Error::<T>::InAccounting2);
+                return Err(Error::<T>::InAccounting2);
             }
 
             // Add status processing
             let new_status: Status = 400; // invoiced(400), can no longer be accepted,
             if let Err(_) = Self::set_ref_status(ref_hash, new_status) {
-                fail!(Error::<T>::SettingStatus2);
+                return Err(Error::<T>::SettingStatus2);
             }
 
             Self::deposit_event(Event::InvoiceIssued(uid));
@@ -716,12 +722,13 @@ mod pallet {
             // accounts updated before payment, because if there is an error then the accounting can be rolled back
             let (payer, beneficiary) = match Self::get_release_state(ref_hash) {
                 // submitted, but not yet accepted
-                (Locked, Unlocked) => fail!(Error::<T>::NotApproved2),
+                (Locked, Unlocked) => return Err(Error::<T>::NotApproved2),
                 (Locked, Locked) => {
                     // Validate that the hash is indeed owned by the buyer
-                    if Self::check_ref_owner(who.clone(), ref_hash) == false {
-                        fail!(Error::<T>::NotAllowed3);
-                    }
+                    ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotAllowed3);
+                    // if Self::check_ref_owner(who.clone(), ref_hash) == false {
+                    //     return Err(Error::<T>::NotAllowed3);
+                    // }
 
                     // get beneficiary from hash
                     let (_, _, details /*TODO better name*/, _) =
@@ -812,27 +819,27 @@ mod pallet {
                     ];
 
                     if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                        fail!(Error::<T>::InAccounting3);
+                        return Err(Error::<T>::InAccounting3);
                     }
 
                     // export details for final payment steps
                     (who, details)
                 }
                 // This state is not allowed for this functions
-                (Unlocked, Locked) => fail!(Error::<T>::NotAllowed4),
+                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed4),
                 // Owner has been given permission by beneficiary to release funds
-                (Unlocked, Unlocked) => fail!(Error::<T>::NotAllowed5),
+                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed5),
             };
 
             // Set release lock "buyer who has approved invoice"
             // this may have been set independently, but is required for next step
             if let Err(_) = Self::set_release_state(payer, Unlocked, ref_hash, uid) {
-                fail!(Error::<T>::ReleaseState);
+                return Err(Error::<T>::ReleaseState);
             }
 
             // Unlock, tansfer funds and mark hash as settled in full
             if let Err(_) = Self::unlock_funds_for_beneficiary(beneficiary, ref_hash, uid) {
-                fail!(Error::<T>::Unlocking);
+                return Err(Error::<T>::Unlocking);
             }
 
             Self::deposit_event(Event::InvoiceSettled(uid));
@@ -872,12 +879,12 @@ mod pallet {
                             match o_lock {
                                 Locked => {
                                     if who == commander {
-                                        fail!(Error::<T>::WrongState1);
+                                        return Err(Error::<T>::WrongState1);
                                     } else if who == fulfiller {
                                         change.1 = state_lock.1;
                                         change.3 = o_lock;
                                     } else {
-                                        fail!(Error::<T>::LockNotAllowed1);
+                                        return Err(Error::<T>::LockNotAllowed1);
                                     };
                                 }
                                 Unlocked => {
@@ -887,9 +894,9 @@ mod pallet {
                                         change.1 = o_lock;
                                         change.3 = state_lock.3;
                                     } else if who == fulfiller {
-                                        fail!(Error::<T>::WrongState2);
+                                        return Err(Error::<T>::WrongState2);
                                     } else {
-                                        fail!(Error::<T>::LockNotAllowed2);
+                                        return Err(Error::<T>::LockNotAllowed2);
                                     };
                                 }
                             }
@@ -897,7 +904,7 @@ mod pallet {
                         // In this state the commander can change the lock, and they can only change it to false
                         // In this state the fulfiller can change the lock, and they can only change it to false
                         (Locked, Locked) => match o_lock {
-                            Locked => fail!(Error::<T>::WrongState3),
+                            Locked => return Err(Error::<T>::WrongState3),
                             Unlocked => {
                                 if who == commander {
                                     change.1 = o_lock;
@@ -906,31 +913,31 @@ mod pallet {
                                     change.1 = state_lock.1;
                                     change.3 = o_lock;
                                 } else {
-                                    fail!(Error::<T>::LockNotAllowed3);
+                                    return Err(Error::<T>::LockNotAllowed3);
                                 }
                             }
                         },
                         // In this state the commander cannot change the lock
                         // In this state the fulfiller can change the lock, and they can only change it to false
                         (Unlocked, Locked) => match o_lock {
-                            Locked => fail!(Error::<T>::LockNotAllowed4),
+                            Locked => return Err(Error::<T>::LockNotAllowed4),
                             Unlocked => {
                                 if who == commander {
-                                    fail!(Error::<T>::WrongState5);
+                                    return Err(Error::<T>::WrongState5);
                                 } else if who == fulfiller {
                                     change.1 = state_lock.1;
                                     change.3 = o_lock;
                                 } else {
-                                    fail!(Error::<T>::LockNotAllowed5);
+                                    return Err(Error::<T>::LockNotAllowed5);
                                 };
                             }
                         },
                         // This state should technically make the funds refundable to the buyer.
                         // Even if the buy wanted to set this state they cannot. Meaning they must create a new order.
-                        (Unlocked, Unlocked) => fail!(Error::<T>::LockNotAllowed5),
+                        (Unlocked, Unlocked) => return Err(Error::<T>::LockNotAllowed5),
                     }
                 }
-                None => fail!(Error::<T>::HashDoesNotExist2),
+                None => return Err(Error::<T>::HashDoesNotExist2),
             };
             PrefundingHashOwner::<T>::insert(&ref_hash, change);
             // Issue event
@@ -946,14 +953,14 @@ mod pallet {
             _uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
             use LockStatus::*;
-
-            if Self::reference_valid(ref_hash) == false {
-                fail!(Error::<T>::HashDoesNotExist3);
-            }
-
-            if Self::check_ref_owner(who.clone(), ref_hash) == false {
-                fail!(Error::<T>::NotOwner2);
-            }
+            ensure!(Self::reference_valid(ref_hash), Error::<T>::HashDoesNotExist3);
+            // if Self::reference_valid(ref_hash) == false {
+            //     return Err(Error::<T>::HashDoesNotExist3);
+            // }
+            ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);    
+            // if Self::check_ref_owner(who.clone(), ref_hash) == false {
+            //     return Err(Error::<T>::NotOwner2);
+            // }
 
             match Self::get_release_state(ref_hash) {
                 // submitted, but not yet accepted
@@ -962,19 +969,19 @@ mod pallet {
                     if Self::prefund_deadline_passed(ref_hash) {
                         let status: Status = 50; // Abandoned or Cancelled
                         if let Err(_) = Self::cancel_prefunding_lock(who, ref_hash, status) {
-                            fail!(Error::<T>::CancelFailed2);
+                            return Err(Error::<T>::CancelFailed2);
                         }
                     } else {
-                        fail!(Error::<T>::DeadlineInPlay);
+                        return Err(Error::<T>::DeadlineInPlay);
                     }
                 }
-                (Locked, Locked) => fail!(Error::<T>::FundsInPlay2),
-                (Unlocked, Locked) => fail!(Error::<T>::NotAllowed6),
+                (Locked, Locked) => return Err(Error::<T>::FundsInPlay2),
+                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed6),
                 (Unlocked, Unlocked) => {
                     // Owner has been  given permission by beneficiary to release funds
                     let status: Status = 50; // Abandoned or cancelled
                     if let Err(_) = Self::cancel_prefunding_lock(who, ref_hash, status) {
-                        fail!(Error::<T>::CancellingPrefund);
+                        return Err(Error::<T>::CancellingPrefund);
                     }
                 }
             }

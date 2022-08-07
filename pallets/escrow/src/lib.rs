@@ -47,7 +47,7 @@ mod pallet {
     use codec::{Decode, Encode};
     use scale_info::TypeInfo;
     use frame_support::{
-        fail,
+        ensure,
         pallet_prelude::*,
         traits::{Currency, ExistenceRequirement::KeepAlive, LockIdentifier, WithdrawReasons, StorageVersion},
     };
@@ -137,14 +137,16 @@ mod pallet {
             until: T::BlockNumber,
             reason: Reason,
         ) -> Result<(), TotemLocksError> {
-            if amount.is_zero() {
-                fail!(TotemLocksError::ZeroAmount)
-            }
-
+            ensure!(!amount.is_zero(), TotemLocksError::ZeroAmount);
+            // if amount.is_zero() {
+                //     return Err(TotemLocksError::ZeroAmount)
+                // }
+                
             let now = frame_system::Pallet::<T>::block_number();
-            if now > until {
-                fail!(TotemLocksError::InvalidDeadline)
-            }
+            ensure!(now <= until, TotemLocksError::InvalidDeadline);
+            // if now > until {
+            //     return Err(TotemLocksError::InvalidDeadline)
+            // }
 
             Escrowed::<T>::try_mutate(who, id, |maybe_escrowed| match maybe_escrowed {
                 Some(_) => return Err(TotemLocksError::IdAlreadyExists),

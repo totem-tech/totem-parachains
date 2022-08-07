@@ -72,7 +72,7 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
+        ensure,
         pallet_prelude::*, 
         traits::{Currency, StorageVersion},
     };
@@ -260,11 +260,11 @@ mod pallet {
                         Orders::<T>::remove(&tx_keys_medium.record_id);
                         OrderItems::<T>::remove(&tx_keys_medium.record_id);
                     } else {
-                        fail!(Error::<T>::StatusNotAllowed6);
+                        return Err(Error::<T>::StatusNotAllowed6);
                     }
                 }
                 // Order does not exist
-                None => fail!(Error::<T>::HashExists3),
+                None => return Err(Error::<T>::HashExists3),
             }
             <T::Bonsai as Storing<T::Hash>>::end_tx(tx_keys_medium.tx_uid)?;
 
@@ -290,27 +290,31 @@ mod pallet {
             let who = ensure_signed(origin)?;
             <T::Bonsai as Storing<T::Hash>>::start_tx(tx_keys_large.tx_uid)?;
             // Check that the supplied record_id does not exist
-            if Orders::<T>::contains_key(&tx_keys_large.record_id) {
-                fail!(Error::<T>::HashExists);
-            }
+            ensure!(!Orders::<T>::contains_key(&tx_keys_large.record_id), Error::<T>::HashExists);
+            // if Orders::<T>::contains_key(&tx_keys_large.record_id) {
+            //     return Err(Error::<T>::HashExists);
+            // }
 
             let mut approval_status = ApprovalStatus::Submitted;
             // Check that it is an open order
             if market_order {
                 // process open order - ignore fulfiller
                 // check that the order does not have a parent - by default the parent and the record_id must be the same
-                if tx_keys_large.record_id == tx_keys_large.parent_id {
-                } else {
-                    fail!(Error::<T>::MarketOrder);
-                }
-                // Go further - Store the Order
-                ();
+                ensure!(tx_keys_large.record_id == tx_keys_large.parent_id, Error::<T>::MarketOrder);
+                // if tx_keys_large.record_id == tx_keys_large.parent_id {
+                //     // Go further - Store the Order
+                //     ();
+                // } else {
+                //     return Err(Error::<T>::MarketOrder);
+                // }
             } else {
                 // closed order, fulfiller must be completed and it must not be the origin
-                if fulfiller == who {
-                    fail!(Error::<T>::CannotBeBoth2);
-                }
+                ensure!(fulfiller != who, Error::<T>::CannotBeBoth2);
+                // if fulfiller == who {
+                //     return Err(Error::<T>::CannotBeBoth2);
+                // }
                 // The order may have a parent - by default the parent and the record_id are the same, but they may also be different
+                
                 if tx_keys_large.record_id == tx_keys_large.parent_id {
                     // This order has no parent therefore is a simple unfunded order with a known fulfiller
                     // TODO
@@ -318,9 +322,10 @@ mod pallet {
                 } else {
                     // This order has a parent therefore it is a proposal and this means there is a fulfiller
                     // check that that the parent hash exists
-                    if Orders::<T>::contains_key(&tx_keys_large.parent_id) == false {
-                        fail!(Error::<T>::HashExists2);
-                    };
+                    ensure!(Orders::<T>::contains_key(&tx_keys_large.parent_id), Error::<T>::HashExists2);
+                    // if Orders::<T>::contains_key(&tx_keys_large.parent_id) == false {
+                    //     return Err(Error::<T>::HashExists2);
+                    // };
                     // if the approver is also the initiator of the order then automatically approve the order
                     if Self::check_approver(who.clone(), approver, tx_keys_large.record_id) {
                         // the order is approved because the approver is the commander.
@@ -388,9 +393,11 @@ mod pallet {
             // Generate Hash for order
             let order_hash =
                 <T as Config>::Accounting::get_pseudo_random_hash(who.clone(), approver.clone());
-            if Orders::<T>::contains_key(&order_hash) {
-                fail!(Error::<T>::HashExists);
-            }
+            ensure!(!Orders::<T>::contains_key(&order_hash), Error::<T>::HashExists);
+
+            // if Orders::<T>::contains_key(&order_hash) {
+            //     return Err(Error::<T>::HashExists);
+            // }
             Self::set_simple_prefunded_service_order(
                 who,
                 approver,
@@ -496,10 +503,10 @@ mod pallet {
                 if let Err(_) =
                     Self::set_state_simple_prefunded_closed_order(who, h, s, order_hdr, tx_uid)
                 {
-                    fail!(Error::<T>::SetPrefundState);
+                    return Err(Error::<T>::SetPrefundState);
                 }
             } else {
-                fail!(Error::<T>::URNobody)
+                return Err(Error::<T>::URNobody)
             }
 
             <T::Bonsai as Storing<T::Hash>>::end_tx(tx_uid)?;
@@ -574,7 +581,7 @@ mod pallet {
                 commander.clone()
             } else {
                 if commander == fulfiller {
-                    fail!(Error::<T>::CannotBeBoth);
+                    return Err(Error::<T>::CannotBeBoth);
                 }
                 fulfiller.clone()
             };
@@ -599,7 +606,7 @@ mod pallet {
                     uid,
                 ) {
                     // Error from setting prefunding "somewhere" ;)
-                    fail!(Error::<T>::InPrefunding1);
+                    return Err(Error::<T>::InPrefunding1);
                 }
                 let order_header: OrderHeader<T::AccountId> = OrderHeader {
                     commander: commander.clone(),
@@ -644,7 +651,7 @@ mod pallet {
             u: T::Hash,
         ) -> DispatchResultWithPostInfo {
             if let Err(_) = T::Prefunding::prefunding_for(c, f, a, d, o, u) {
-                fail!(Error::<T>::InPrefunding7);
+                return Err(Error::<T>::InPrefunding7);
             }
 
             Ok(().into())
@@ -688,23 +695,23 @@ mod pallet {
                         // can only change to approved (1)
                         match s {
                             ApprovalStatus::Accepted => (),
-                            _ => fail!(Error::<T>::ApprStatus),
+                            _ => return Err(Error::<T>::ApprStatus),
                         }
                     }
                     1 => {
                         // Can only change to 0 or 2
                         match s {
                             ApprovalStatus::Submitted | ApprovalStatus::Rejected => (),
-                            _ => fail!(Error::<T>::ApprStatus),
+                            _ => return Err(Error::<T>::ApprStatus),
                         }
                     }
-                    _ => fail!(Error::<T>::ApprStatus),
+                    _ => return Err(Error::<T>::ApprStatus),
                 }
                 // All tests passed, set status to whatever.
                 order_hdr.order_status = s as u16;
                 Orders::<T>::insert(&h, order_hdr);
             } else {
-                fail!(Error::<T>::NotApprover);
+                return Err(Error::<T>::NotApprover);
             }
 
             Self::deposit_event(Event::OrderStatusUpdate(b));
@@ -735,11 +742,11 @@ mod pallet {
                 0 | 2 => {
                     match order_hdr.approval_status {
                         ApprovalStatus::Submitted | ApprovalStatus::Rejected => (), // submitted pending approval or rejected
-                        ApprovalStatus::Accepted => fail!(Error::<T>::Approved),
+                        ApprovalStatus::Accepted => return Err(Error::<T>::Approved),
                     }
                 }
-                1 => fail!(Error::<T>::OrderStatus1),
-                _ => fail!(Error::<T>::OrderStatus2),
+                1 => return Err(Error::<T>::OrderStatus1),
+                _ => return Err(Error::<T>::OrderStatus2),
             };
             // check that at least one of these has changed:
             // let mut dl: u64;
@@ -747,11 +754,11 @@ mod pallet {
             let current_block = frame_system::Pallet::<T>::block_number();
             // apply a new fulfiller but check that it isn't the commander
             if order_hdr.commander == commander {
-                fail!(Error::<T>::Fulfiller);
+                return Err(Error::<T>::Fulfiller);
             }
             if order_hdr.amount != amount {
                 if amount < 0i128 {
-                    fail!(Error::<T>::Amount);
+                    return Err(Error::<T>::Amount);
                 }
 
                 // IMPORTANT TODO
@@ -765,7 +772,7 @@ mod pallet {
                 // every time there is a change the deadline gets pushed back by 48 hours byond the current block
                 let min_deadline = current_block_converted + 11520_u32;
                 if deadline < min_deadline {
-                    fail!(Error::<T>::ShortDeadline);
+                    return Err(Error::<T>::ShortDeadline);
                 }
                 // dl = deadline;
             }
@@ -774,7 +781,7 @@ mod pallet {
                 // This is basically adding 49 hours to the current block
                 let minimum_due_date = current_block_converted + 11760_u32;
                 if due_date < minimum_due_date {
-                    fail!(Error::<T>::ShortDueDate);
+                    return Err(Error::<T>::ShortDueDate);
                 }
                 // dd = due_date;
             }
@@ -830,7 +837,7 @@ mod pallet {
                             // Update the prefunding status (confirm locked funds)
                             let lock = LockStatus::Locked;
                             if let Err(_e) = T::Prefunding::set_release_state(f, lock, h, uid) {
-                                fail!(Error::<T>::InPrefunding2)
+                                return Err(Error::<T>::InPrefunding2)
                             }
                         }
                         2 => {
@@ -844,7 +851,7 @@ mod pallet {
                                 h,
                                 uid,
                             ) {
-                                fail!(Error::<T>::InPrefunding3)
+                                return Err(Error::<T>::InPrefunding3)
                             }
                             // now release the funds lock
                             if let Err(_e) = T::Prefunding::unlock_funds_for_owner(
@@ -852,10 +859,10 @@ mod pallet {
                                 h,
                                 uid,
                             ) {
-                                fail!(Error::<T>::InPrefunding4)
+                                return Err(Error::<T>::InPrefunding4)
                             }
                         }
-                        _ => fail!(Error::<T>::StatusNotAllowed1),
+                        _ => return Err(Error::<T>::StatusNotAllowed1),
                     }
                 }
                 // Order already in accepted state - Update the status
@@ -870,14 +877,14 @@ mod pallet {
                                 h,
                                 uid,
                             ) {
-                                fail!(Error::<T>::InPrefunding5)
+                                return Err(Error::<T>::InPrefunding5)
                             }
                         }
-                        _ => fail!(Error::<T>::StatusNotAllowed2),
+                        _ => return Err(Error::<T>::StatusNotAllowed2),
                     }
                 }
-                2 | 5 => fail!(Error::<T>::StatusNotAllowed3),
-                _ => fail!(Error::<T>::StatusNotAllowed4),
+                2 | 5 => return Err(Error::<T>::StatusNotAllowed3),
+                _ => return Err(Error::<T>::StatusNotAllowed4),
             }
 
             Orders::<T>::insert(
@@ -903,21 +910,21 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             // check that this is the fulfiller
             if order.order_status != 5 {
-                fail!(Error::<T>::OrderStatus3)
+                return Err(Error::<T>::OrderStatus3)
             }
 
             // Order has been invoiced. The buyer is now deciding to accept or other
             match order_status {
                 // Invoice is disputed. TODO provide the ability to change the invoice and resubmit
-                3 => fail!(Error::<T>::NotImplmented1),
+                3 => return Err(Error::<T>::NotImplmented1),
                 6 => {
                     // Invoice Accepted. Now pay-up!.
                     if let Err(_e) = T::Prefunding::settle_prefunded_invoice(o, h, uid) {
-                        fail!(Error::<T>::InPrefunding6)
+                        return Err(Error::<T>::InPrefunding6)
                     }
                     Self::deposit_event(Event::InvoiceSettled(uid));
                 }
-                _ => fail!(Error::<T>::StatusNotAllowed5),
+                _ => return Err(Error::<T>::StatusNotAllowed5),
             }
             // Update the status in this module
 
@@ -936,7 +943,7 @@ mod pallet {
         /// This is used by any party that wants to accept a market order in whole or part.
         /// This is non-blocking and can accept many applicants
         fn postulate_simple_prefunded_open_order() -> DispatchResultWithPostInfo {
-            fail!("TODO")
+            return Err("TODO")
         }
     }
 

@@ -78,9 +78,9 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
         pallet_prelude::*,
         traits::StorageVersion,
+        ensure,
     };
     use frame_system::pallet_prelude::*;
 
@@ -141,6 +141,8 @@ mod pallet {
         TransactionCompleted,
         /// Someone is attempting to use this TX_UID after a transaction failed.
         TransactionIdInUse,
+        /// Incorrect owner of transaction
+        NotTransactionOwner,
     }
 
     #[pallet::hooks]
@@ -228,22 +230,25 @@ mod pallet {
             // then check that the supplied hash is owned by the signer of the transaction
             match e {
                 RecordType::Teams => {
-                    if false == T::Projects::is_project_owner(o, k) {
-                        Self::deposit_event(Event::ErrorRecordOwner(t));
-                        fail!("You cannot add a record you do not own");
-                    }
+                    ensure!(T::Projects::is_project_owner(o, k), Error::<T>::NotTransactionOwner),
+                    // if false == T::Projects::is_project_owner(o, k) {
+                        // Self::deposit_event(Event::ErrorRecordOwner(t));
+                        // return Err("You cannot add a record you do not own");
+                        // }
                 }
                 RecordType::Timekeeping => {
-                    if false == T::Timekeeping::is_time_record_owner(o, k) {
-                        Self::deposit_event(Event::ErrorRecordOwner(t));
-                        fail!("You cannot add a record you do not own");
-                    }
+                    ensure!(T::Timekeeping::is_time_record_owner(o, k), Error::<T>::NotTransactionOwner),
+                    // if false == T::Timekeeping::is_time_record_owner(o, k) {
+                        // Self::deposit_event(Event::ErrorRecordOwner(t));
+                        // return Err("You cannot add a record you do not own");
+                        // }
                 }
-                RecordType::Orders => {
-                    if false == T::Orders::is_order_party(o, k) {
-                        Self::deposit_event(Event::ErrorRecordOwner(t));
-                        fail!("You cannot add a record you do not own");
-                    }
+                    RecordType::Orders => {
+                    ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner),
+                    // if false == T::Orders::is_order_party(o, k) {
+                    //     Self::deposit_event(Event::ErrorRecordOwner(t));
+                    //     return Err("You cannot add a record you do not own");
+                    // }
                 }
             }
 
@@ -251,48 +256,66 @@ mod pallet {
         }
 
         fn insert_record(k: T::Hash, t: T::Hash) -> DispatchResultWithPostInfo {
-            // TODO implement fee payment mechanism (currently just transaction fee)
+            // TODO implement fee payment mechanism (currently just transaction fee) for archiving a record.
             IsValidRecord::<T>::insert(k, t);
 
             Ok(().into())
         }
 
         fn start_uuid(u: T::Hash) -> DispatchResultWithPostInfo {
-            if IsSuccessful::<T>::contains_key(&u) {
-                // Throw an error because the transaction already completed.
-                fail!(Error::<T>::TransactionCompleted);
-            } else if IsStarted::<T>::contains_key(&u) {
-                // Apparently someone is attempting to use this TX_UID after a transaction failed.
-                fail!(Error::<T>::TransactionIdInUse);
-            } else {
-                // this is a new UUID just starting the transaction
-                let current_block = frame_system::Pallet::<T>::block_number();
-                let default_bytes = b"nobody can save fiat currency now";
-                let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
-                TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
-                IsStarted::<T>::insert(u, current_block);
-            }
+            ensure!(!IsSuccessful::<T>::contains_key(&u), Error::<T>::TransactionCompleted);
+            ensure!(!IsStarted::<T>::contains_key(&u), Error::<T>::TransactionIdInUse);
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let default_bytes = b"nobody can save fiat currency now";
+            let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
+            TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
+            IsStarted::<T>::insert(u, current_block);
+            
+            // if IsSuccessful::<T>::contains_key(&u) {
+            //     // Throw an error because the transaction already completed.
+            //     return Err(Error::<T>::TransactionCompleted);
+            // } else if IsStarted::<T>::contains_key(&u) {
+            //     // Apparently someone is attempting to use this TX_UID after a transaction failed.
+            //     return Err(Error::<T>::TransactionIdInUse);
+            // } else {
+                //     // this is a new UUID just starting the transaction
+                //     let current_block = frame_system::Pallet::<T>::block_number();
+            //     let default_bytes = b"nobody can save fiat currency now";
+            //     let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
+            //     TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
+            //     IsStarted::<T>::insert(u, current_block);
+            // }
 
             Ok(().into())
         }
-
+        
         fn end_uuid(u: T::Hash) -> DispatchResultWithPostInfo {
-            if IsSuccessful::<T>::contains_key(&u) {
-                // Throw an error because the transaction already completed
-                fail!(Error::<T>::TransactionCompleted);
-            } else if IsStarted::<T>::contains_key(&u) {
-                // The transaction is now completed successfully update the state change
-                // remove from started, and place in successful
-                let current_block = frame_system::Pallet::<T>::block_number();
-                let block: u32 = T::BonsaiConverter::convert(current_block);
-                let block = block + 172800_u32; // cleanup in 30 Days
-                let deletion_block: T::BlockNumber = T::BonsaiConverter::convert(block);
-                IsStarted::<T>::remove(&u);
-                IsSuccessful::<T>::insert(u, deletion_block);
-            } else {
-                // This situation should not exist.
-                fail!(Error::<T>::TransactionCompleted);
-            }
+            ensure!(!IsSuccessful::<T>::contains_key(&u), Error::<T>::TransactionCompleted);
+            // The transaction is now completed successfully update the state change
+            // remove from started, and place in successful
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let block: u32 = T::BonsaiConverter::convert(current_block);
+            let block = block + 172800_u32; // cleanup in 30 Days
+            let deletion_block: T::BlockNumber = T::BonsaiConverter::convert(block);
+            IsStarted::<T>::remove(&u);
+            IsSuccessful::<T>::insert(u, deletion_block);
+
+            // if IsSuccessful::<T>::contains_key(&u) {
+            //     // Throw an error because the transaction already completed
+            //     return Err(Error::<T>::TransactionCompleted);
+            // } else if IsStarted::<T>::contains_key(&u) {
+            //     // The transaction is now completed successfully update the state change
+            //     // remove from started, and place in successful
+            //     let current_block = frame_system::Pallet::<T>::block_number();
+            //     let block: u32 = T::BonsaiConverter::convert(current_block);
+            //     let block = block + 172800_u32; // cleanup in 30 Days
+            //     let deletion_block: T::BlockNumber = T::BonsaiConverter::convert(block);
+            //     IsStarted::<T>::remove(&u);
+            //     IsSuccessful::<T>::insert(u, deletion_block);
+            // } else {
+            //     // This situation should not exist.
+            //     return Err(Error::<T>::TransactionCompleted);
+            // }
 
             Ok(().into())
         }

@@ -45,7 +45,7 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
-        fail, 
+        ensure,
         pallet_prelude::*,
         traits::StorageVersion,
     };
@@ -153,9 +153,11 @@ mod pallet {
             let _who = ensure_root(origin)?;
 
             // abandon if this is the same controller
-            if Self::is_controller(&controller) {
-                fail!(Error::<T>::SameController);
-            }
+            ensure!(Self::is_controller(&controller), Error::<T>::SameController);
+
+            // if Self::is_controller(&controller) {
+            //     return Err(Error::<T>::SameController);
+            // }
 
             // insert new controller
             Controller::<T>::put(controller);
@@ -173,7 +175,7 @@ mod pallet {
             } else if Self::check_setup() {
                 TransferStatus::<T>::put(true)
             } else {
-                fail!(Error::<T>::ControllerNotSet);
+                return Err(Error::<T>::ControllerNotSet);
             }
 
             Ok(().into())
@@ -183,10 +185,11 @@ mod pallet {
         #[pallet::weight(0/*TODO*/)]
         pub fn mint_coins(origin: OriginFor<T>, quantity: u128) -> DispatchResultWithPostInfo {
             let _who = ensure_root(origin)?;
+            ensure!(!Self::transfer_status(), Error::<T>::CannotMintCoins);
 
-            if Self::transfer_status() {
-                fail!(Error::<T>::CannotMintCoins);
-            }
+            // if Self::transfer_status() {
+            //     return Err(Error::<T>::CannotMintCoins);
+            // }
 
             let supply = Self::max_issuance()
                 .checked_add(quantity)
@@ -211,11 +214,12 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             let _who = ensure_root(origin)?;
             let unissued = Self::unissued();
-
             // check that the amount is not greater than the available funds
-            if amount > unissued {
-                fail!(Error::<T>::InsufficientFunds);
-            }
+            ensure!(amount > unissued, Error::<T>::InsufficientFunds);
+
+            // if amount > unissued {
+            //     return Err(Error::<T>::InsufficientFunds);
+            // }
 
             // Those should never error.
             let unissued = unissued.checked_sub(amount).ok_or(Error::<T>::Overflow)?;
@@ -238,15 +242,16 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
             let issued = Self::issued();
-
             // ensure that this is the controller account
-            if Self::is_controller(&who) == false {
-                fail!(Error::<T>::NotController);
-            }
-
-            if amount > issued {
-                fail!(Error::<T>::InsufficientFunds);
-            }
+            ensure!(Self::is_controller(&who), Error::<T>::NotController);
+            // if Self::is_controller(&who) == false {
+                //     return Err(Error::<T>::NotController);
+                // }
+                
+            ensure!(amount <= issued, Error::<T>::InsufficientFunds);
+            // if amount > issued {
+            //     return Err(Error::<T>::InsufficientFunds);
+            // }
 
             let issued = issued.checked_sub(amount).ok_or(Error::<T>::Overflow)?;
             let new_balance = match Self::account_id_balances(&to) {
@@ -278,19 +283,20 @@ mod pallet {
             amount: u128,
         ) -> DispatchResultWithPostInfo {
             let from = ensure_signed(origin)?;
-
             // are transfers open?
-            if Self::transfer_status() == false {
-                fail!(Error::<T>::TransfersNotOpen);
-            }
+            ensure!(Self::transfer_status(), Error::<T>::TransfersNotOpen);
+            // if Self::transfer_status() == false {
+            //     return Err(Error::<T>::TransfersNotOpen);
+            // }
 
             // Get the balance of sender
             let new_sender_balance =
                 Self::account_id_balances(&from).ok_or(Error::<T>::InsufficientFunds)?;
+            
             let new_receiver_balance = Self::account_id_balances(&to).unwrap_or(0);
-
+            // TODO this logic is all wrong.    
             match new_sender_balance.cmp(&amount) {
-                core::cmp::Ordering::Less => fail!(Error::<T>::InsufficientFunds),
+                core::cmp::Ordering::Less => return Err(Error::<T>::InsufficientFunds),
                 core::cmp::Ordering::Greater => {
                     // reduce balance on sender
                     let new_sender_balance = new_sender_balance
