@@ -234,10 +234,7 @@ mod pallet {
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
-            ensure!(
-                project_owner == changer,
-                Error::<T>::ProjectCannotReassignNotOwned
-            );
+            ensure!(project_owner == changer, Error::<T>::ProjectCannotReassignNotOwned);
 
             // retain all other projects except the one we want to reassign
             OwnerProjectsList::<T>::mutate_or_err(&project_owner, |owner_projects_list| {
