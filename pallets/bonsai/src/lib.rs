@@ -244,7 +244,7 @@ mod pallet {
                         // }
                 }
                     RecordType::Orders => {
-                    ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner;
+                    ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner);
                     // if false == T::Orders::is_order_party(o, k) {
                     //     Self::deposit_event(Event::ErrorRecordOwner(t));
                     //     return Err("You cannot add a record you do not own");
