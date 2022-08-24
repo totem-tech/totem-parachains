@@ -3,7 +3,7 @@
   "id": "rapex",
   "chainType": "Live",
   "bootNodes": [
-    "/dns4/r-boot-1.kapex.network/tcp/41333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",
+    // "/dns4/r-boot-1.kapex.network/tcp/41333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",
   ],
   "telemetryEndpoints": [
     [
@@ -32,28 +32,28 @@
         "parachainId": 2007
       },
       "sudo": {
-        "key": "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3"
+        // "key": "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3"
       },
       "balances": {
         "balances": [
           [
-            "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
+            // "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
             2541818000000000000
           ],
           [
-            "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
             20000000000000000
           ],
           [
-            "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
             20000000000000000
           ]
         ]
       },
       "collatorSelection": {
         "invulnerables": [
-          "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
-          "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
+          // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+          // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
         ],
         "candidacyBond": 16000000000,
         "desiredCandidates": 0
@@ -61,17 +61,17 @@
       "session": {
         "keys": [
           [
-            "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
-            "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
             {
-              "aura": "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq"
+              // "aura": "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq"
             }
           ],
           [
-            "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
-            "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
             {
-              "aura": "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
+              // "aura": "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
             }
           ]
         ]
@@ -86,15 +86,15 @@
       "accounting": {
         "openingBalances": [
           [
-            "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
+            // "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
             2541818000000000000
           ],
           [
-            "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
             20000000000000000
           ],
           [
-            "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
             20000000000000000
           ]
         ]
