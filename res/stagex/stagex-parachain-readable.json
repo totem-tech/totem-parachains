@@ -1,9 +1,9 @@
 {
-  "name": "Rapex",
-  "id": "rapex",
+  "name": "Stagex",
+  "id": "stagex",
   "chainType": "Live",
   "bootNodes": [
-    // "/dns4/r-boot-1.kapex.network/tcp/41333/ws/p2p/12D3KooWAyVMvqR9zpu3ri6SAFQewfQegrQ2iMSx8UsmXeixxCZo",
+    "/dns4/s-boot.kapex.network/tcp/30333/ws/p2p/12D3KooWRKFoutg9EBeGXaoZ2C9efLMcP1fHtFaEZfW43MnL6c9e"
   ],
   "telemetryEndpoints": [
     [
@@ -11,12 +11,12 @@
       0
     ]
   ],
-  "protocolId": "rapex",
+  "protocolId": "stagex",
   "forkId": null,
   "properties": {
     "ss58Format": 2007,
     "tokenDecimals": 12,
-    "tokenSymbol": "RAPEX"
+    "tokenSymbol": "STGX"
   },
   "relay_chain": "rococo",
   "para_id": 2007,
@@ -32,28 +32,28 @@
         "parachainId": 2007
       },
       "sudo": {
-        // "key": "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3"
+        "key": "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy"
       },
       "balances": {
         "balances": [
           [
-            // "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
+            "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy",
             2541818000000000000
           ],
           [
-            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             20000000000000000
           ],
           [
-            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             20000000000000000
           ]
         ]
       },
       "collatorSelection": {
         "invulnerables": [
-          // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
-          // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
+          "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
+          "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt"
         ],
         "candidacyBond": 16000000000,
         "desiredCandidates": 0
@@ -61,17 +61,17 @@
       "session": {
         "keys": [
           [
-            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
-            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             {
-              // "aura": "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq"
+              "aura": "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5"
             }
           ],
           [
-            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
-            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             {
-              // "aura": "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU"
+              "aura": "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt"
             }
           ]
         ]
@@ -86,15 +86,15 @@
       "accounting": {
         "openingBalances": [
           [
-            // "5EyMdKjqZgCeNJrjhGDGigHGhvYtyMCgybk4LNSqgxWQUHJ3",
+            "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy",
             2541818000000000000
           ],
           [
-            // "5FpvZBV1nxFxysNKsXnTFzDU8EmkPdjg23RajS7qZp64hfgq",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             20000000000000000
           ],
           [
-            // "5GU68rgaaTYarNDt7U5MKcQbcGZT9EqptBTegvaz75b5GLiU",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             20000000000000000
           ]
         ]

@@ -29,8 +29,10 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn sc_service::ChainSpec>, St
 		"local" => Box::new(chain_spec::local_testnet_config()),
 		
 		// Totem specific
-		// Lego Testnet (Rococo and Rococo Local)
+		// Lego Testnet (Rococo Local)
 		"lego" => Box::new(chain_spec::lego_config()?),
+		// Stagex Testnet (Rococo Live)
+		"stagex" => Box::new(chain_spec::stagex_config()?),
 		// Wapex Testnet (Westend)
 		"wapex" => Box::new(chain_spec::wapex_config()?),
 		// Kapex Live (Polkadot)
