@@ -17,7 +17,7 @@
   "properties": {
     "ss58Format": 2007,
     "tokenDecimals": 12,
-    "tokenSymbol": "KAPEX"
+    "tokenSymbol": "KPX"
   },
   "relay_chain": "polkadot",
   "para_id": 2007,

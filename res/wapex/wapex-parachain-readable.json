@@ -16,10 +16,10 @@
   "properties": {
     "ss58Format": 2007,
     "tokenDecimals": 12,
-    "tokenSymbol": "WAPEX"
+    "tokenSymbol": "WPX"
   },
-  "relay_chain": "westend",
-  "para_id": 2107,
+  "relay_chain": "rococo",
+  "para_id": 2001,
   "consensusEngine": null,
   "codeSubstitutes": {},
   "genesis": {
