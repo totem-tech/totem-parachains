@@ -2,7 +2,9 @@
   "name": "Rococo Totem Relaychain",
   "id": "rococo_totem_relaychain",
   "chainType": "Local",
-  "bootNodes": [],
+  "bootNodes": [
+    "/ip4/159.89.1.153/tcp/31433/ws/p2p/12D3KooWRpKwCpcK7tBUf2YEa8Kh1VxhCP1s8EtAyRJQEDtpMMA2"
+  ],
   "telemetryEndpoints": null,
   "protocolId": "dot",
   "forkId": null,
