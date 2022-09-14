@@ -78,6 +78,10 @@ pub fn kapex_config() -> Result<DummyChainSpec, String> {
 	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/kapex/kapex-parachain-raw.json")[..])
 }
 
+pub fn stagex_config() -> Result<DummyChainSpec, String> {
+	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/stagex/stagex-parachain-raw.json")[..])
+}
+
 pub fn development_config() -> ChainSpec {
 	// Give your base currency a unit name and decimal places
 	let mut properties = sc_chain_spec::Properties::new();
