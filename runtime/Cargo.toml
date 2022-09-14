@@ -1,6 +1,6 @@
 [package]
 name = "totem-parachain-runtime"
-version = "1.1.2"
+version = "1.1.3"
 authors = ['Totem Accounting <support@totemaccounting.com>']
 description = 'Totem Parachain Runtime'
 license = 'GNU'
@@ -120,7 +120,6 @@ std = [
 	"pallet-collator-selection/std",
 	"pallet-session/std",
 	"pallet-sudo/std",
-	# "pallet-template/std",
 	"pallet-timestamp/std",
 	"pallet-transaction-payment-rpc-runtime-api/std",
 	"pallet-transaction-payment/std",
@@ -155,7 +154,6 @@ runtime-benchmarks = [
 	"frame-system/runtime-benchmarks",
 	"pallet-balances-totem/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
-	# "pallet-template/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
 	"sp-runtime/runtime-benchmarks",

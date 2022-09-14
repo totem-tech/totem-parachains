@@ -13,21 +13,14 @@ readme = "README.md"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-# codec = { package = "parity-scale-codec", version = "3.0.0" }
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
 	"derive"
 ] }
 jsonrpsee = { version = "0.15.1", features = ["server", "macros"] }
-# pallet-transaction-payment-rpc-runtime-api = { version = "4.0.0-dev", path = "./runtime-api" }
-# sp-api = { version = "4.0.0-dev", path = "../../../primitives/api" }
-# sp-blockchain = { version = "4.0.0-dev", path = "../../../primitives/blockchain" }
-# sp-core = { version = "6.0.0", path = "../../../primitives/core" }
 pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.28" }
 sp-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.28" }
 sp-blockchain = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", branch = "polkadot-v0.9.28" }
 sp-core = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
 
-# sp-rpc = { version = "6.0.0", path = "../../../primitives/rpc" }
-# sp-runtime = { version = "6.0.0", path = "../../../primitives/runtime" }
 sp-rpc = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
 sp-runtime = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
