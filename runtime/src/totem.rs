@@ -5,6 +5,7 @@ impl pallet_accounting::Config for Runtime {
     type Event = Event;
     type AccountingConverter = Converter;
     type Currency = Balances;
+    type RandomThing = RandomnessCollectiveFlip;
 }
 
 // impl pallet_archive::Config for Runtime {

@@ -5203,7 +5203,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-accounting"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -5213,7 +5213,6 @@ dependencies = [
  "scale-info",
  "sp-arithmetic",
  "sp-core",
- "sp-io",
  "sp-runtime",
  "sp-std",
  "totem-common",
@@ -11014,7 +11013,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-node"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -11080,7 +11079,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-runtime"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -11105,6 +11104,7 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances-totem",
  "pallet-collator-selection",
+ "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
