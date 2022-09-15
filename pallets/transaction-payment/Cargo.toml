@@ -1,11 +1,11 @@
 [package]
 name = "pallet-transaction-payment-totem"
-version = "4.0.0-dev"
+version = "1.1.0"
 authors = ["Parity Technologies <admin@parity.io>"]
 edition = "2021"
 license = "Apache-2.0"
-homepage = "https://substrate.io"
-repository = "https://github.com/paritytech/substrate/"
+homepage = 'https://totemaccounting.com'
+repository = 'https://gitlab.com/totem-tech/totem'
 description = "FRAME pallet to manage transaction payments adapted for Totem"
 readme = "README.md"
 
