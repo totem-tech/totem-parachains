@@ -330,6 +330,18 @@ impl pallet_authorship::Config for Runtime {
 }
 
 parameter_types! {
+	pub const IndexDeposit: Balance = THOUSAND;
+}
+
+impl pallet_indices::Config for Runtime {
+	type AccountIndex = Index;
+	type Currency = pallet_balances_totem::Pallet<Runtime>;
+	type Deposit = IndexDeposit;
+	type Event = Event;
+	type WeightInfo = pallet_indices::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
 	pub const ExistentialDeposit: Balance = EXISTENTIAL_DEPOSIT;
 	pub const MaxLocks: u32 = 50;
 	pub const MaxReserves: u32 = 50;
@@ -369,6 +381,13 @@ impl pallet_transaction_payment::Config for Runtime {
 }
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
+
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type PalletsOrigin = OriginCaller;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
 
 parameter_types! {
 	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT / 4;
@@ -486,6 +505,8 @@ construct_runtime!(
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
 		ParachainInfo: parachain_info::{Pallet, Storage, Config} = 3,
 		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
+		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
+		Utility: pallet_utility = 6,
 
 		// Monetary stuff.
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
