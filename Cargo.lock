@@ -4857,7 +4857,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-accounting"
-version = "1.1.1"
+version = "1.2.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -5689,7 +5689,7 @@ dependencies = [
 
 [[package]]
 name = "pallet-transaction-payment-totem"
-version = "4.0.0-dev"
+version = "1.1.0"
 dependencies = [
  "frame-support",
  "frame-system",
@@ -10691,7 +10691,11 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-node"
+<<<<<<< HEAD
 version = "1.1.3"
+=======
+version = "1.3.0"
+>>>>>>> kapex-v1.3.0-polkadot-v0.9.28-alignment
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -10736,6 +10740,7 @@ dependencies = [
  "sc-transaction-pool-api",
  "serde",
  "sp-api",
+ "sp-arithmetic",
  "sp-block-builder",
  "sp-blockchain",
  "sp-consensus",
@@ -10759,7 +10764,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-runtime"
-version = "1.1.3"
+version = "1.3.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -10784,12 +10789,14 @@ dependencies = [
  "pallet-authorship",
  "pallet-balances-totem",
  "pallet-collator-selection",
+ "pallet-indices",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",
  "pallet-timestamp",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-payment-totem",
+ "pallet-utility",
  "pallet-xcm",
  "parachain-info",
  "parity-scale-codec",
@@ -10799,6 +10806,7 @@ dependencies = [
  "serde",
  "smallvec",
  "sp-api",
+ "sp-arithmetic",
  "sp-block-builder",
  "sp-consensus-aura",
  "sp-core",

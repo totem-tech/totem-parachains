@@ -59,6 +59,28 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 		amount: CoinAmount,
 	) -> DispatchResult;
 
+	fn set_reserve_amount(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
+
+	fn unreserve_amount(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
+
+	fn slash_reserve(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
+
+	fn reassign_reserve(
+		slashed: AccountId,
+		beneficiary: AccountId,
+		amount: CoinAmount,
+		is_free_balance: bool,
+	) -> DispatchResult;
+
 	fn account_for_fees(fee: CoinAmount, payer: AccountId) -> DispatchResult;
 	// fn account_for_burnt_fees(fee: CoinAmount, loser: AccountId) -> DispatchResult;
 	// fn distribute_fees_rewards(fee: CoinAmount, author: AccountId) -> DispatchResult;
@@ -137,6 +159,36 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	}
 
 	fn account_for_fees(_f: CoinAmount, _p: AccountId) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+
+	fn set_reserve_amount(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+
+	fn unreserve_amount(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+
+	fn slash_reserve(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+	
+	fn reassign_reserve(
+		_slashed: AccountId,
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+		_is_free_balance: bool,
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
