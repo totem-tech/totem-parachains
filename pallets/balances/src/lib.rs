@@ -1042,16 +1042,24 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 						let actual = cmp::min(from_account.reserved, value);
 						ensure!(best_effort || actual == value, Error::<T, I>::InsufficientBalance);
 						match status {
-							Status::Free =>
+							Status::Free => {
 								to_account.free = to_account
 									.free
 									.checked_add(&actual)
-									.ok_or(ArithmeticError::Overflow)?,
-							Status::Reserved =>
+									.ok_or(ArithmeticError::Overflow)?;
+									// Added for Totem Accounting
+									// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
+									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, false).ok();								
+								},
+							Status::Reserved => {
 								to_account.reserved = to_account
 									.reserved
 									.checked_add(&actual)
-									.ok_or(ArithmeticError::Overflow)?,
+									.ok_or(ArithmeticError::Overflow)?;
+									// Added for Totem Accounting
+									// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
+									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, true).ok();
+								},
 						}
 						from_account.reserved -= actual;
 						Ok(actual)
@@ -1059,6 +1067,8 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 				)
 			},
 		)?;
+
+
 
 		Self::deposit_event(Event::ReserveRepatriated {
 			from: slashed.clone(),
@@ -1795,6 +1805,9 @@ where
 			Self::ensure_can_withdraw(&who, value, WithdrawReasons::RESERVE, account.free)
 		})?;
 
+		// Added for Totem Accounting
+		T::Accounting::set_reserve_amount(who.clone(), value.clone())?;
+
 		Self::deposit_event(Event::Reserved { who: who.clone(), amount: value });
 		Ok(())
 	}
@@ -1818,7 +1831,12 @@ where
 			account.free = account.free.defensive_saturating_add(actual);
 			actual
 		}) {
-			Ok(x) => x,
+			Ok(x) => {
+				// Added for Totem Accounting
+				// TODO Errors in the accounting are not handled correctly - the `ok()` shim has been used instead
+				T::Accounting::unreserve_amount(who.clone(), x.clone()).ok();
+				x
+			},
 			Err(_) => {
 				// This should never happen since we don't alter the total amount in the account.
 				// If it ever does, then we should fail gracefully though, indicating that nothing
@@ -1868,9 +1886,16 @@ where
 				(NegativeImbalance::new(actual), value - actual)
 			}) {
 				Ok((imbalance, not_slashed)) => {
+					let accounting_amount = value.saturating_sub(not_slashed);
+
+					// Added for Totem Accounting
+					// TODO Errors in the accounting are not handled correctly - the `ok()` shim has been used instead
+					T::Accounting::slash_reserve(who.clone(), accounting_amount.clone()).ok();
+
 					Self::deposit_event(Event::Slashed {
 						who: who.clone(),
-						amount: value.saturating_sub(not_slashed),
+						// amount: value.saturating_sub(not_slashed),
+						amount: accounting_amount,
 					});
 					return (imbalance, not_slashed)
 				},
