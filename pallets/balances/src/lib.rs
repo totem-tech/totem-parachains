@@ -176,7 +176,7 @@ use frame_support::{
 		Get, Imbalance, LockIdentifier, LockableCurrency, NamedReservableCurrency, OnUnbalanced,
 		ReservableCurrency, SignedImbalance, StoredMap, TryDrop, WithdrawReasons,
 	},
-	WeakBoundedVec,
+	PalletId, WeakBoundedVec,
 };
 use frame_system as system;
 use scale_info::TypeInfo;
@@ -244,6 +244,10 @@ pub mod pallet {
 
 		/// The accounting pallet.
 		type Accounting: Posting<Self::AccountId, Self::Hash, Self::BlockNumber, Self::Balance>;
+
+		/// The treasury's pallet id, used for deriving its sovereign account ID.
+		#[pallet::constant]
+		type PalletId: Get<PalletId>;
 	}
 
 	#[pallet::pallet]
@@ -1452,6 +1456,15 @@ where
 				Zero::zero()
 			});
 		});
+
+		// Reducing the global ledger - but will need to determine 
+		// BalanceSheet: {
+		// 	Assets: {
+		// 	  CurrentAssets: InternalBalance credit
+		// BalanceSheet: {
+		// 	Equity: NetworkReserves debit
+
+
 		PositiveImbalance::new(amount)
 	}
 
@@ -1687,6 +1700,11 @@ where
 					Some(x) => x,
 					None => return Ok(Self::PositiveImbalance::zero()),
 				};
+
+				// Added for Totem Accounting
+				/// The account ID of the treasury pot.
+				let account_id = T::PalletId::get().into_account_truncating();
+				T::Accounting::account_for_simple_transfer(account_id, who.clone(), value)?;
 
 				Self::deposit_event(Event::Deposit { who: who.clone(), amount: value });
 				Ok(PositiveImbalance::new(value))

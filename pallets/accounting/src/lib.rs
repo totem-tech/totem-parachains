@@ -512,8 +512,7 @@ mod pallet {
                 Record {
                     primary_party: netfee_address.clone(),
                     counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome
-::NetworkFeeIncome)))),
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome::NetworkFeeIncome)))),
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,

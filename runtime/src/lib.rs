@@ -348,6 +348,7 @@ parameter_types! {
 	pub const ExistentialDeposit: Balance = EXISTENTIAL_DEPOSIT;
 	pub const MaxLocks: u32 = 50;
 	pub const MaxReserves: u32 = 50;
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
 }
 
 impl pallet_balances_totem::Config for Runtime {
@@ -363,6 +364,7 @@ impl pallet_balances_totem::Config for Runtime {
 	type MaxReserves = MaxReserves;
 	type ReserveIdentifier = [u8; 8];
 	type Accounting = pallet_accounting::Pallet<Self>;
+	type PalletId = TreasuryPalletId;
 }
 
 parameter_types! {
