@@ -1,9 +1,9 @@
 {
-  "name": "Wapex",
-  "id": "wapex",
+  "name": "Stagex",
+  "id": "stagex",
   "chainType": "Live",
   "bootNodes": [
-    "/dns4/w-boot-1.kapex.network/tcp/31333/ws/p2p/12D3KooWAhxe6K9RbzsGgrE3nRtSCzRbgSDYUHZgSPSRQfBx7CAV"
+    "/dns4/s-boot-1.kapex.network/tcp/31333/ws/p2p/12D3KooWRKFoutg9EBeGXaoZ2C9efLMcP1fHtFaEZfW43MnL6c9e"
   ],
   "telemetryEndpoints": [
     [
@@ -11,15 +11,15 @@
       0
     ]
   ],
-  "protocolId": "wapex",
+  "protocolId": "stagex",
   "forkId": null,
   "properties": {
     "ss58Format": 2007,
     "tokenDecimals": 12,
-    "tokenSymbol": "WPX"
+    "tokenSymbol": "STGX"
   },
   "relay_chain": "rococo",
-  "para_id": 2001,
+  "para_id": 2007,
   "consensusEngine": null,
   "codeSubstitutes": {},
   "genesis": {
@@ -29,31 +29,31 @@
       },
       "parachainSystem": null,
       "parachainInfo": {
-        "parachainId": 2107
+        "parachainId": 2007
       },
       "sudo": {
-        "key": "5EHt73bxrpC7VURsUhwV7PrqRy4g732TQbKFWGwXWPcgNSYz"
+        "key": "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy"
       },
       "balances": {
         "balances": [
           [
-            "5EHt73bxrpC7VURsUhwV7PrqRy4g732TQbKFWGwXWPcgNSYz",
+            "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy",
             2541818000000000000
           ],
           [
-            "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             20000000000000000
           ],
           [
-            "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             20000000000000000
           ]
         ]
       },
       "collatorSelection": {
         "invulnerables": [
-          "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7",
-          "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z"
+          "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
+          "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt"
         ],
         "candidacyBond": 16000000000,
         "desiredCandidates": 0
@@ -61,17 +61,17 @@
       "session": {
         "keys": [
           [
-            "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7",
-            "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             {
-              "aura": "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7"
+              "aura": "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5"
             }
           ],
           [
-            "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z",
-            "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             {
-              "aura": "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z"
+              "aura": "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt"
             }
           ]
         ]
@@ -86,15 +86,15 @@
       "accounting": {
         "openingBalances": [
           [
-            "5EHt73bxrpC7VURsUhwV7PrqRy4g732TQbKFWGwXWPcgNSYz",
+            "5Fsu8KpHxNu8PwiE3gg7w5XpkgQozmP5jUTjMixCXL3iAmQy",
             2541818000000000000
           ],
           [
-            "5DbwcnXEBkTGUFXy1JBWvJCEaU49uGJPNFegtyUws5ACH4Y7",
+            "5DDBmg5wuSm9AR36dfZ8kJgdshadEexCarbHeftbXveqMBd5",
             20000000000000000
           ],
           [
-            "5G6W9BmF4i7E381cyFhodPqchVtPY7P56Dxt8hCW6XJ6go6z",
+            "5Gzr97b6feCUEY5TopdRj8iDqPwgXf6AYNPegYtmcx1bg8xt",
             20000000000000000
           ]
         ]

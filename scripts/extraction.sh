@@ -20,6 +20,7 @@
 # Then execute the next step to convert the readable chainspec to raw format for sharing.
 #______________________________________________________________#
 
+# ./target/release/totem-parachain-collator build-spec --chain ./res/stagex/stagex-parachain-readable.json --raw > ./res/stagex/stagex-parachain-raw-new.json && \
 # ./target/release/totem-parachain-collator build-spec --chain ./res/wapex/wapex-parachain-readable.json --raw > ./res/wapex/wapex-parachain-raw-new.json && \
 # ./target/release/totem-parachain-collator build-spec --chain ./res/kapex/kapex-parachain-readable.json --raw > ./res/kapex/kapex-parachain-raw-new.json && \
 # ./target/release/totem-parachain-collator build-spec --chain ./res/lego/lego-parachain-readable.json --raw > ./res/lego/lego-parachain-raw-new.json
@@ -33,6 +34,7 @@
 # ./target/release/totem-parachain-collator export-genesis-wasm --chain ./res/kapex/kapex-parachain-raw.json > ./res/parachain-genesis-wasm-new.wasm
 
 # ./target/release/totem-parachain-collator export-genesis-state --chain ./res/lego/lego-parachain-raw.json > ./res/lego/lego-genesis-state-new.state && \
+# ./target/release/totem-parachain-collator export-genesis-state --chain ./res/stagex/stagex-parachain-raw.json > ./res/stagex/stagex-genesis-state-new.state && \
 # ./target/release/totem-parachain-collator export-genesis-state --chain ./res/wapex/wapex-parachain-raw.json > ./res/wapex/wapex-genesis-state-new.state && \
 # ./target/release/totem-parachain-collator export-genesis-state --chain ./res/kapex/kapex-parachain-raw.json > ./res/kapex/kapex-genesis-state-new.state
 
