@@ -3,7 +3,7 @@
   "id": "stagex",
   "chainType": "Live",
   "bootNodes": [
-    "/dns4/s-boot-1.kapex.network/tcp/30333/ws/p2p/12D3KooWRKFoutg9EBeGXaoZ2C9efLMcP1fHtFaEZfW43MnL6c9e"
+    "/dns4/s-boot-1.kapex.network/tcp/31333/ws/p2p/12D3KooWRKFoutg9EBeGXaoZ2C9efLMcP1fHtFaEZfW43MnL6c9e"
   ],
   "telemetryEndpoints": [
     [
