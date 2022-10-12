@@ -636,7 +636,7 @@ mod pallet {
             let input = (
                 (sender, recipient),
                 pallet_timestamp::Pallet::<T>::get(),
-                sp_io::offchain::random_seed(),
+                // sp_io::offchain::random_seed(),
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );
