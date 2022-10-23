@@ -624,14 +624,6 @@ where
 	> {
 		let tip = self.0;
 		let fee = Pallet::<T>::compute_fee(len as u32, info, tip);
-
-		// // Added for Totem Accounting
-		let actual_fee = T::TransactionConverter::convert(fee.clone());
-		// Error should not happen, because there is no way the fees can overflow
-		// when converting i128 -> u128
-		T::Accounting::account_for_fees(actual_fee, who.clone())
-			.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(99)))?;
-
 		<<T as Config>::OnChargeTransaction as OnChargeTransaction<T>>::withdraw_fee(
 			who, call, info, fee, tip,
 		)
@@ -775,6 +767,12 @@ where
 	) -> Result<(), TransactionValidityError> {
 		if let Some((tip, who, imbalance)) = maybe_pre {
 			let actual_fee = Pallet::<T>::compute_actual_fee(len as u32, info, post_info, tip);
+			// // Added for Totem Accounting
+			let real_fee = T::TransactionConverter::convert(actual_fee.clone());
+			// Error should not happen, because there is no way the fees can overflow
+			// when converting i128 -> u128
+			T::Accounting::account_for_fees(real_fee, who.clone())
+				.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(99)))?;
 			T::OnChargeTransaction::correct_and_deposit_fee(
 				&who, info, post_info, actual_fee, tip, imbalance,
 			)?;
