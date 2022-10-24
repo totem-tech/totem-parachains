@@ -16,8 +16,13 @@
 # --build-arg package=totem-parachain-node \
 # --build-arg buildtype=build .
 
+# As of 24/10/2022
+# This should be considered later - currently this breaks the compile of Totem in Docker
+# FROM docker.io/paritytech/ci-linux:production as builder
+
+# Aug 11 2022 last working version of ci-linux to compile Docker image
 # This is the build stage for Totem Parachain. Here we create the binary.
-FROM docker.io/paritytech/ci-linux:production as builder
+FROM docker.io/paritytech/ci-linux:1c0fde6a-20220811 as builder
 ARG package
 ARG buildtype
 
