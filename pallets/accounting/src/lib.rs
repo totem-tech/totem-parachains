@@ -497,26 +497,6 @@ mod pallet {
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
                 },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: payer.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkFeeIncome)))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Credit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
             ];
 
             Self::handle_multiposting_amounts(&keys)?;
