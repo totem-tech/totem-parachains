@@ -17,10 +17,10 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 	"derive"
 ] }
 jsonrpsee = { version = "0.15.1", features = ["server", "macros"] }
-pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.28" }
-sp-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.28" }
-sp-blockchain = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", branch = "polkadot-v0.9.28" }
-sp-core = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
+pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.29" }
+sp-api = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", default-features = false , branch = "polkadot-v0.9.29" }
+sp-blockchain = { git = "https://github.com/paritytech/substrate", version = "4.0.0-dev", branch = "polkadot-v0.9.29" }
+sp-core = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.29', default-features = false }
 
-sp-rpc = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
-sp-runtime = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.28', default-features = false }
+sp-rpc = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.29', default-features = false }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", branch = 'polkadot-v0.9.29', default-features = false }
