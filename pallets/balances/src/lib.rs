@@ -156,6 +156,7 @@
 #[macro_use]
 mod tests;
 mod benchmarking;
+pub mod migration;
 mod tests_composite;
 mod tests_local;
 #[cfg(test)]
@@ -185,7 +186,7 @@ use sp_runtime::{
 		AtLeast32BitUnsigned, Bounded, CheckedAdd, CheckedSub, MaybeSerializeDeserialize,
 		Saturating, StaticLookup, Zero,
 	},
-	ArithmeticError, DispatchError, RuntimeDebug,
+	ArithmeticError, DispatchError, FixedPointOperand, RuntimeDebug,
 };
 use sp_std::{cmp, fmt::Debug, mem, ops::BitOr, prelude::*, result};
 pub use weights::WeightInfo;
@@ -214,13 +215,15 @@ pub mod pallet {
 			+ MaybeSerializeDeserialize
 			+ Debug
 			+ MaxEncodedLen
-			+ TypeInfo;
+			+ TypeInfo
+			+ FixedPointOperand;
 
 		/// Handler for the unbalanced reduction when removing a dust account.
 		type DustRemoval: OnUnbalanced<NegativeImbalance<Self, I>>;
 
 		/// The overarching event type.
-		type Event: From<Event<Self, I>> + IsType<<Self as frame_system::Config>::Event>;
+		type RuntimeEvent: From<Event<Self, I>>
+			+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The minimum amount required to keep an account open.
 		#[pallet::constant]
@@ -248,8 +251,13 @@ pub mod pallet {
 		type Accounting: Posting<Self::AccountId, Self::Hash, Self::BlockNumber, Self::Balance>;
 	}
 
+	/// The current storage version.
+	const STORAGE_VERSION: frame_support::traits::StorageVersion =
+		frame_support::traits::StorageVersion::new(1);
+
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
+	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T, I = ()>(PhantomData<(T, I)>);
 
 	#[pallet::call]
@@ -279,6 +287,7 @@ pub mod pallet {
 		/// ---------------------------------
 		/// - Origin account is already in memory, so no DB operations for them.
 		/// # </weight>
+		#[pallet::call_index(0)]
 		#[pallet::weight(T::WeightInfo::transfer())]
 		pub fn transfer(
 			origin: OriginFor<T>,
@@ -304,6 +313,7 @@ pub mod pallet {
 		/// it will reset the account nonce (`frame_system::AccountNonce`).
 		///
 		/// The dispatch origin for this call is `root`.
+		#[pallet::call_index(1)]
 		#[pallet::weight(
 			T::WeightInfo::set_balance_creating() // Creates a new account.
 				.max(T::WeightInfo::set_balance_killing()) // Kills an existing account.
@@ -357,6 +367,7 @@ pub mod pallet {
 		/// - Same as transfer, but additional read and write because the source account is not
 		///   assumed to be in the overlay.
 		/// # </weight>
+		#[pallet::call_index(2)]
 		#[pallet::weight(T::WeightInfo::force_transfer())]
 		pub fn force_transfer(
 			origin: OriginFor<T>,
@@ -382,6 +393,7 @@ pub mod pallet {
 		/// 99% of the time you want [`transfer`] instead.
 		///
 		/// [`transfer`]: struct.Pallet.html#method.transfer
+		#[pallet::call_index(3)]
 		#[pallet::weight(T::WeightInfo::transfer_keep_alive())]
 		pub fn transfer_keep_alive(
 			origin: OriginFor<T>,
@@ -411,6 +423,7 @@ pub mod pallet {
 		///   keep the sender account alive (true). # <weight>
 		/// - O(1). Just like transfer, but reading the user's transferable balance first.
 		///   #</weight>
+		#[pallet::call_index(4)]
 		#[pallet::weight(T::WeightInfo::transfer_all())]
 		pub fn transfer_all(
 			origin: OriginFor<T>,
@@ -429,6 +442,7 @@ pub mod pallet {
 		/// Unreserve some balance from a user by force.
 		///
 		/// Can only be called by ROOT.
+		#[pallet::call_index(5)]
 		#[pallet::weight(T::WeightInfo::force_unreserve())]
 		pub fn force_unreserve(
 			origin: OriginFor<T>,
@@ -480,7 +494,7 @@ pub mod pallet {
 		VestingBalance,
 		/// Account liquidity restrictions prevent withdrawal
 		LiquidityRestrictions,
-		/// Balance too low to send value
+		/// Balance too low to send value.
 		InsufficientBalance,
 		/// Value too low to create account due to existential deposit
 		ExistentialDeposit,
@@ -499,7 +513,15 @@ pub mod pallet {
 	/// The total units issued in the system.
 	#[pallet::storage]
 	#[pallet::getter(fn total_issuance)]
+	#[pallet::whitelist_storage]
 	pub type TotalIssuance<T: Config<I>, I: 'static = ()> = StorageValue<_, T::Balance, ValueQuery>;
+
+	/// The total units of outstanding deactivated balance in the system.
+	#[pallet::storage]
+	#[pallet::getter(fn inactive_issuance)]
+	#[pallet::whitelist_storage]
+	pub type InactiveIssuance<T: Config<I>, I: 'static = ()> =
+		StorageValue<_, T::Balance, ValueQuery>;
 
 	/// The Balances pallet example of storing the balance of an account.
 	///
@@ -552,13 +574,6 @@ pub mod pallet {
 		ValueQuery,
 	>;
 
-	/// Storage version of the pallet.
-	///
-	/// This is set to v2.0.0 for new networks.
-	#[pallet::storage]
-	pub(super) type StorageVersion<T: Config<I>, I: 'static = ()> =
-		StorageValue<_, Releases, ValueQuery>;
-
 	#[pallet::genesis_config]
 	pub struct GenesisConfig<T: Config<I>, I: 'static = ()> {
 		pub balances: Vec<(T::AccountId, T::Balance)>,
@@ -576,8 +591,6 @@ pub mod pallet {
 		fn build(&self) {
 			let total = self.balances.iter().fold(Zero::zero(), |acc: T::Balance, &(_, n)| acc + n);
 			<TotalIssuance<T, I>>::put(total);
-
-			<StorageVersion<T, I>>::put(Releases::V2_0_0);
 
 			for (_, balance) in &self.balances {
 				assert!(
@@ -720,21 +733,6 @@ impl<Balance: Saturating + Copy + Ord> AccountData<Balance> {
 	/// The total balance in this account including any that is reserved and ignoring any frozen.
 	fn total(&self) -> Balance {
 		self.free.saturating_add(self.reserved)
-	}
-}
-
-// A value placed in storage that represents the current version of the Balances storage.
-// This value is used by the `on_runtime_upgrade` logic to determine whether we run
-// storage migration logic. This should match directly with the semantic versions of the Rust crate.
-#[derive(Encode, Decode, Clone, Copy, PartialEq, Eq, RuntimeDebug, MaxEncodedLen, TypeInfo)]
-enum Releases {
-	V1_0_0,
-	V2_0_0,
-}
-
-impl Default for Releases {
-	fn default() -> Self {
-		Releases::V1_0_0
 	}
 }
 
@@ -1079,6 +1077,9 @@ impl<T: Config<I>, I: 'static> fungible::Inspect<T::AccountId> for Pallet<T, I> 
 	fn total_issuance() -> Self::Balance {
 		TotalIssuance::<T, I>::get()
 	}
+	fn active_issuance() -> Self::Balance {
+		TotalIssuance::<T, I>::get().saturating_sub(InactiveIssuance::<T, I>::get())
+	}
 	fn minimum_balance() -> Self::Balance {
 		T::ExistentialDeposit::get()
 	}
@@ -1157,19 +1158,31 @@ impl<T: Config<I>, I: 'static> fungible::Transfer<T::AccountId> for Pallet<T, I>
 		let er = if keep_alive { KeepAlive } else { AllowDeath };
 		<Self as Currency<T::AccountId>>::transfer(source, dest, amount, er).map(|_| amount)
 	}
+
+	fn deactivate(amount: Self::Balance) {
+		InactiveIssuance::<T, I>::mutate(|b| b.saturating_accrue(amount));
+	}
+
+	fn reactivate(amount: Self::Balance) {
+		InactiveIssuance::<T, I>::mutate(|b| b.saturating_reduce(amount));
+	}
 }
 
 impl<T: Config<I>, I: 'static> fungible::Unbalanced<T::AccountId> for Pallet<T, I> {
 	fn set_balance(who: &T::AccountId, amount: Self::Balance) -> DispatchResult {
-		Self::mutate_account(who, |account| {
-			account.free = amount;
+		Self::mutate_account(who, |account| -> DispatchResult {
+			// fungibles::Unbalanced::decrease_balance didn't check account.reserved
+			// free = new_balance - reserved
+			account.free =
+				amount.checked_sub(&account.reserved).ok_or(ArithmeticError::Underflow)?;
 			Self::deposit_event(Event::BalanceSet {
 				who: who.clone(),
 				free: account.free,
 				reserved: account.reserved,
 			});
-		})?;
-		Ok(())
+
+			Ok(())
+		})?
 	}
 
 	fn set_total_issuance(amount: Self::Balance) {
@@ -1426,7 +1439,19 @@ where
 	}
 
 	fn total_issuance() -> Self::Balance {
-		<TotalIssuance<T, I>>::get()
+		TotalIssuance::<T, I>::get()
+	}
+
+	fn active_issuance() -> Self::Balance {
+		<Self as fungible::Inspect<T::AccountId>>::active_issuance()
+	}
+
+	fn deactivate(amount: Self::Balance) {
+		<Self as fungible::Transfer<T::AccountId>>::deactivate(amount);
+	}
+
+	fn reactivate(amount: Self::Balance) {
+		<Self as fungible::Transfer<T::AccountId>>::reactivate(amount);
 	}
 
 	fn minimum_balance() -> Self::Balance {

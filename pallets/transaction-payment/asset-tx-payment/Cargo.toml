@@ -14,13 +14,13 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 # Substrate dependencies
-sp-core = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.29' }
-sp-io = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.29' }
-sp-runtime = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.29' }
-sp-std = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0", default-features = false, branch = 'polkadot-v0.9.29' }
+sp-core = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.36' }
+sp-io = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.36' }
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.36' }
+sp-std = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0", default-features = false, branch = 'polkadot-v0.9.36' }
 
-frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.29' }
-frame-system = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.29' }
+frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.36' }
+frame-system = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.36' }
 pallet-transaction-payment = { path = "../../transaction-payment", package = "pallet-transaction-payment-totem", default-features = false }
 
 # Other dependencies
@@ -31,10 +31,10 @@ serde = { version = "1.0.136", optional = true }
 [dev-dependencies]
 serde_json = "1.0.85"
 
-sp-storage = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.29' }
+sp-storage = { git = 'https://github.com/paritytech/substrate.git', version = "6.0.0", default-features = false, branch = 'polkadot-v0.9.36' }
 
-pallet-assets = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.29' }
-pallet-authorship = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.29' }
+pallet-assets = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.36' }
+pallet-authorship = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", default-features = false, branch = 'polkadot-v0.9.36' }
 
 pallet-balances = { path = "../../balances", package = "pallet-balances-totem" }
 
