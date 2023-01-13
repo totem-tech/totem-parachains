@@ -171,7 +171,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("totem-parachain"),
 	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
-	spec_version: 1,
+	spec_version: 2,
 	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -330,6 +330,18 @@ impl pallet_authorship::Config for Runtime {
 }
 
 parameter_types! {
+	pub const IndexDeposit: Balance = THOUSAND;
+}
+
+impl pallet_indices::Config for Runtime {
+	type AccountIndex = Index;
+	type Currency = pallet_balances_totem::Pallet<Runtime>;
+	type Deposit = IndexDeposit;
+	type Event = Event;
+	type WeightInfo = pallet_indices::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
 	pub const ExistentialDeposit: Balance = EXISTENTIAL_DEPOSIT;
 	pub const MaxLocks: u32 = 50;
 	pub const MaxReserves: u32 = 50;
@@ -366,6 +378,15 @@ impl pallet_transaction_payment::Config for Runtime {
 	type TransactionConverter = totem_common::converter::Converter;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type Accounting = pallet_accounting::Pallet<Self>;
+}
+
+impl pallet_randomness_collective_flip::Config for Runtime {}
+
+impl pallet_utility::Config for Runtime {
+	type Event = Event;
+	type Call = Call;
+	type PalletsOrigin = OriginCaller;
+	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -484,6 +505,8 @@ construct_runtime!(
 		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent} = 2,
 		ParachainInfo: parachain_info::{Pallet, Storage, Config} = 3,
 		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
+		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
+		Utility: pallet_utility = 6,
 
 		// Monetary stuff.
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
@@ -495,6 +518,7 @@ construct_runtime!(
 		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>} = 22,
 		Aura: pallet_aura::{Pallet, Storage, Config<T>} = 23,
 		AuraExt: cumulus_pallet_aura_ext::{Pallet, Storage, Config} = 24,
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage} = 25,
 
 		// XCM helpers.
 		XcmpQueue: cumulus_pallet_xcmp_queue::{Pallet, Call, Storage, Event<T>} = 30,
