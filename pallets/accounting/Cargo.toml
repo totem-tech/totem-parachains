@@ -1,6 +1,6 @@
 [package]
 name = 'pallet-accounting'
-version = '1.4.0'
+version = '1.4.1'
 authors = ['Totem Accounting <support@totemaccounting.com>']
 description = 'Accounting Engine Pallet'
 license = 'GNU'
