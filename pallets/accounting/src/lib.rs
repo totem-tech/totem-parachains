@@ -207,7 +207,8 @@ mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        // type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
             + Convert<[u8; 32], Self::AccountId>;
@@ -303,13 +304,6 @@ mod pallet {
 
             PostingNumber::<T>::put(posting_index);
             PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
-            
-            Self::deposit_event(Event::LegderUpdate(
-                key.primary_party,
-                key.ledger,
-                key.amount,
-                posting_index,
-            ));
 
             Ok(())
         }
@@ -398,6 +392,7 @@ mod pallet {
         }
 
         /// Adds a new accounting entry in the ledger in case of a transfer
+        /// Reduce the Internal balance, and reduce the equity from the sender with the reverse for the receiver
         fn account_for_simple_transfer(
             from: T::AccountId,
             to: T::AccountId,
@@ -421,8 +416,8 @@ mod pallet {
                 Record {
                     primary_party: from.clone(),
                     counterparty: to.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkTransaction))))),
-                    amount: increase_amount,
+                    ledger: Ledger::BalanceSheet(B::Equity(E::NetworkReserves)),
+                    amount: decrease_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash,
                     changed_on_blocknumber: current_block,
@@ -441,8 +436,7 @@ mod pallet {
                 Record {
                     primary_party: to.clone(),
                     counterparty: from.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome
-::TransactionReceipt)))), 
+                    ledger: Ledger::BalanceSheet(B::Equity(E::NetworkReserves)),
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash,
@@ -831,10 +825,8 @@ mod pallet {
             let sender_encoded = sender.encode();
             let (random_value, _) = T::RandomThing::random(&sender_encoded);
             let input = (
-                // (sender, recipient),
                 tuple,
                 pallet_timestamp::Pallet::<T>::get(),
-                // sp_io::offchain::random_seed(),
                 random_value,
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
