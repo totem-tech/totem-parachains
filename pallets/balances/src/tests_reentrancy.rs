@@ -22,8 +22,7 @@
 use crate::{self as pallet_balances, Config, Pallet};
 use frame_support::{
 	parameter_types,
-	traits::{ConstU32, ConstU64, ConstU8, StorageMapShim},
-	weights::IdentityFee,
+	traits::{ConstU32, ConstU64, StorageMapShim},
 };
 use pallet_transaction_payment::CurrencyAdapter;
 use sp_core::H256;
@@ -84,10 +83,11 @@ impl frame_system::Config for Test {
 }
 
 impl pallet_transaction_payment::Config for Test {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Pallet<Test>, ()>;
-	type TransactionByteFee = ConstU64<1>;
 	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightToFee = IdentityFee<u64>;
+	type LengthToFee = IdentityFee<u64>;
 	type FeeMultiplierUpdate = ();
 }
 

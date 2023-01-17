@@ -46,6 +46,7 @@ pub struct InclusionFee<Balance> {
 	pub adjusted_weight_fee: Balance,
 }
 
+// TODO Gives a compiler warning in Totem
 impl<Balance: AtLeast32BitUnsigned + Copy> InclusionFee<Balance> {
 	/// Returns the total of inclusion fee.
 	///
@@ -74,6 +75,7 @@ pub struct FeeDetails<Balance> {
 	pub tip: Balance,
 }
 
+// TODO Gives a compiler warning in Totem
 impl<Balance: AtLeast32BitUnsigned + Copy> FeeDetails<Balance> {
 	/// Returns the final fee.
 	///

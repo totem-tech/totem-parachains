@@ -34,14 +34,14 @@ type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
 frame_support::construct_runtime!(
-	pub enum Test where
+	pub struct Test where
 		Block = Block,
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		TransactionPayment: pallet_transaction_payment::{Pallet, Storage},
+		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>},
 	}
 );
 
@@ -78,10 +78,11 @@ impl frame_system::Config for Test {
 }
 
 impl pallet_transaction_payment::Config for Test {
+	type Event = Event;
 	type OnChargeTransaction = CurrencyAdapter<Pallet<Test>, ()>;
-	type TransactionByteFee = ConstU64<1>;
 	type OperationalFeeMultiplier = ConstU8<5>;
 	type WeightToFee = IdentityFee<u64>;
+	type LengthToFee = IdentityFee<u64>;
 	type FeeMultiplierUpdate = ();
 }
 
