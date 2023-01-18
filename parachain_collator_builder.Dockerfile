@@ -32,7 +32,7 @@ WORKDIR /totem-parachains
 COPY . /totem-parachains
 
 # rust compiler command 
-RUN cargo ${buildtype} --${PROFILE} -p ${package}
+RUN cargo ${buildtype} --${PROFILE} --locked -p ${package}
 
 # This is the 2nd stage: a very small image where we copy the Totem Parachain Collator binary."
 FROM docker.io/library/ubuntu:20.04
