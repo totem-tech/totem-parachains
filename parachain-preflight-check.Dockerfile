@@ -4,7 +4,7 @@
 
 # docker build \
 # -t totemlive/totem-parachain:check \
-# -f parachain_collator_builder.Dockerfile \
+# -f parachain-preflight-check.Dockerfile \
 # --build-arg package=totem-parachain-node .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
