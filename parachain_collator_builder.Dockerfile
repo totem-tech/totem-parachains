@@ -1,12 +1,12 @@
-# Usage
-
 # This builds the Parachain Collator node for the Totem Parachain.
 
-# docker build \
-# -t totemlive/totem-parachain:local \
-# -f parachain_collator_builder.Dockerfile \
-# --build-arg package=totem-parachain-node \
-# --build-arg buildtype=check .
+# Usage
+
+# Ensure that you have already downloaded the correct/latest images before running this dockerfile.
+# !!! download the latest docker.io/paritytech/ci-linux:production !!!
+# !!! download the latest docker.io/library/ubuntu:20.04 !!!
+
+# !!! USE THE PRE-FLIGHT CHECK DOCKERFILE FIRST !!!
 
 # docker build \
 # -t totemlive/totem-parachain:local \
