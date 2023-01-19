@@ -1,8 +1,6 @@
 # Usage
 
 # This builds the Parachain Collator node for the Totem Parachain.
-# NOTE Although you _can_ execute this container directly IT WILL NOT FUNCTION AS A PARACHAIN for reasons to do with WASM deterministic build.
-# Instead you must pass the Totem Parachain Chain Specification file in the --chain argument when starting the node.
 
 # docker build \
 # -t totemlive/totem-parachain:local \
@@ -17,9 +15,6 @@
 # --build-arg buildtype=build .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
-# This is pegged to a version before the upgrade to polkadot 0.9.28, because some change was introduced after this date which caused this Docker build to fail compiling 
-# with this error `error: failed to run custom build command for librocksdb-sys v0.6.1+6.28.2`
-# FROM docker.io/paritytech/ci-linux:c391e6e6-20220426 as builder
 
 FROM docker.io/paritytech/ci-linux:production as builder
 ARG package
