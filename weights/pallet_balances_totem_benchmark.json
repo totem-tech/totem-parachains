@@ -5728,3 +5728,2868 @@
     ]
   }
 ]Created file: "./weights/pallet_balances_totem-new-test.rs"
+[
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "transfer",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 510493,
+        "storage_root_time": 5940,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450602,
+        "storage_root_time": 4340,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 452793,
+        "storage_root_time": 4167,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 401222,
+        "storage_root_time": 4607,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 444651,
+        "storage_root_time": 4597,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 444886,
+        "storage_root_time": 4203,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 422379,
+        "storage_root_time": 4127,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 489535,
+        "storage_root_time": 5298,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 458725,
+        "storage_root_time": 4524,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 449802,
+        "storage_root_time": 4219,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 438698,
+        "storage_root_time": 4298,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 457519,
+        "storage_root_time": 4721,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 443655,
+        "storage_root_time": 4232,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 439318,
+        "storage_root_time": 5135,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 442840,
+        "storage_root_time": 4312,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 465315,
+        "storage_root_time": 4658,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 452295,
+        "storage_root_time": 4686,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 441506,
+        "storage_root_time": 4650,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 441442,
+        "storage_root_time": 4297,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 453943,
+        "storage_root_time": 5224,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 622200,
+        "storage_root_time": 6542,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 456926,
+        "storage_root_time": 6251,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 458562,
+        "storage_root_time": 5252,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 455635,
+        "storage_root_time": 4661,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 467535,
+        "storage_root_time": 4542,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 467271,
+        "storage_root_time": 5040,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 451700,
+        "storage_root_time": 5319,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 433662,
+        "storage_root_time": 5316,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 486639,
+        "storage_root_time": 4864,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446972,
+        "storage_root_time": 4141,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 463254,
+        "storage_root_time": 5085,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 438003,
+        "storage_root_time": 5046,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 470472,
+        "storage_root_time": 5574,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 473678,
+        "storage_root_time": 5323,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 454930,
+        "storage_root_time": 4641,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 419938,
+        "storage_root_time": 4915,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 488207,
+        "storage_root_time": 5593,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 438547,
+        "storage_root_time": 5605,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 473451,
+        "storage_root_time": 4671,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 467771,
+        "storage_root_time": 4270,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "transfer_keep_alive",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 458764,
+        "storage_root_time": 5589,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 418148,
+        "storage_root_time": 4382,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 414638,
+        "storage_root_time": 4278,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 407208,
+        "storage_root_time": 4504,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 414762,
+        "storage_root_time": 4614,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 414561,
+        "storage_root_time": 16300,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 432380,
+        "storage_root_time": 4128,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 434132,
+        "storage_root_time": 4605,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 259060,
+        "storage_root_time": 5083,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 431449,
+        "storage_root_time": 4487,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 417939,
+        "storage_root_time": 4420,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 399807,
+        "storage_root_time": 5155,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 417350,
+        "storage_root_time": 4242,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 433894,
+        "storage_root_time": 4487,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 409087,
+        "storage_root_time": 4667,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 587401,
+        "storage_root_time": 5716,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 428785,
+        "storage_root_time": 4388,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 482524,
+        "storage_root_time": 4792,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 414116,
+        "storage_root_time": 4004,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 364521,
+        "storage_root_time": 4130,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 479379,
+        "storage_root_time": 6408,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 419661,
+        "storage_root_time": 5093,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 425994,
+        "storage_root_time": 4414,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 422494,
+        "storage_root_time": 6326,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 470827,
+        "storage_root_time": 5022,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 436942,
+        "storage_root_time": 4627,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 591387,
+        "storage_root_time": 5148,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 442624,
+        "storage_root_time": 4679,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 435170,
+        "storage_root_time": 4845,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 421500,
+        "storage_root_time": 4728,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 423195,
+        "storage_root_time": 4734,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 426127,
+        "storage_root_time": 4609,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 490895,
+        "storage_root_time": 4832,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 428125,
+        "storage_root_time": 4622,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 424109,
+        "storage_root_time": 6613,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 435858,
+        "storage_root_time": 4718,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 466537,
+        "storage_root_time": 4500,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 436603,
+        "storage_root_time": 4698,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 424156,
+        "storage_root_time": 4272,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 438841,
+        "storage_root_time": 4085,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "set_balance_creating",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 115885,
+        "storage_root_time": 5696,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 99645,
+        "storage_root_time": 4942,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 102724,
+        "storage_root_time": 4471,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97804,
+        "storage_root_time": 4084,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97798,
+        "storage_root_time": 4473,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97725,
+        "storage_root_time": 4734,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 108978,
+        "storage_root_time": 4756,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97869,
+        "storage_root_time": 4040,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 96486,
+        "storage_root_time": 3990,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97485,
+        "storage_root_time": 4243,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 96636,
+        "storage_root_time": 3971,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 105721,
+        "storage_root_time": 4016,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 96547,
+        "storage_root_time": 4018,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 93120,
+        "storage_root_time": 3888,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 144632,
+        "storage_root_time": 4794,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 100780,
+        "storage_root_time": 4361,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 97073,
+        "storage_root_time": 4007,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 96822,
+        "storage_root_time": 4101,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98577,
+        "storage_root_time": 4067,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 96698,
+        "storage_root_time": 4050,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 118645,
+        "storage_root_time": 5096,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 100836,
+        "storage_root_time": 4120,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 104548,
+        "storage_root_time": 4389,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 99300,
+        "storage_root_time": 4043,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 99937,
+        "storage_root_time": 4081,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 108012,
+        "storage_root_time": 21317,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98736,
+        "storage_root_time": 4052,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98698,
+        "storage_root_time": 4010,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98226,
+        "storage_root_time": 3958,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98841,
+        "storage_root_time": 3997,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98196,
+        "storage_root_time": 3988,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 100857,
+        "storage_root_time": 4334,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 95332,
+        "storage_root_time": 3817,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 95556,
+        "storage_root_time": 3962,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 135290,
+        "storage_root_time": 4922,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 104173,
+        "storage_root_time": 4182,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 70307,
+        "storage_root_time": 5748,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 99594,
+        "storage_root_time": 4245,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 98845,
+        "storage_root_time": 3911,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 115439,
+        "storage_root_time": 4312,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "set_balance_killing",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 141018,
+        "storage_root_time": 5402,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 111698,
+        "storage_root_time": 4026,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 117820,
+        "storage_root_time": 4354,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113960,
+        "storage_root_time": 4019,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 109649,
+        "storage_root_time": 3853,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 109070,
+        "storage_root_time": 4341,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113668,
+        "storage_root_time": 4041,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113597,
+        "storage_root_time": 4019,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114808,
+        "storage_root_time": 3987,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 112747,
+        "storage_root_time": 4048,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113298,
+        "storage_root_time": 5426,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 115776,
+        "storage_root_time": 4310,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113083,
+        "storage_root_time": 4030,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 119721,
+        "storage_root_time": 4644,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 140883,
+        "storage_root_time": 4180,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 113103,
+        "storage_root_time": 4014,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 112725,
+        "storage_root_time": 3860,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 109252,
+        "storage_root_time": 3913,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 109698,
+        "storage_root_time": 3913,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 112928,
+        "storage_root_time": 5133,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 139955,
+        "storage_root_time": 5098,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 117836,
+        "storage_root_time": 4478,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 116468,
+        "storage_root_time": 4063,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114526,
+        "storage_root_time": 4060,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 115230,
+        "storage_root_time": 4017,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 136048,
+        "storage_root_time": 4517,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 122948,
+        "storage_root_time": 5017,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 117453,
+        "storage_root_time": 4142,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114841,
+        "storage_root_time": 4096,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 111744,
+        "storage_root_time": 4102,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 128787,
+        "storage_root_time": 4132,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 115353,
+        "storage_root_time": 4064,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114115,
+        "storage_root_time": 3869,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 110798,
+        "storage_root_time": 3929,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 110733,
+        "storage_root_time": 3852,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 110530,
+        "storage_root_time": 4732,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 116938,
+        "storage_root_time": 4121,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114930,
+        "storage_root_time": 4072,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 114274,
+        "storage_root_time": 4015,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 115707,
+        "storage_root_time": 4093,
+        "reads": 1,
+        "repeat_reads": 1,
+        "writes": 1,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "force_transfer",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 503715,
+        "storage_root_time": 5399,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 447894,
+        "storage_root_time": 4242,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 438813,
+        "storage_root_time": 4252,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 435357,
+        "storage_root_time": 4141,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 457353,
+        "storage_root_time": 4714,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 453324,
+        "storage_root_time": 4267,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 457830,
+        "storage_root_time": 4348,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 436712,
+        "storage_root_time": 4071,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 451950,
+        "storage_root_time": 4187,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 440671,
+        "storage_root_time": 4499,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446402,
+        "storage_root_time": 4406,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 437563,
+        "storage_root_time": 4168,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446309,
+        "storage_root_time": 4504,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 468439,
+        "storage_root_time": 4619,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 466244,
+        "storage_root_time": 4201,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 440459,
+        "storage_root_time": 4428,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 436685,
+        "storage_root_time": 4133,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 424742,
+        "storage_root_time": 5895,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 442249,
+        "storage_root_time": 4288,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 448457,
+        "storage_root_time": 4389,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 490574,
+        "storage_root_time": 4979,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 462313,
+        "storage_root_time": 4512,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 476832,
+        "storage_root_time": 4242,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 444354,
+        "storage_root_time": 4272,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 447742,
+        "storage_root_time": 4195,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 476423,
+        "storage_root_time": 4835,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 462849,
+        "storage_root_time": 4649,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446520,
+        "storage_root_time": 4241,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450585,
+        "storage_root_time": 4009,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450063,
+        "storage_root_time": 4410,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446780,
+        "storage_root_time": 4568,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446831,
+        "storage_root_time": 4349,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 430232,
+        "storage_root_time": 4183,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 487791,
+        "storage_root_time": 4711,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 446787,
+        "storage_root_time": 4363,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 461351,
+        "storage_root_time": 4431,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 456361,
+        "storage_root_time": 4191,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450488,
+        "storage_root_time": 7011,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450200,
+        "storage_root_time": 4338,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 472590,
+        "storage_root_time": 4937,
+        "reads": 12,
+        "repeat_reads": 5,
+        "writes": 13,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "transfer_all",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 482427,
+        "storage_root_time": 5668,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 456150,
+        "storage_root_time": 4434,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 469064,
+        "storage_root_time": 4139,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 452701,
+        "storage_root_time": 5406,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 453085,
+        "storage_root_time": 4425,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 474123,
+        "storage_root_time": 4534,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450692,
+        "storage_root_time": 5094,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 455405,
+        "storage_root_time": 4414,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 435330,
+        "storage_root_time": 4072,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 418174,
+        "storage_root_time": 7069,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 486597,
+        "storage_root_time": 5090,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 452970,
+        "storage_root_time": 4287,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 435645,
+        "storage_root_time": 4106,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 489854,
+        "storage_root_time": 4574,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 451665,
+        "storage_root_time": 4185,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 450813,
+        "storage_root_time": 4238,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 477270,
+        "storage_root_time": 4112,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 525996,
+        "storage_root_time": 4878,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 454420,
+        "storage_root_time": 4338,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 452416,
+        "storage_root_time": 4233,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 516691,
+        "storage_root_time": 5457,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 464866,
+        "storage_root_time": 4379,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 475100,
+        "storage_root_time": 5123,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 463305,
+        "storage_root_time": 4224,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 485803,
+        "storage_root_time": 4609,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 400764,
+        "storage_root_time": 5274,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 464543,
+        "storage_root_time": 5363,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 466802,
+        "storage_root_time": 4453,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 487896,
+        "storage_root_time": 4468,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 461814,
+        "storage_root_time": 4374,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 476191,
+        "storage_root_time": 5458,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 448831,
+        "storage_root_time": 4403,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 489787,
+        "storage_root_time": 4396,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 471100,
+        "storage_root_time": 4089,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 472536,
+        "storage_root_time": 4970,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 462697,
+        "storage_root_time": 4268,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 486652,
+        "storage_root_time": 4381,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 459594,
+        "storage_root_time": 4282,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 461610,
+        "storage_root_time": 4918,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 463128,
+        "storage_root_time": 4188,
+        "reads": 11,
+        "repeat_reads": 2,
+        "writes": 12,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  },
+  {
+    "pallet": "pallet_balances_totem",
+    "instance": "Balances",
+    "benchmark": "force_unreserve",
+    "time_results": [
+      {
+        "components": [],
+        "extrinsic_time": 275241,
+        "storage_root_time": 5237,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 256102,
+        "storage_root_time": 4303,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 251665,
+        "storage_root_time": 4601,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 279068,
+        "storage_root_time": 4413,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 271423,
+        "storage_root_time": 4214,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 304731,
+        "storage_root_time": 5246,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 262610,
+        "storage_root_time": 4678,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 404573,
+        "storage_root_time": 5236,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 270419,
+        "storage_root_time": 4740,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 257793,
+        "storage_root_time": 4471,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 290522,
+        "storage_root_time": 4432,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 273058,
+        "storage_root_time": 4221,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 247109,
+        "storage_root_time": 4811,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 257865,
+        "storage_root_time": 4445,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 256131,
+        "storage_root_time": 4436,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 255327,
+        "storage_root_time": 4223,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 263049,
+        "storage_root_time": 4536,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 248671,
+        "storage_root_time": 4695,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 258061,
+        "storage_root_time": 4606,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 247810,
+        "storage_root_time": 4171,
+        "reads": 0,
+        "repeat_reads": 0,
+        "writes": 0,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ],
+    "db_results": [
+      {
+        "components": [],
+        "extrinsic_time": 280913,
+        "storage_root_time": 5674,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 286525,
+        "storage_root_time": 4803,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 257273,
+        "storage_root_time": 4545,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 266363,
+        "storage_root_time": 4537,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 254299,
+        "storage_root_time": 4214,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 300797,
+        "storage_root_time": 4746,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 291037,
+        "storage_root_time": 4394,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 262807,
+        "storage_root_time": 4484,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 286610,
+        "storage_root_time": 4291,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 265535,
+        "storage_root_time": 7152,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 293084,
+        "storage_root_time": 4618,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 271464,
+        "storage_root_time": 4395,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 297348,
+        "storage_root_time": 4731,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 268645,
+        "storage_root_time": 4239,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 263376,
+        "storage_root_time": 4380,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 254215,
+        "storage_root_time": 4175,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 289853,
+        "storage_root_time": 4577,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 283751,
+        "storage_root_time": 4502,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 273096,
+        "storage_root_time": 4134,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      },
+      {
+        "components": [],
+        "extrinsic_time": 254423,
+        "storage_root_time": 4297,
+        "reads": 9,
+        "repeat_reads": 3,
+        "writes": 8,
+        "repeat_writes": 0,
+        "proof_size": 0
+      }
+    ]
+  }
+]Created file: "./weights/pallet_balances_totem-new-test.rs"

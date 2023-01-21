@@ -3,7 +3,7 @@
 //!
 //! THIS FILE WAS AUTO-GENERATED USING THE SUBSTRATE BENCHMARK CLI VERSION 4.0.0-dev
 //! DATE: 2023-01-21, STEPS: `50`, REPEAT: 20, LOW RANGE: `[]`, HIGH RANGE: `[]`
-//! HOSTNAME: `ubuntu`, CPU: `DO-Regular`
+//! HOSTNAME: `ubuntu-s-8vcpu-16gb-fra1-01`, CPU: `DO-Regular`
 //! EXECUTION: Some(Wasm), WASM-EXECUTION: Compiled, CHAIN: Some("dev"), DB CACHE: 1024
 
 // Executed Command:
@@ -39,8 +39,8 @@ impl<T: frame_system::Config> pallet_balances_totem::WeightInfo for WeightInfo<T
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer() -> Weight {
-		// Minimum execution time: 522_320 nanoseconds.
-		Weight::from_ref_time(531_003_000)
+		// Minimum execution time: 401_222 nanoseconds.
+		Weight::from_ref_time(449_802_000)
 			.saturating_add(T::DbWeight::get().reads(11))
 			.saturating_add(T::DbWeight::get().writes(12))
 	}
@@ -53,22 +53,22 @@ impl<T: frame_system::Config> pallet_balances_totem::WeightInfo for WeightInfo<T
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer_keep_alive() -> Weight {
-		// Minimum execution time: 480_735 nanoseconds.
-		Weight::from_ref_time(500_857_000)
+		// Minimum execution time: 259_060 nanoseconds.
+		Weight::from_ref_time(417_939_000)
 			.saturating_add(T::DbWeight::get().reads(11))
 			.saturating_add(T::DbWeight::get().writes(12))
 	}
 	// Storage: System Account (r:1 w:1)
 	fn set_balance_creating() -> Weight {
-		// Minimum execution time: 93_022 nanoseconds.
-		Weight::from_ref_time(96_866_000)
+		// Minimum execution time: 93_120 nanoseconds.
+		Weight::from_ref_time(97_804_000)
 			.saturating_add(T::DbWeight::get().reads(1))
 			.saturating_add(T::DbWeight::get().writes(1))
 	}
 	// Storage: System Account (r:1 w:1)
 	fn set_balance_killing() -> Weight {
-		// Minimum execution time: 99_443 nanoseconds.
-		Weight::from_ref_time(113_790_000)
+		// Minimum execution time: 109_070 nanoseconds.
+		Weight::from_ref_time(113_298_000)
 			.saturating_add(T::DbWeight::get().reads(1))
 			.saturating_add(T::DbWeight::get().writes(1))
 	}
@@ -81,8 +81,8 @@ impl<T: frame_system::Config> pallet_balances_totem::WeightInfo for WeightInfo<T
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn force_transfer() -> Weight {
-		// Minimum execution time: 505_164 nanoseconds.
-		Weight::from_ref_time(533_209_000)
+		// Minimum execution time: 424_742 nanoseconds.
+		Weight::from_ref_time(446_402_000)
 			.saturating_add(T::DbWeight::get().reads(12))
 			.saturating_add(T::DbWeight::get().writes(13))
 	}
@@ -95,8 +95,8 @@ impl<T: frame_system::Config> pallet_balances_totem::WeightInfo for WeightInfo<T
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer_all() -> Weight {
-		// Minimum execution time: 516_312 nanoseconds.
-		Weight::from_ref_time(546_326_000)
+		// Minimum execution time: 418_174 nanoseconds.
+		Weight::from_ref_time(454_420_000)
 			.saturating_add(T::DbWeight::get().reads(11))
 			.saturating_add(T::DbWeight::get().writes(12))
 	}
@@ -109,8 +109,8 @@ impl<T: frame_system::Config> pallet_balances_totem::WeightInfo for WeightInfo<T
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:2)
 	fn force_unreserve() -> Weight {
-		// Minimum execution time: 287_973 nanoseconds.
-		Weight::from_ref_time(299_070_000)
+		// Minimum execution time: 247_109 nanoseconds.
+		Weight::from_ref_time(262_610_000)
 			.saturating_add(T::DbWeight::get().reads(9))
 			.saturating_add(T::DbWeight::get().writes(8))
 	}
