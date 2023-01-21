@@ -43,7 +43,7 @@
 use frame_support::{traits::Get, weights::{Weight, constants::RocksDbWeight}};
 use sp_std::marker::PhantomData;
 
-/// Weight functions needed for pallet_balances.
+/// Weight functions for pallet_balances_totem.
 pub trait WeightInfo {
 	fn transfer() -> Weight;
 	fn transfer_keep_alive() -> Weight;
@@ -66,8 +66,8 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer() -> Weight {
-		// Minimum execution time: 103_000 nanoseconds.
-		Weight::from_ref_time(104_000_000 as u64)
+		// Minimum execution time: 522_320 nanoseconds.
+		Weight::from_ref_time(531_003_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(11 as u64))
 			.saturating_add(T::DbWeight::get().writes(12 as u64))
 	}
@@ -80,22 +80,22 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer_keep_alive() -> Weight {
-		// Minimum execution time: 99_000 nanoseconds.
-		Weight::from_ref_time(100_000_000 as u64)
+		// Minimum execution time: 480_735 nanoseconds.
+		Weight::from_ref_time(500_857_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(11 as u64))
 			.saturating_add(T::DbWeight::get().writes(12 as u64))
 	}
 	// Storage: System Account (r:1 w:1)
 	fn set_balance_creating() -> Weight {
-		// Minimum execution time: 28_486 nanoseconds.
-		Weight::from_ref_time(28_940_000 as u64)
+		// Minimum execution time: 93_022 nanoseconds.
+		Weight::from_ref_time(96_866_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
 	// Storage: System Account (r:1 w:1)
 	fn set_balance_killing() -> Weight {
-		// Minimum execution time: 31_225 nanoseconds.
-		Weight::from_ref_time(31_946_000 as u64)
+		// Minimum execution time: 99_443 nanoseconds.
+		Weight::from_ref_time(113_790_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(1 as u64))
 			.saturating_add(T::DbWeight::get().writes(1 as u64))
 	}
@@ -108,8 +108,8 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn force_transfer() -> Weight {
-		// Minimum execution time: 102_000 nanoseconds.
-		Weight::from_ref_time(103_000_000 as u64)
+		// Minimum execution time: 505_164 nanoseconds.
+		Weight::from_ref_time(533_209_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(12 as u64))
 			.saturating_add(T::DbWeight::get().writes(13 as u64))
 	}
@@ -122,8 +122,8 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Accounting GlobalLedger (r:2 w:2)
 	// Storage: Accounting PostingDetail (r:0 w:4)
 	fn transfer_all() -> Weight {
-		// Minimum execution time: 105_000 nanoseconds.
-		Weight::from_ref_time(106_000_000 as u64)
+		// Minimum execution time: 516_312 nanoseconds.
+		Weight::from_ref_time(546_326_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(11 as u64))
 			.saturating_add(T::DbWeight::get().writes(12 as u64))
 	}
@@ -137,60 +137,9 @@ impl<T: frame_system::Config> WeightInfo for SubstrateWeight<T> {
 	// Storage: Accounting PostingDetail (r:0 w:2)
 	fn force_unreserve() -> Weight {
 		// Minimum execution time: 63_000 nanoseconds.
-		Weight::from_ref_time(64_000_000 as u64)
+		// Minimum execution time: 287_973 nanoseconds.
+		Weight::from_ref_time(299_070_000 as u64)
 			.saturating_add(T::DbWeight::get().reads(9 as u64))
 			.saturating_add(T::DbWeight::get().writes(8 as u64))
 	}
-
-// For backwards compatibility and tests
-// impl WeightInfo for () {
-// 	// Storage: System Account (r:1 w:1)
-// 	fn transfer() -> Weight {
-// 		// Minimum execution time: 48_134 nanoseconds.
-// 		Weight::from_ref_time(48_811_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
-// 	// Storage: System Account (r:1 w:1)
-// 	fn transfer_keep_alive() -> Weight {
-// 		// Minimum execution time: 36_586 nanoseconds.
-// 		Weight::from_ref_time(36_966_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
-// 	// Storage: System Account (r:1 w:1)
-// 	fn set_balance_creating() -> Weight {
-// 		// Minimum execution time: 28_486 nanoseconds.
-// 		Weight::from_ref_time(28_940_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
-// 	// Storage: System Account (r:1 w:1)
-// 	fn set_balance_killing() -> Weight {
-// 		// Minimum execution time: 31_225 nanoseconds.
-// 		Weight::from_ref_time(31_946_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
-// 	// Storage: System Account (r:2 w:2)
-// 	fn force_transfer() -> Weight {
-// 		// Minimum execution time: 47_347 nanoseconds.
-// 		Weight::from_ref_time(48_005_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(2 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(2 as u64))
-// 	}
-// 	// Storage: System Account (r:1 w:1)
-// 	fn transfer_all() -> Weight {
-// 		// Minimum execution time: 41_668 nanoseconds.
-// 		Weight::from_ref_time(42_232_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
-// 	// Storage: System Account (r:1 w:1)
-// 	fn force_unreserve() -> Weight {
-// 		// Minimum execution time: 23_741 nanoseconds.
-// 		Weight::from_ref_time(24_073_000 as u64)
-// 			.saturating_add(RocksDbWeight::get().reads(1 as u64))
-// 			.saturating_add(RocksDbWeight::get().writes(1 as u64))
-// 	}
 }
