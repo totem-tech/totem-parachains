@@ -305,12 +305,12 @@ mod pallet {
             PostingNumber::<T>::put(posting_index);
             PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
 
-            Self::deposit_event(Event::LegderUpdate(
-                key.primary_party,
-                key.ledger,
-                key.amount,
-                posting_index,
-            ));
+            // Self::deposit_event(Event::LegderUpdate(
+            //     key.primary_party,
+            //     key.ledger,
+            //     key.amount,
+            //     posting_index,
+            // ));
 
             Ok(())
         }
