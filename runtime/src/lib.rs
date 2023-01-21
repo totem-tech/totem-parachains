@@ -178,7 +178,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
 	spec_version: 4,
-	impl_version: 1,
+	impl_version: 3,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
@@ -392,12 +392,12 @@ impl pallet_transaction_payment::Config for Runtime {
 
 impl pallet_randomness_collective_flip::Config for Runtime {}
 
-impl pallet_utility::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type RuntimeCall = RuntimeCall;
-	type PalletsOrigin = OriginCaller;
-	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
-}
+// impl pallet_utility::Config for Runtime {
+// 	type RuntimeEvent = RuntimeEvent;
+// 	type RuntimeCall = RuntimeCall;
+// 	type PalletsOrigin = OriginCaller;
+// 	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+// }
 
 parameter_types! {
 	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
@@ -517,7 +517,7 @@ construct_runtime!(
 		ParachainInfo: parachain_info::{Pallet, Storage, Config} = 3,
 		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
-		Utility: pallet_utility = 6,
+		// Utility: pallet_utility = 6,
 
 		// Monetary stuff.
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
