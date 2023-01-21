@@ -29,7 +29,7 @@ COPY . /totem-parachains
 # rust compiler command 
 RUN cargo ${buildtype} --${PROFILE} --locked -p ${package}
 
-# This is the 2nd stage: a very small image where we copy the Totem Parachain Collator binary."
+# This is the 2nd stage: a very small image where we copy the Totem Kapex Parachain binary."
 FROM docker.io/library/ubuntu:20.04
 
 LABEL description="Multistage Docker image for Totem Live Accounting Parachain" \
