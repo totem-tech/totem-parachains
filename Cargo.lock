@@ -11007,6 +11007,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-payment-totem",
+ "pallet-utility",
  "pallet-xcm",
  "parachain-info",
  "parity-scale-codec",
