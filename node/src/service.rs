@@ -11,7 +11,7 @@ use cumulus_client_cli::CollatorOptions;
 // use totem_parachain_runtime::{
 // 	opaque::Block, AccountId, Balance, Hash, Index as Nonce, RuntimeApi,
 // };
-use totem_parachain_runtime::{opaque::Block, AccountId, Hash, RuntimeApi};
+use totem_parachain_runtime::{opaque::Block, Hash, RuntimeApi};
 
 // Cumulus Imports
 use cumulus_client_consensus_aura::{AuraConsensus, BuildAuraConsensusParams, SlotProportion};
