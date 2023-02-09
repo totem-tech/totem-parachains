@@ -733,6 +733,23 @@ impl pallet_proxy::Config for Runtime {
 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
 }
 
+type EnsureRootOrHalfCouncil = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
+>;
+impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type AddOrigin = EnsureRootOrHalfCouncil;
+	type RemoveOrigin = EnsureRootOrHalfCouncil;
+	type SwapOrigin = EnsureRootOrHalfCouncil;
+	type ResetOrigin = EnsureRootOrHalfCouncil;
+	type PrimeOrigin = EnsureRootOrHalfCouncil;
+	type MembershipInitialized = Council;
+	type MembershipChanged = Council;
+	type MaxMembers = ConstU32<100>;
+	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
+}
+
 // /// Configure the pallet template in pallets/template.
 // impl pallet_template::Config for Runtime {
 // 	type RuntimeEvent = RuntimeEvent;
@@ -799,6 +816,7 @@ construct_runtime!(
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 104,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 105,
 		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 106,
+		Membership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 107,
 	}
 );
 
@@ -815,6 +833,14 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
+		[pallet_scheduler, Scheduler]
+		[pallet_democracy, Democracy]
+		[pallet_collective::<Instance1>, Council]
+		[pallet_treasury, Treasury]
+		[pallet_preimage, Preimage]
+		[pallet_vesting, Vesting]
+		[pallet_proxy, Proxy]
+		[pallet_membership::<Instance1>, Membership]
 	);
 }
 
