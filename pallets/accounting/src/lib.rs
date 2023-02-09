@@ -206,7 +206,8 @@ mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        // type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
+        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
             + Convert<[u8; 32], Self::AccountId>;
@@ -302,13 +303,13 @@ mod pallet {
 
             PostingNumber::<T>::put(posting_index);
             PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
-            
-            Self::deposit_event(Event::LegderUpdate(
-                key.primary_party,
-                key.ledger,
-                key.amount,
-                posting_index,
-            ));
+
+            // Self::deposit_event(Event::LegderUpdate(
+            //     key.primary_party,
+            //     key.ledger,
+            //     key.amount,
+            //     posting_index,
+            // ));
 
             Ok(())
         }
@@ -395,6 +396,7 @@ mod pallet {
         }
 
         /// Adds a new accounting entry in the ledger in case of a transfer
+        /// Reduce the Internal balance, and reduce the equity from the sender with the reverse for the receiver
         fn account_for_simple_transfer(
             from: T::AccountId,
             to: T::AccountId,
@@ -418,8 +420,8 @@ mod pallet {
                 Record {
                     primary_party: from.clone(),
                     counterparty: to.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkTransaction))))),
-                    amount: increase_amount,
+                    ledger: Ledger::BalanceSheet(B::Equity(E::NetworkReserves)),
+                    amount: decrease_amount,
                     debit_credit: Indicator::Debit,
                     reference_hash,
                     changed_on_blocknumber: current_block,
@@ -438,7 +440,7 @@ mod pallet {
                 Record {
                     primary_party: to.clone(),
                     counterparty: from.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::TransactionReceipt)))), 
+                    ledger: Ledger::BalanceSheet(B::Equity(E::NetworkReserves)),
                     amount: increase_amount,
                     debit_credit: Indicator::Credit,
                     reference_hash,
@@ -488,29 +490,9 @@ mod pallet {
                 Record {
                     primary_party: payer.clone(),
                     counterparty: netfee_address.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkTransactionFees))))),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkTransactionFees))))),
                     amount: increase_amount,
                     debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: payer.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: fee_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                Record {
-                    primary_party: netfee_address.clone(),
-                    counterparty: payer.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkFeeIncome)))),
-                    amount: increase_amount,
-                    debit_credit: Indicator::Credit,
                     reference_hash: fee_hash,
                     changed_on_blocknumber: current_block,
                     applicable_period_blocknumber: current_block_dupe,
@@ -521,7 +503,219 @@ mod pallet {
             
             Ok(())
         }
-        
+
+        /// This function takes an amount to be reserved for the user and prepares to account for it.
+        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        fn set_reserve_amount(
+            beneficiary: T::AccountId,
+            amount: CurrencyBalanceOf<T>,
+        ) -> DispatchResult {
+            // Take the amount and convert for use with accounting. Amount is of type T::Balance which is u128.
+            // As amount will always be positive, convert for use in accounting
+            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(amount)?;
+            // This sets the change block and the applicable posting period. For this context they will always be
+            // the same.
+            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+            let current_block_dupe = current_block; // Applicable period for accounting
+
+            // Generate dummy Hash reference (it has no real bearing but allows posting to happen)
+            let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+
+            let keys = [
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+                    amount: decrease_amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
+                    amount: increase_amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+            ];
+
+            Self::handle_multiposting_amounts(&keys)?;
+            
+            Ok(())
+        }
+
+        /// This function takes an amount to be reserved for the user and prepares to account for it.
+        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        fn unreserve_amount(
+            beneficiary: T::AccountId,
+            amount: CurrencyBalanceOf<T>,
+        ) -> DispatchResult {
+            // Take the amount and convert for use with accounting. Amount is of type T::Balance which is u128.
+            // As amount will always be positive, convert for use in accounting
+            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(amount)?;
+            // This sets the change block and the applicable posting period. For this context they will always be
+            // the same.
+            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+            let current_block_dupe = current_block; // Applicable period for accounting
+
+            // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
+            let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+
+            let keys = [
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
+                    amount: decrease_amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+                    amount: increase_amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+            ];
+
+            Self::handle_multiposting_amounts(&keys)?;
+            
+            Ok(())
+        }
+
+        /// This function takes slashes the reserved amount. It causes the coin supply to be reduced, which is handled
+        /// by the balances pallet, however the accounting must book this direct to expenses.
+        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        fn slash_reserve(
+            beneficiary: T::AccountId,
+            amount: CurrencyBalanceOf<T>,
+        ) -> DispatchResult {
+            // Take the amount and convert for use with accounting. Amount is of type T::Balance which is u128.
+            // As amount will always be positive, convert for use in accounting
+            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(amount)?;
+            // This sets the change block and the applicable posting period. For this context they will always be
+            // the same.
+            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+            let current_block_dupe = current_block; // Applicable period for accounting
+
+            // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
+            let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+
+            let keys = [
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
+                    amount: decrease_amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: beneficiary.clone(),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins)))),
+                    amount: increase_amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+            ];
+
+            Self::handle_multiposting_amounts(&keys)?;
+            
+            Ok(())
+        }
+
+        /// This function reassigns a reserve amount to another beneficiary. Usually used in the context of slashing.
+        /// It is called from the balances pallet and all previous checks on balances have already been performed before this is called.
+        fn reassign_reserve(
+            slashed: T::AccountId,
+            beneficiary: T::AccountId,
+            amount: CurrencyBalanceOf<T>,
+            is_free_balance: bool,
+        ) -> DispatchResult {
+            // Take the amount and convert for use with accounting. Amount is of type T::Balance which is u128.
+            // As amount will always be positive, convert for use in accounting
+            let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(amount)?;
+            // This sets the change block and the applicable posting period. For this context they will always be
+            // the same.
+            let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
+            let current_block_dupe = current_block; // Applicable period for accounting
+
+            // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
+            let ref_hash: T::Hash = Self::get_pseudo_random_hash(slashed.clone(), beneficiary.clone());
+
+            // Select the account ledger to update
+            let beneficiary_ledger = match is_free_balance {
+                // the funds will be moved to the free balance of the beneficiary
+                true => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
+                // the funds will be moved to the reserved balance of the beneficiary
+                false => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
+            };
+
+            // First handle the slashing on the slashed account, then handle the addition of the funds to the new account
+            let keys = [
+                Record {
+                    primary_party: slashed.clone(),
+                    counterparty: slashed.clone(),
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
+                    amount: decrease_amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: slashed.clone(),
+                    counterparty: slashed.clone(),
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins)))),
+                    amount: increase_amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: slashed.clone(),
+                    ledger: beneficiary_ledger,
+                    amount: increase_amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                Record {
+                    primary_party: beneficiary.clone(),
+                    counterparty: slashed.clone(),
+                    ledger: Ledger::ProfitLoss(P::Income(I::OtherOperatingIncome(OOPIN::BlockchainSlashedFundsIncome))),
+                    amount: increase_amount,
+                    debit_credit: Indicator::Credit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+            ];
+
+            Self::handle_multiposting_amounts(&keys)?;
+
+            Ok(())
+        }
+
         // SUSPENDED until the ASSET_TX_PAYMENT Pallet introduced.
         // /// This function handles burnt fee amounts when the fee rewards distribution fails.
         // /// Related to the asset_tx_payment pallet HandleCredit
@@ -596,7 +790,7 @@ mod pallet {
         //         Record {
         //             primary_party: netfee_address.clone(),
         //             counterparty: author.clone(),
-        //             ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::AdminCosts(_0030_::Blockchain(TXOUT::NetworkValidationReward))))),
+        //             ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkValidationReward))))),
         //             amount: increase_amount,
         //             debit_credit: Indicator::Debit,
         //             reference_hash: fee_hash,
@@ -616,7 +810,7 @@ mod pallet {
         //         Record {
         //             primary_party: author.clone(),
         //             counterparty: netfee_address.clone(),
-        //             ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(TXIN::NetworkValidationIncome)))), 
+        //             ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome::NetworkValidationIncome)))), 
         //             amount: increase_amount,
         //             debit_credit: Indicator::Credit,
         //             reference_hash: fee_hash,
@@ -638,7 +832,6 @@ mod pallet {
                 tuple,
                 pallet_timestamp::Pallet::<T>::get(),
                 random_value,
-                // sp_io::offchain::random_seed(),
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );

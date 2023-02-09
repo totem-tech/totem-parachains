@@ -1,14 +1,12 @@
+# This builds the Parachain Collator node for the Totem Parachain.
+
 # Usage
 
-# This builds the Parachain Collator node for the Totem Parachain.
-# NOTE Although you _can_ execute this container directly IT WILL NOT FUNCTION AS A PARACHAIN for reasons to do with WASM deterministic build.
-# Instead you must pass the Totem Parachain Chain Specification file in the --chain argument when starting the node.
+# Ensure that you have already downloaded the correct/latest images before running this dockerfile.
+# !!! download the latest docker.io/paritytech/ci-linux:production !!!
+# !!! download the latest docker.io/library/ubuntu:20.04 !!!
 
-# docker build \
-# -t totemlive/totem-parachain:local \
-# -f parachain_collator_builder.Dockerfile \
-# --build-arg package=totem-parachain-node \
-# --build-arg buildtype=check .
+# !!! USE THE PRE-FLIGHT CHECK DOCKERFILE FIRST !!!
 
 # docker build \
 # -t totemlive/totem-parachain:local \
@@ -17,10 +15,8 @@
 # --build-arg buildtype=build .
 
 # This is the build stage for Totem Parachain. Here we create the binary.
-# FROM docker.io/paritytech/ci-linux:production as builder
-# This is pegged to a version, because some change was introduced after this date which caused this Docker build to fail compiling 
-# with this error `error: failed to run custom build command for librocksdb-sys v0.6.1+6.28.2`
-FROM docker.io/paritytech/ci-linux:c391e6e6-20220426 as builder
+
+FROM docker.io/paritytech/ci-linux:production as builder
 ARG package
 ARG buildtype
 
@@ -31,7 +27,7 @@ WORKDIR /totem-parachains
 COPY . /totem-parachains
 
 # rust compiler command 
-RUN cargo ${buildtype} --${PROFILE} -p ${package}
+RUN cargo ${buildtype} --${PROFILE} --locked -p ${package}
 
 # This is the 2nd stage: a very small image where we copy the Totem Parachain Collator binary."
 FROM docker.io/library/ubuntu:20.04

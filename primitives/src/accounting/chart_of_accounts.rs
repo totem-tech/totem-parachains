@@ -42,7 +42,7 @@ use frame_support::{dispatch::TypeInfo};
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum TXOUT {
+pub enum InternalAccounting {
     /// Used for generalised network transactions
     NetworkTransaction,
     /// Used to distribute the crowdloan funds
@@ -56,7 +56,7 @@ pub enum TXOUT {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum TXIN {
+pub enum InternalIncome {
     /// Used for generalised network transactions
     TransactionReceipt,
     /// P40_0007_C000,
@@ -215,7 +215,7 @@ pub enum _0004_ {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum _0007_ {
+pub enum TFP {
     /// P50_0007_D000,
     EmployeeTax,
     /// P50_0007_D001,
@@ -240,6 +240,8 @@ pub enum _0007_ {
     CarTax,
     /// P50_0007_D011,
     CapitalGainsTaxonCryptoAssets,
+    /// Blockchain Slashing Penalty
+    SlashedCoins,
 }
 /// Claims
 #[allow(non_camel_case_types)]
@@ -741,9 +743,9 @@ pub enum RecoveredExpenses {
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum _0030_ {
+pub enum AdminCosts {
     /// Blockchain specific expense classification
-    Blockchain(TXOUT),
+    Blockchain(InternalAccounting),
     /// P50_0030_D001,
     BankCharges,
     /// P50_0030_D002,
@@ -1114,6 +1116,7 @@ pub enum CurrentAssets {
     PettyCash,
     /// B10_0004_D000,
     InternalBalance,
+    InternalReservedBalance,
     /// B10_0005_D000,
     EscrowDeposit,
     /// B10_0006_D000,
@@ -1488,7 +1491,7 @@ pub enum Sales {
     /// P40_0009_C000,
     MiscellaneousIncome,
     /// Chain specific income types
-    Blockchain(TXIN),
+    Blockchain(InternalIncome),
 }
 /// Other Income Interest Income
 #[allow(non_camel_case_types)]
@@ -1547,6 +1550,7 @@ pub enum OOPIN {
     GainLossDisposal(PPE),
     /// P42_1003_C000,
     GainLossDiscontinuedOperations,
+    BlockchainSlashedFundsIncome,
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1598,7 +1602,7 @@ pub enum OPEX {
     /// _0006_(_0006_),
     CorporationTax,
     /// _0007_(_0007_),
-    TaxFinesPenalties(_0007_),
+    TaxFinesPenalties(TFP),
     /// _0008_(_0008_),
     Claims(_0008_),
     /// _0009_(_0009_),
@@ -1644,7 +1648,7 @@ pub enum OPEX {
     /// _0029_(_0029_),
     LegalFees(_0029_),
     /// _0030_(_0030_),
-    AdminCosts(_0030_),
+    Admin(AdminCosts),
     /// _0031_(_0031_),
     BadDebts(_0031_),
     /// _0032_(_0032_),
