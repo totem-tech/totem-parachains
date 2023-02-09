@@ -1040,31 +1040,19 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 									.free
 									.checked_add(&actual)
 									.ok_or(ArithmeticError::Overflow)?;
-								// Added for Totem Accounting
-								// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
-								T::Accounting::reassign_reserve(
-									slashed.clone(),
-									beneficiary.clone(),
-									actual,
-									false,
-								)
-								.ok();
-							},
+									// Added for Totem Accounting
+									// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
+									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, false).ok();
+								},
 							Status::Reserved => {
 								to_account.reserved = to_account
 									.reserved
 									.checked_add(&actual)
 									.ok_or(ArithmeticError::Overflow)?;
-								// Added for Totem Accounting
-								// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
-								T::Accounting::reassign_reserve(
-									slashed.clone(),
-									beneficiary.clone(),
-									actual,
-									true,
-								)
-								.ok();
-							},
+									// Added for Totem Accounting
+									// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
+									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, true).ok();
+								},
 						}
 						from_account.reserved -= actual;
 						Ok(actual)
@@ -1072,6 +1060,8 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 				)
 			},
 		)?;
+
+
 
 		Self::deposit_event(Event::ReserveRepatriated {
 			from: slashed.clone(),

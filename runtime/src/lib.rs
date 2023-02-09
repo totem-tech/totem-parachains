@@ -6,9 +6,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
-mod totem;
 mod weights;
 pub mod xcm_config;
+mod totem;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
@@ -39,11 +39,14 @@ use frame_support::{
 		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
 	PalletId,
+	RuntimeDebug
 };
+use frame_support::traits::InstanceFilter;
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
 	EnsureRoot,
 };
+use codec::{Decode, Encode, MaxEncodedLen};
 
 pub use pallet_balances_totem::Call as BalancesCall;
 
@@ -229,6 +232,12 @@ const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
 	WEIGHT_REF_TIME_PER_SECOND.saturating_div(2),
 	cumulus_primitives_core::relay_chain::v2::MAX_POV_SIZE as u64,
 );
+
+const SUPPLY_FACTOR: Balance = 100;
+const STORAGE_BYTE_FEE: Balance = 100 * MICROUNIT * SUPPLY_FACTOR;
+const fn deposit(items: u32, bytes: u32) -> Balance {
+	items as Balance * 100 * MILLIUNIT * SUPPLY_FACTOR + (bytes as Balance) * STORAGE_BYTE_FEE
+}
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -657,6 +666,73 @@ impl pallet_vesting::Config for Runtime {
 	const MAX_VESTING_SCHEDULES: u32 = 28;
 }
 
+parameter_types! {
+	// One storage item; key size 32, value size 8; .
+	pub ProxyDepositBase: Balance = deposit(1, 8);
+	// Additional storage item size of 33 bytes.
+	pub ProxyDepositFactor: Balance = deposit(0, 33);
+	pub AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub AnnouncementDepositFactor: Balance = deposit(0, 66);
+}
+
+/// The type used to represent the kinds of proxying allowed.
+#[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Encode, Decode,
+RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo,
+)]
+pub enum ProxyType {
+	Any,
+	NonTransfer,
+	Governance,
+}
+impl Default for ProxyType {
+	fn default() -> Self {
+		Self::Any
+	}
+}
+impl InstanceFilter<RuntimeCall> for ProxyType {
+	fn filter(&self, c: &RuntimeCall) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => !matches!(
+                c,
+                RuntimeCall::Balances(..) |
+                RuntimeCall::Indices(pallet_indices::Call::transfer { .. })
+            ),
+			ProxyType::Governance => matches!(
+                c,
+                RuntimeCall::Democracy(..) |
+                RuntimeCall::Council(..) |
+				RuntimeCall::Treasury(..)
+            ),
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			(ProxyType::NonTransfer, _) => true,
+			_ => false,
+		}
+	}
+}
+
+
+impl pallet_proxy::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = Balances;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = ConstU32<32>;
+	type WeightInfo = ();
+	type MaxPending = ConstU32<32>;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
+
 // /// Configure the pallet template in pallets/template.
 // impl pallet_template::Config for Runtime {
 // 	type RuntimeEvent = RuntimeEvent;
@@ -722,6 +798,7 @@ construct_runtime!(
 		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 103,
 		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 104,
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 105,
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 106,
 	}
 );
 

@@ -40,10 +40,7 @@ mod chart_of_accounts;
 pub use chart_of_accounts::{Ledger, *};
 
 use crate::LedgerBalance;
-use frame_support::{
-	dispatch::{DispatchResult, EncodeLike, TypeInfo},
-	pallet_prelude::*,
-};
+use frame_support::{dispatch::{ DispatchResult, EncodeLike, TypeInfo }, pallet_prelude::*};
 // use scale_info::TypeInfo;
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
@@ -52,8 +49,9 @@ use sp_std::prelude::*;
 pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 	type PostingIndex: Member + Copy + Into<u128> + Encode + Decode + Eq;
 
-	fn handle_multiposting_amounts(keys: &[Record<AccountId, Hash, BlockNumber>])
-		-> DispatchResult;
+	fn handle_multiposting_amounts(
+		keys: &[Record<AccountId, Hash, BlockNumber>],
+	) -> DispatchResult;
 
 	fn account_for_simple_transfer(
 		from: AccountId,
@@ -61,11 +59,20 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 		amount: CoinAmount,
 	) -> DispatchResult;
 
-	fn set_reserve_amount(beneficiary: AccountId, amount: CoinAmount) -> DispatchResult;
+	fn set_reserve_amount(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
 
-	fn unreserve_amount(beneficiary: AccountId, amount: CoinAmount) -> DispatchResult;
+	fn unreserve_amount(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
 
-	fn slash_reserve(beneficiary: AccountId, amount: CoinAmount) -> DispatchResult;
+	fn slash_reserve(
+		beneficiary: AccountId,
+		amount: CoinAmount,
+	) -> DispatchResult;
 
 	fn reassign_reserve(
 		slashed: AccountId,
@@ -155,15 +162,24 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn set_reserve_amount(_beneficiary: AccountId, _amount: CoinAmount) -> DispatchResult {
+	fn set_reserve_amount(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn unreserve_amount(_beneficiary: AccountId, _amount: CoinAmount) -> DispatchResult {
+	fn unreserve_amount(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
-	fn slash_reserve(_beneficiary: AccountId, _amount: CoinAmount) -> DispatchResult {
+	fn slash_reserve(
+		_beneficiary: AccountId,
+		_amount: CoinAmount,
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 

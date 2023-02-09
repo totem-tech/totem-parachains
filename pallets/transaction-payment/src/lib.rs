@@ -57,8 +57,7 @@ use sp_runtime::{
 		Saturating, SignedExtension, Zero,
 	},
 	transaction_validity::{
-		InvalidTransaction, TransactionPriority, TransactionValidity, TransactionValidityError,
-		ValidTransaction,
+		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction, InvalidTransaction,
 	},
 	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill, RuntimeDebug,
 };
@@ -68,7 +67,7 @@ use frame_support::{
 	dispatch::{
 		DispatchClass, DispatchInfo, DispatchResult, GetDispatchInfo, Pays, PostDispatchInfo,
 	},
-	traits::{Currency, EstimateCallFee, Get},
+	traits::{EstimateCallFee, Get, Currency},
 	weights::{Weight, WeightToFee},
 };
 
@@ -855,9 +854,8 @@ where
 				let real_fee = T::TransactionConverter::convert(actual_fee.clone());
 				// Error should not happen, because there is no way the fees can overflow
 				// when converting i128 -> u128
-				T::Accounting::account_for_fees(real_fee, who.clone()).map_err(|_| {
-					TransactionValidityError::Invalid(InvalidTransaction::Custom(99))
-				})?;
+				T::Accounting::account_for_fees(real_fee, who.clone())
+					.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(99)))?;
 			}
 
 			T::OnChargeTransaction::correct_and_deposit_fee(

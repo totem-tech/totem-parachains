@@ -6,6 +6,7 @@ use cumulus_primitives_core::ParaId;
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 use log::{info, warn};
 // use totem_parachain_runtime::{Block, RuntimeApi};
+use totem_parachain_runtime::Block;
 use sc_cli::{
 	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
 	NetworkParams, Result, RuntimeVersion, SharedParams, SubstrateCli,
@@ -13,7 +14,6 @@ use sc_cli::{
 use sc_service::config::{BasePath, PrometheusConfig};
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
-use totem_parachain_runtime::Block;
 
 use crate::{
 	chain_spec,
@@ -53,7 +53,7 @@ impl SubstrateCli for Cli {
 
 	fn description() -> String {
 		format!(
-			"Totem Parachain Collator\n\nThe command-line arguments provided first will be \
+		"Totem Parachain Collator\n\nThe command-line arguments provided first will be \
 		passed to the parachain node, while the arguments provided after -- will be passed \
 		to the relay chain node.\n\n\
 		{} <parachain-args> -- <relay-chain-args>",

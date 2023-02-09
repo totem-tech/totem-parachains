@@ -39,9 +39,9 @@ use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
 
 pub trait Validating<AccountId, Hash> {
-	fn is_time_record_owner(o: AccountId, h: Hash) -> bool;
+    fn is_time_record_owner(o: AccountId, h: Hash) -> bool;
 
-	fn validate_and_archive(o: AccountId, h: Hash, a: bool) -> bool;
+    fn validate_and_archive(o: AccountId, h: Hash, a: bool) -> bool;
 }
 
 /// Number of pauses of the timer.
@@ -77,13 +77,13 @@ pub type BanStatus = bool;
 
 #[derive(Clone, Copy, Debug, PartialEq, Encode, Decode, TypeInfo)]
 pub enum StatusOfTimeRecord {
-	Draft,
-	Submitted,
-	Disputed,
-	Rejected,
-	Accepted,
-	Invoiced,
-	Blocked,
+    Draft,
+    Submitted,
+    Disputed,
+    Rejected,
+    Accepted,
+    Invoiced,
+    Blocked,
 }
 
 /// Reason why the code changes.
@@ -97,36 +97,36 @@ pub struct BannedStruct(BanStatus, ReasonCodeStruct);
 /// The individual time record.
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct Timekeeper<
-	AccountId,
-	ReferenceHash,
-	NumberOfBlocks,
-	LockStatus,
-	StatusOfTimeRecord,
-	ReasonCodeStruct,
-	PostingPeriod,
-	StartOrEndBlockNumber,
-	NumberOfBreaks,
+    AccountId,
+    ReferenceHash,
+    NumberOfBlocks,
+    LockStatus,
+    StatusOfTimeRecord,
+    ReasonCodeStruct,
+    PostingPeriod,
+    StartOrEndBlockNumber,
+    NumberOfBreaks,
 > {
-	pub worker: AccountId,
-	pub project_hash: ReferenceHash,
-	pub total_blocks: NumberOfBlocks,
-	pub locked_status: LockStatus,
-	pub locked_reason: ReasonCodeStruct,
-	pub submit_status: StatusOfTimeRecord,
-	pub reason_code: ReasonCodeStruct,
-	pub posting_period: PostingPeriod,
-	pub start_block: StartOrEndBlockNumber,
-	pub end_block: StartOrEndBlockNumber,
-	pub nr_of_breaks: NumberOfBreaks,
+    pub worker: AccountId,
+    pub project_hash: ReferenceHash,
+    pub total_blocks: NumberOfBlocks,
+    pub locked_status: LockStatus,
+    pub locked_reason: ReasonCodeStruct,
+    pub submit_status: StatusOfTimeRecord,
+    pub reason_code: ReasonCodeStruct,
+    pub posting_period: PostingPeriod,
+    pub start_block: StartOrEndBlockNumber,
+    pub end_block: StartOrEndBlockNumber,
+    pub nr_of_breaks: NumberOfBreaks,
 }
 
 #[cfg(any(test, feature = "mock"))]
 impl<AccountId, Hash> Validating<AccountId, Hash> for () {
-	fn is_time_record_owner(_o: AccountId, _h: Hash) -> bool {
-		unimplemented!("Used as a mock, shouldn't be called")
-	}
+    fn is_time_record_owner(_o: AccountId, _h: Hash) -> bool {
+        unimplemented!("Used as a mock, shouldn't be called")
+    }
 
-	fn validate_and_archive(_o: AccountId, _h: Hash, _a: bool) -> bool {
-		unimplemented!("Used as a mock, shouldn't be called")
-	}
+    fn validate_and_archive(_o: AccountId, _h: Hash, _a: bool) -> bool {
+        unimplemented!("Used as a mock, shouldn't be called")
+    }
 }

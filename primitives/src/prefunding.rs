@@ -41,51 +41,51 @@ use scale_info::TypeInfo;
 use sp_std::prelude::*;
 
 pub trait Encumbrance<AccountId, Hash, BlockNumber, CoinAmount> {
-	fn prefunding_for(
-		who: AccountId,
-		recipient: AccountId,
-		amount: CoinAmount,
-		deadline: BlockNumber,
-		ref_hash: Hash,
-		uid: Hash,
-	) -> DispatchResultWithPostInfo;
+    fn prefunding_for(
+        who: AccountId,
+        recipient: AccountId,
+        amount: CoinAmount,
+        deadline: BlockNumber,
+        ref_hash: Hash,
+        uid: Hash,
+    ) -> DispatchResultWithPostInfo;
 
-	fn send_simple_invoice(
-		who: AccountId,
-		recipient: AccountId,
-		amount: LedgerBalance,
-		ref_hash: Hash,
-		uid: Hash,
-	) -> DispatchResultWithPostInfo;
+    fn send_simple_invoice(
+        who: AccountId,
+        recipient: AccountId,
+        amount: LedgerBalance,
+        ref_hash: Hash,
+        uid: Hash,
+    ) -> DispatchResultWithPostInfo;
 
-	fn settle_prefunded_invoice(
-		who: AccountId,
-		ref_hash: Hash,
-		uid: Hash,
-	) -> DispatchResultWithPostInfo;
+    fn settle_prefunded_invoice(
+        who: AccountId,
+        ref_hash: Hash,
+        uid: Hash,
+    ) -> DispatchResultWithPostInfo;
 
-	fn set_release_state(
-		who: AccountId,
-		o_lock: LockStatus,
-		ref_hash: Hash,
-		uid: Hash,
-	) -> DispatchResultWithPostInfo;
+    fn set_release_state(
+        who: AccountId,
+        o_lock: LockStatus,
+        ref_hash: Hash,
+        uid: Hash,
+    ) -> DispatchResultWithPostInfo;
 
-	fn unlock_funds_for_owner(
-		who: AccountId,
-		ref_hash: Hash,
-		uid: Hash,
-	) -> DispatchResultWithPostInfo;
+    fn unlock_funds_for_owner(
+        who: AccountId,
+        ref_hash: Hash,
+        uid: Hash,
+    ) -> DispatchResultWithPostInfo;
 
-	fn check_ref_owner(who: AccountId, ref_hash: Hash) -> bool;
+    fn check_ref_owner(who: AccountId, ref_hash: Hash) -> bool;
 
-	fn check_ref_beneficiary(who: AccountId, ref_hash: Hash) -> bool;
+    fn check_ref_beneficiary(who: AccountId, ref_hash: Hash) -> bool;
 }
 
 #[derive(Clone, Copy, Debug, Decode, Encode, PartialEq, Eq, TypeInfo)]
 pub enum LockStatus {
-	Unlocked = 0,
-	Locked = 1,
+    Unlocked = 0,
+    Locked = 1,
 }
 
 /// Generic Status for whatever the HashReference refers.

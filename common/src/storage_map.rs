@@ -41,27 +41,27 @@ use frame_support::{dispatch::DispatchResultWithPostInfo, storage::StorageMap};
 /// Adds behavior to `StorageMap`s.
 pub trait StorageMapExt<K, V>
 where
-	Self: StorageMap<K, V>,
-	K: FullEncode + Encode + EncodeLike,
-	V: FullCodec + Decode + FullEncode + Encode + EncodeLike,
+    Self: StorageMap<K, V>,
+    K: FullEncode + Encode + EncodeLike,
+    V: FullCodec + Decode + FullEncode + Encode + EncodeLike,
 {
-	/// If the key exists in the map, modifies it with the provided function,
-	/// otherwise, an error is returned.
-	fn mutate_or_err<KeyArg: EncodeLike<K>, F: FnOnce(&mut V)>(
-		key: KeyArg,
-		f: F,
-	) -> DispatchResultWithPostInfo {
-		Self::mutate_exists(key, |option| match option.as_mut() {
-			Some(value) => Ok(f(value).into()),
-			None => Err("Cannot recover the value".into()),
-		})
-	}
+    /// If the key exists in the map, modifies it with the provided function,
+    /// otherwise, an error is returned.
+    fn mutate_or_err<KeyArg: EncodeLike<K>, F: FnOnce(&mut V)>(
+        key: KeyArg,
+        f: F,
+    ) -> DispatchResultWithPostInfo {
+        Self::mutate_exists(key, |option| match option.as_mut() {
+            Some(value) => Ok(f(value).into()),
+            None => Err("Cannot recover the value".into()),
+        })
+    }
 }
 
 impl<T, K, V> StorageMapExt<K, V> for T
 where
-	T: StorageMap<K, V>,
-	K: FullEncode + Encode + EncodeLike,
-	V: FullCodec + Decode + FullEncode + Encode + EncodeLike,
+    T: StorageMap<K, V>,
+    K: FullEncode + Encode + EncodeLike,
+    V: FullCodec + Decode + FullEncode + Encode + EncodeLike,
 {
 }

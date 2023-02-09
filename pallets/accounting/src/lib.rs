@@ -68,10 +68,10 @@ pub use pallet::*;
 mod pallet {
 
 	use frame_support::{
-		dispatch::DispatchResult,
 		fail,
 		pallet_prelude::*,
-		traits::{Currency, Randomness, StorageVersion},
+		traits::{ Currency, StorageVersion, Randomness },
+		dispatch::DispatchResult,
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::{Convert, Hash, Zero};
@@ -83,7 +83,7 @@ mod pallet {
 	use totem_primitives::{LedgerBalance, PostingIndex};
 
 	type CurrencyBalanceOf<T> =
-		<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	/// The current storage version.
 	const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -98,7 +98,11 @@ mod pallet {
 	/// It is also a counter for the number of accounting entries made in the entire system
 	#[pallet::storage]
 	#[pallet::getter(fn posting_number)]
-	pub type PostingNumber<T: Config> = StorageValue<_, PostingIndex, ValueQuery>;
+	pub type PostingNumber<T: Config> = StorageValue<
+		_,
+		PostingIndex,
+		ValueQuery
+	>;
 
 	/// Accounting Balances for each account by the ledgers that it uses.
 	/// Keys: AccountId, Ledger
@@ -108,10 +112,8 @@ mod pallet {
 	#[pallet::getter(fn balance_by_ledger)]
 	pub type BalanceByLedger<T: Config> = StorageDoubleMap<
 		_,
-		Blake2_128Concat,
-		T::AccountId,
-		Blake2_128Concat,
-		Ledger,
+		Blake2_128Concat, T::AccountId,
+		Blake2_128Concat, Ledger,
 		LedgerBalance,
 	>;
 
@@ -123,10 +125,8 @@ mod pallet {
 	#[pallet::getter(fn posting_detail)]
 	pub type PostingDetail<T: Config> = StorageDoubleMap<
 		_,
-		Blake2_128Concat,
-		(T::AccountId, Ledger),
-		Blake2_128Concat,
-		PostingIndex,
+		Blake2_128Concat, (T::AccountId, Ledger),
+		Blake2_128Concat, PostingIndex,
 		Detail<T::AccountId, T::Hash, T::BlockNumber>,
 	>;
 
@@ -135,8 +135,12 @@ mod pallet {
 	/// across all ledgers. It does not provide the detail of the posting, just the balances.
 	#[pallet::storage]
 	#[pallet::getter(fn global_ledger)]
-	pub type GlobalLedger<T: Config> =
-		StorageMap<_, Blake2_128Concat, Ledger, LedgerBalance, ValueQuery>;
+	pub type GlobalLedger<T: Config> = StorageMap<
+		_,
+		Blake2_128Concat, Ledger,
+		LedgerBalance,
+		ValueQuery,
+	>;
 
 	// The genesis config type.
 	// The Balances here should be exactly the same as configured in the Balances Pallet to set the opening balances correctly
@@ -156,23 +160,20 @@ mod pallet {
 	#[pallet::genesis_build]
 	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
 		fn build(&self) {
+
 			let input = *b"TotemsOpeningBalancesGenesisHash";
 			let reference_hash: T::Hash = T::Hashing::hash(input.encode().as_slice());
 			let block_number: T::BlockNumber = 0u32.into();
 			let posting_index: PostingIndex = 0;
 			// Reserves is a Debit Balance Account
-			let mint_to: Ledger =
-				Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
+			let mint_to: Ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
 			// Reserves is a Credit Balance Account
 			let account_for: Ledger = Ledger::BalanceSheet(B::Equity(E::NetworkReserves));
-			let total = self
-				.opening_balances
-				.iter()
-				.fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
+			let total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
 
 			<PostingNumber<T>>::put(&posting_index);
-			<GlobalLedger<T>>::insert(&mint_to, total.clone());
-			<GlobalLedger<T>>::insert(&account_for, total);
+			<GlobalLedger::<T>>::insert(&mint_to, total.clone());
+			<GlobalLedger::<T>>::insert(&account_for, total);
 
 			for (address, balance) in &self.opening_balances {
 				let account_balance_key_debit = (address.clone(), mint_to.clone());
@@ -182,7 +183,7 @@ mod pallet {
 					counterparty: address.clone(),
 					amount: balance.clone(),
 					debit_credit: Indicator::Debit,
-					reference_hash,
+					reference_hash: reference_hash,
 					changed_on_blocknumber: block_number,
 					applicable_period_blocknumber: block_number,
 				};
@@ -191,23 +192,15 @@ mod pallet {
 					counterparty: address.clone(),
 					amount: balance.clone(),
 					debit_credit: Indicator::Credit,
-					reference_hash,
+					reference_hash: reference_hash,
 					changed_on_blocknumber: block_number,
 					applicable_period_blocknumber: block_number,
 				};
 
-				<BalanceByLedger<T>>::insert(&address, &mint_to, balance.clone());
-				<BalanceByLedger<T>>::insert(&address, &account_for, balance);
-				<PostingDetail<T>>::insert(
-					&account_balance_key_debit,
-					&posting_index,
-					detail_debit,
-				);
-				<PostingDetail<T>>::insert(
-					&account_balance_key_credit,
-					&posting_index,
-					detail_credit,
-				);
+				<BalanceByLedger::<T>>::insert(&address, &mint_to, balance.clone());
+				<BalanceByLedger::<T>>::insert(&address, &account_for, balance);
+				<PostingDetail::<T>>::insert(&account_balance_key_debit, &posting_index, detail_debit);
+				<PostingDetail::<T>>::insert(&account_balance_key_credit, &posting_index, detail_credit);
 			}
 		}
 	}
@@ -218,7 +211,7 @@ mod pallet {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
-			+ Convert<[u8; 32], Self::AccountId>;
+		+ Convert<[u8; 32], Self::AccountId>;
 		type Currency: Currency<Self::AccountId>;
 		type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
 	}
@@ -254,7 +247,12 @@ mod pallet {
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
-		LegderUpdate(<T as frame_system::Config>::AccountId, Ledger, LedgerBalance, PostingIndex),
+		LegderUpdate(
+			<T as frame_system::Config>::AccountId,
+			Ledger,
+			LedgerBalance,
+			PostingIndex,
+		),
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -274,7 +272,7 @@ mod pallet {
 		) -> DispatchResult {
 			let balance_key = (key.primary_party.clone(), key.ledger.clone());
 			// let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
-			let abs_amount: LedgerBalance = key.amount.clone().abs();
+			let abs_amount: LedgerBalance =  key.amount.clone().abs();
 			let detail = Detail {
 				counterparty: key.counterparty.clone(),
 				amount: abs_amount,
@@ -290,21 +288,15 @@ mod pallet {
 			// As all values passed to this function are already signed +/- we only need to sum to the previous balance and check for overflow
 			// Updates are only made to storage once tests below are passed for debits or credits.
 			match <BalanceByLedger<T>>::get(&key.primary_party, &key.ledger) {
-				None => BalanceByLedger::<T>::insert(
-					&key.primary_party,
-					&key.ledger,
-					key.amount.clone(),
-				),
+				None => BalanceByLedger::<T>::insert(&key.primary_party, &key.ledger, key.amount.clone()),
 				Some(b) => {
-					let new_balance =
-						b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
+					let new_balance = b.checked_add(key.amount).ok_or(Error::<T>::BalanceValueOverflow)?;
 					BalanceByLedger::<T>::insert(&key.primary_party, &key.ledger, new_balance);
 				},
 			};
 
-			if let Some(new_global_balance) =
-				<GlobalLedger<T>>::get(&key.ledger).checked_add(key.amount)
-			{
+			if let Some(new_global_balance) = <GlobalLedger<T>>::get(&key.ledger)
+				.checked_add(key.amount) {
 				GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
 			} else {
 				GlobalLedger::<T>::insert(&key.ledger, key.amount.clone());
@@ -331,16 +323,17 @@ mod pallet {
 		) -> Result<(LedgerBalance, LedgerBalance), Error<T>> {
 			let increase_amount: LedgerBalance =
 				T::AccountingConverter::try_convert(amount).ok_or(Error::<T>::AmountOverflow)?;
-			let decrease_amount =
-				increase_amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?;
+			let decrease_amount = increase_amount
+				.checked_neg()
+				.ok_or(Error::<T>::AmountOverflow)?;
 
 			Ok((increase_amount, decrease_amount))
 		}
 	}
 
 	impl<T: Config> Posting<T::AccountId, T::Hash, T::BlockNumber, CurrencyBalanceOf<T>> for Pallet<T>
-	where
-		T: pallet_timestamp::Config,
+		where
+			T: pallet_timestamp::Config,
 	{
 		type PostingIndex = PostingIndex;
 
@@ -375,10 +368,7 @@ mod pallet {
 						for key in keys.iter().cloned().take(idx - 1) {
 							let reversed = Record {
 								// Reversal should never cause an overflow - check nevertheless
-								amount: key
-									.amount
-									.checked_neg()
-									.ok_or(Error::<T>::AmountOverflow)?,
+								amount: key.amount.checked_neg().ok_or(Error::<T>::AmountOverflow)?,
 								debit_credit: key.debit_credit.reverse(),
 								..key
 							};
@@ -423,9 +413,7 @@ mod pallet {
 				Record {
 					primary_party: from.clone(),
 					counterparty: to.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash,
@@ -445,9 +433,7 @@ mod pallet {
 				Record {
 					primary_party: to.clone(),
 					counterparty: from.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash,
@@ -474,7 +460,10 @@ mod pallet {
 		/// This function takes the transaction fee and prepares to account for it in accounting.
 		/// This is one of the few functions that will set the ledger accounts to be updated here. Fees
 		/// are native to the Substrate Framework, and there may be other use cases.
-		fn account_for_fees(fee: CurrencyBalanceOf<T>, payer: T::AccountId) -> DispatchResult {
+		fn account_for_fees(
+			fee: CurrencyBalanceOf<T>,
+			payer: T::AccountId,
+		) -> DispatchResult {
 			// Take the fee amount and convert for use with accounting. Fee is of type T::Balance which is u128.
 			// As amount will always be positive, convert for use in accounting
 			let (increase_amount, decrease_amount) = Self::increase_decrease_amounts(fee)?;
@@ -494,9 +483,7 @@ mod pallet {
 				Record {
 					primary_party: payer.clone(),
 					counterparty: netfee_address.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: fee_hash,
@@ -506,9 +493,7 @@ mod pallet {
 				Record {
 					primary_party: payer.clone(),
 					counterparty: netfee_address.clone(),
-					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(
-						AdminCosts::Blockchain(InternalAccounting::NetworkTransactionFees),
-					)))),
+					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkTransactionFees))))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash: fee_hash,
@@ -537,16 +522,13 @@ mod pallet {
 			let current_block_dupe = current_block; // Applicable period for accounting
 
 			// Generate dummy Hash reference (it has no real bearing but allows posting to happen)
-			let ref_hash: T::Hash =
-				Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+			let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
 
 			let keys = [
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: ref_hash,
@@ -556,9 +538,7 @@ mod pallet {
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalReservedBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash: ref_hash,
@@ -587,16 +567,13 @@ mod pallet {
 			let current_block_dupe = current_block; // Applicable period for accounting
 
 			// Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
-			let ref_hash: T::Hash =
-				Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+			let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
 
 			let keys = [
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalReservedBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: ref_hash,
@@ -606,9 +583,7 @@ mod pallet {
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash: ref_hash,
@@ -638,16 +613,13 @@ mod pallet {
 			let current_block_dupe = current_block; // Applicable period for accounting
 
 			// Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
-			let ref_hash: T::Hash =
-				Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
+			let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
 
 			let keys = [
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalReservedBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: ref_hash,
@@ -657,9 +629,7 @@ mod pallet {
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: beneficiary.clone(),
-					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(
-						OPEX::TaxFinesPenalties(TFP::SlashedCoins),
-					))),
+					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins)))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash: ref_hash,
@@ -690,19 +660,14 @@ mod pallet {
 			let current_block_dupe = current_block; // Applicable period for accounting
 
 			// Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
-			let ref_hash: T::Hash =
-				Self::get_pseudo_random_hash(slashed.clone(), beneficiary.clone());
+			let ref_hash: T::Hash = Self::get_pseudo_random_hash(slashed.clone(), beneficiary.clone());
 
 			// Select the account ledger to update
 			let beneficiary_ledger = match is_free_balance {
 				// the funds will be moved to the free balance of the beneficiary
-				true => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-					CurrentAssets::InternalBalance,
-				))),
+				true => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))),
 				// the funds will be moved to the reserved balance of the beneficiary
-				false => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-					CurrentAssets::InternalReservedBalance,
-				))),
+				false => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
 			};
 
 			// First handle the slashing on the slashed account, then handle the addition of the funds to the new account
@@ -710,9 +675,7 @@ mod pallet {
 				Record {
 					primary_party: slashed.clone(),
 					counterparty: slashed.clone(),
-					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(
-						CurrentAssets::InternalReservedBalance,
-					))),
+					ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
 					amount: decrease_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: ref_hash,
@@ -722,9 +685,7 @@ mod pallet {
 				Record {
 					primary_party: slashed.clone(),
 					counterparty: slashed.clone(),
-					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(
-						OPEX::TaxFinesPenalties(TFP::SlashedCoins),
-					))),
+					ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins)))),
 					amount: increase_amount,
 					debit_credit: Indicator::Debit,
 					reference_hash: ref_hash,
@@ -744,9 +705,7 @@ mod pallet {
 				Record {
 					primary_party: beneficiary.clone(),
 					counterparty: slashed.clone(),
-					ledger: Ledger::ProfitLoss(P::Income(I::OtherOperatingIncome(
-						OOPIN::BlockchainSlashedFundsIncome,
-					))),
+					ledger: Ledger::ProfitLoss(P::Income(I::OtherOperatingIncome(OOPIN::BlockchainSlashedFundsIncome))),
 					amount: increase_amount,
 					debit_credit: Indicator::Credit,
 					reference_hash: ref_hash,
@@ -863,24 +822,24 @@ mod pallet {
 		//         },
 		//     ];
 
-		//     Self::handle_multiposting_amounts(&keys)?;
+        //     Self::handle_multiposting_amounts(&keys)?;
 
-		//     Ok(())
-		// }
+        //     Ok(())
+        // }
 
-		fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
-			let tuple = (sender.clone(), recipient);
-			let sender_encoded = sender.encode();
-			let (random_value, _) = T::RandomThing::random(&sender_encoded);
-			let input = (
-				tuple,
-				pallet_timestamp::Pallet::<T>::get(),
-				random_value,
-				frame_system::Pallet::<T>::extrinsic_index(),
-				frame_system::Pallet::<T>::block_number(),
-			);
+        fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
+            let tuple = (sender.clone(), recipient);
+            let sender_encoded = sender.encode();
+            let (random_value, _) = T::RandomThing::random(&sender_encoded);
+            let input = (
+                tuple,
+                pallet_timestamp::Pallet::<T>::get(),
+                random_value,
+                frame_system::Pallet::<T>::extrinsic_index(),
+                frame_system::Pallet::<T>::block_number(),
+            );
 
-			T::Hashing::hash(input.encode().as_slice()) // default hash BlakeTwo256
-		}
-	}
+            T::Hashing::hash(input.encode().as_slice()) // default hash BlakeTwo256
+        }
+    }
 }

@@ -36,11 +36,11 @@
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
 use frame_support::{dispatch::EncodeLike, pallet_prelude::*};
-use scale_info::TypeInfo;
 use sp_std::prelude::*;
+use scale_info::TypeInfo;
 
 pub trait Validating<AccountId, Hash> {
-	fn is_order_party(o: AccountId, r: Hash) -> bool;
+    fn is_order_party(o: AccountId, r: Hash) -> bool;
 }
 
 // Module Types
@@ -48,54 +48,54 @@ pub type OrderStatus = u16; // Generic Status for whatever the HashReference ref
 
 #[derive(Debug, Decode, Encode, Clone, Copy, PartialEq, Eq, TypeInfo)]
 pub enum ApprovalStatus {
-	Submitted = 0,
-	Accepted = 1,
-	Rejected = 2,
+    Submitted = 0,
+    Accepted = 1,
+    Rejected = 2,
 }
 
 /// The order header: contains common values for all items.
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct OrderHeader<AccountId> {
-	pub commander: AccountId,
-	pub fulfiller: AccountId,
-	pub approver: AccountId,
-	pub order_status: u16,
-	pub approval_status: ApprovalStatus,
-	pub buy_or_sell: u16,
-	pub amount: i128,
-	pub market_order: bool,
-	pub order_type: u16,
-	pub deadline: u32,
-	pub due_date: u32,
+    pub commander: AccountId,
+    pub fulfiller: AccountId,
+    pub approver: AccountId,
+    pub order_status: u16,
+    pub approval_status: ApprovalStatus,
+    pub buy_or_sell: u16,
+    pub amount: i128,
+    pub market_order: bool,
+    pub order_type: u16,
+    pub deadline: u32,
+    pub due_date: u32,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct OrderItem<Hash> {
-	pub product: Hash,
-	pub unit_price: i128,
-	pub quantity: u128,
-	pub unit_of_measure: u16,
+    pub product: Hash,
+    pub unit_price: i128,
+    pub quantity: u128,
+    pub unit_of_measure: u16,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct TxKeysL<Hash> {
-	pub record_id: Hash,
-	pub parent_id: Hash,
-	pub bonsai_token: Hash,
-	pub tx_uid: Hash,
+    pub record_id: Hash,
+    pub parent_id: Hash,
+    pub bonsai_token: Hash,
+    pub tx_uid: Hash,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct TxKeysM<Hash> {
-	pub record_id: Hash,
-	pub bonsai_token: Hash,
-	pub tx_uid: Hash,
+    pub record_id: Hash,
+    pub bonsai_token: Hash,
+    pub tx_uid: Hash,
 }
 
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, Default, TypeInfo)]
 pub struct TxKeysS<Hash> {
-	pub bonsai_token: Hash,
-	pub tx_uid: Hash,
+    pub bonsai_token: Hash,
+    pub tx_uid: Hash,
 }
 
 // Implementations
@@ -103,7 +103,7 @@ pub struct TxKeysS<Hash> {
 impl EncodeLike<ApprovalStatus> for u8 {}
 
 impl Default for ApprovalStatus {
-	fn default() -> Self {
-		ApprovalStatus::Submitted
-	}
+    fn default() -> Self {
+        ApprovalStatus::Submitted
+    }
 }
