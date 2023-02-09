@@ -6,9 +6,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod totem;
 mod weights;
 pub mod xcm_config;
-mod totem;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
@@ -496,6 +496,22 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
+parameter_types! {
+	pub const CouncilMotionDuration: BlockNumber = 5 * DAYS;
+}
+
+type CouncilCollective = pallet_collective::Instance1;
+impl pallet_collective::Config<CouncilCollective> for Runtime {
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type RuntimeEvent = RuntimeEvent;
+	type MaxMembers = ConstU32<100>;
+	type MaxProposals = ConstU32<100>;
+	type MotionDuration = CouncilMotionDuration;
+	type RuntimeOrigin = RuntimeOrigin;
+	type Proposal = RuntimeCall;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
 // /// Configure the pallet template in pallets/template.
 // impl pallet_template::Config for Runtime {
 // 	type RuntimeEvent = RuntimeEvent;
@@ -553,6 +569,9 @@ construct_runtime!(
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
+
+		//Governance
+		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 100,
 	}
 );
 

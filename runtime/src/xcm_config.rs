@@ -176,11 +176,7 @@ impl xcm_executor::Config for XcmConfig {
 	type LocationInverter = LocationInverter<Ancestry>;
 	type Barrier = Barrier;
 	type Weigher = FixedWeightBounds<UnitWeightCost, RuntimeCall, MaxInstructions>;
-	type Trader =
-	// TODO ToAuthor<R> needs to be implemented in Totem - same place as DealWithFees in Substrate
-	// Currently fees are burnt.
-	// UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, ToAuthor<Runtime>>;
-		UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, ()>;
+	type Trader = UsingComponents<WeightToFee, RelayLocation, AccountId, Balances, ()>;
 	type ResponseHandler = PolkadotXcm;
 	type AssetTrap = PolkadotXcm;
 	type AssetClaims = PolkadotXcm;
