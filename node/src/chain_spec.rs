@@ -250,5 +250,9 @@ fn testnet_genesis(
 		polkadot_xcm: totem_parachain_runtime::PolkadotXcmConfig {
 			safe_xcm_version: Some(SAFE_XCM_VERSION),
 		},
+		council: Default::default(),
+		democracy: Default::default(),
+		treasury: Default::default(),
+		vesting: Default::default(),
 	}
 }
