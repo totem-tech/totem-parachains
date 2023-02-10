@@ -629,7 +629,7 @@ impl pallet_democracy::Config for Runtime {
 	type CancellationOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 2, 3>;
 	type CooloffPeriod = CooloffPeriod;
-	type Currency = Balances;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type EnactmentPeriod = EnactmentPeriod;
 	type RuntimeEvent = RuntimeEvent;
 	/// A unanimous council can have the next scheduled referendum be a straight
@@ -723,6 +723,9 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
                 c,
                 RuntimeCall::Democracy(..) |
                 RuntimeCall::Council(..) |
+				RuntimeCall::TechnicalCouncil(..) |
+				RuntimeCall::Membership(..) |
+				RuntimeCall::TechnicalMembership(..) |
 				RuntimeCall::Treasury(..)
             ),
 		}
