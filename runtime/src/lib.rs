@@ -880,12 +880,14 @@ mod benches {
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
 		[pallet_scheduler, Scheduler]
 		[pallet_democracy, Democracy]
-		[pallet_collective::<Instance1>, Council]
+		[pallet_collective, Council]
+		[pallet_collective, TechnicalCouncil]
 		[pallet_treasury, Treasury]
 		[pallet_preimage, Preimage]
 		[pallet_vesting, Vesting]
 		[pallet_proxy, Proxy]
-		[pallet_membership::<Instance1>, Membership]
+		[pallet_membership, Membership]
+		[pallet_membership, TechnicalMembership]
 	);
 }
 
