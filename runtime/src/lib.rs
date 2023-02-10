@@ -543,8 +543,6 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		RuntimeBlockWeights::get().max_block;
-	// Retry a scheduled item every 10 blocks (1 minute) until the preimage exists.
-	pub const NoPreimagePostponement: Option<u32> = Some(10);
 }
 
 impl pallet_scheduler::Config for Runtime {
@@ -594,6 +592,7 @@ impl pallet_treasury::Config for Runtime {
 
 parameter_types! {
 	pub const PreimageBaseDeposit: Balance = UNIT;
+	pub const PreimageByteDeposit: Balance = 10;
 }
 
 impl pallet_preimage::Config for Runtime {
@@ -613,7 +612,6 @@ parameter_types! {
 	pub const MinimumDeposit: Balance = 100 * UNIT;
 	pub const EnactmentPeriod: BlockNumber = 30 * 24 * 60 * MINUTES;
 	pub const CooloffPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
-	pub const PreimageByteDeposit: Balance = 10;
 }
 
 impl pallet_democracy::Config for Runtime {
