@@ -528,8 +528,8 @@ parameter_types! {
 	pub const TechnicalCollectiveMotionDuration: BlockNumber = 5 * DAYS;
 }
 
-type TechnicalCollective = pallet_collective::Instance2;
-impl pallet_collective::Config<TechnicalCollective> for Runtime {
+type technicalCollective = pallet_collective::Instance2;
+impl pallet_collective::Config<technicalCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
@@ -759,7 +759,8 @@ type EnsureRootOrHalfCouncil = EitherOfDiverse<
 	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
 
-impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
+type Members = pallet_membership::Instance1;
+impl pallet_membership::Config<Members> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AddOrigin = EnsureRootOrHalfCouncil;
 	type RemoveOrigin = EnsureRootOrHalfCouncil;
@@ -768,6 +769,25 @@ impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type PrimeOrigin = EnsureRootOrHalfCouncil;
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
+	type MaxMembers = ConstU32<100>;
+	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
+}
+
+type EnsureRootOrMoreThanHalfOfCouncil = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
+>;
+
+type TechnicalMembers = pallet_membership::Instance2;
+impl pallet_membership::Config<TechnicalMembers> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type AddOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type RemoveOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type SwapOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type ResetOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type PrimeOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type MembershipInitialized = TechnicalCouncil;
+	type MembershipChanged = TechnicalCouncil;
 	type MaxMembers = ConstU32<100>;
 	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
 }
@@ -840,6 +860,7 @@ construct_runtime!(
 		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 106,
 		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 107,
 		Membership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 108,
+		TechnicalMembership: pallet_membership::<Instance2>::{Pallet, Call, Storage, Event<T>, Config<T>} = 109,
 	}
 );
 

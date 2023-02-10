@@ -1,5 +1,5 @@
 use cumulus_primitives_core::ParaId;
-use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT, MembershipConfig};
+use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT, MembershipConfig, TechnicalMembershipConfig};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
@@ -256,6 +256,10 @@ fn testnet_genesis(
 		treasury: Default::default(),
 		vesting: Default::default(),
 		membership: MembershipConfig {
+			members: vec![].try_into().unwrap(),
+			phantom: Default::default(),
+		},
+		technical_membership: TechnicalMembershipConfig {
 			members: vec![].try_into().unwrap(),
 			phantom: Default::default(),
 		},
