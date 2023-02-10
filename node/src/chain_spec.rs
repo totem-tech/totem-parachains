@@ -251,6 +251,7 @@ fn testnet_genesis(
 			safe_xcm_version: Some(SAFE_XCM_VERSION),
 		},
 		council: Default::default(),
+		technical_council: Default::default(),
 		democracy: Default::default(),
 		treasury: Default::default(),
 		vesting: Default::default(),

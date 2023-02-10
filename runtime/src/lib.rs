@@ -525,6 +525,22 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 }
 
 parameter_types! {
+	pub const TechnicalCollectiveMotionDuration: BlockNumber = 5 * DAYS;
+}
+
+type TechnicalCollective = pallet_collective::Instance2;
+impl pallet_collective::Config<TechnicalCollective> for Runtime {
+	type RuntimeOrigin = RuntimeOrigin;
+	type Proposal = RuntimeCall;
+	type RuntimeEvent = RuntimeEvent;
+	type MotionDuration = TechnicalCollectiveMotionDuration;
+	type MaxProposals = ConstU32<100>;
+	type MaxMembers = ConstU32<100>;
+	type DefaultVote = pallet_collective::PrimeDefaultVote;
+	type WeightInfo = pallet_collective::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		RuntimeBlockWeights::get().max_block;
 	// Retry a scheduled item every 10 blocks (1 minute) until the preimage exists.
@@ -816,13 +832,14 @@ construct_runtime!(
 
 		//Governance
 		Council: pallet_collective::<Instance1>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 100,
-		Democracy: pallet_democracy::{Pallet, Call, Storage, Config<T>, Event<T>} = 101,
-		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>} = 102,
-		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 103,
-		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 104,
-		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 105,
-		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 106,
-		Membership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 107,
+		TechnicalCouncil: pallet_collective::<Instance2>::{Pallet, Call, Storage, Origin<T>, Event<T>, Config<T>} = 101,
+		Democracy: pallet_democracy::{Pallet, Call, Storage, Config<T>, Event<T>} = 102,
+		Scheduler: pallet_scheduler::{Pallet, Call, Storage, Event<T>} = 103,
+		Treasury: pallet_treasury::{Pallet, Call, Storage, Config, Event<T>} = 104,
+		Preimage: pallet_preimage::{Pallet, Call, Storage, Event<T>} = 105,
+		Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 106,
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 107,
+		Membership: pallet_membership::<Instance1>::{Pallet, Call, Storage, Event<T>, Config<T>} = 108,
 	}
 );
 
