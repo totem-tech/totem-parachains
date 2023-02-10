@@ -544,17 +544,23 @@ impl pallet_scheduler::Config for Runtime {
 	type Preimages = Preimage;
 }
 
+pub type EnsureRootOrHalfGeneralCouncil = EitherOfDiverse<
+	EnsureRoot<AccountId>,
+	pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
+>;
+
 parameter_types! {
 	pub const TreasuryPalletId: PalletId = PalletId(*b"eg/trsry");
 	pub const ProposalBond: Permill = Permill::from_percent(5);
 	pub const ProposalBondMinimum: Balance = 100;
 	pub const SpendPeriod: BlockNumber = 100;
+	pub const Burn: Permill = Permill::from_percent(0);
 }
 
 impl pallet_treasury::Config for Runtime {
-	type Currency = Balances;
-	type ApproveOrigin = frame_system::EnsureRoot<AccountId>;
-	type RejectOrigin = frame_system::EnsureRoot<AccountId>;
+	type Currency = pallet_balances_totem::Pallet<Self>;
+	type ApproveOrigin = EnsureRootOrHalfGeneralCouncil;
+	type RejectOrigin = EnsureRootOrHalfGeneralCouncil;
 	type RuntimeEvent = RuntimeEvent;
 	type OnSlash = ();
 	type ProposalBond = ProposalBond;
@@ -562,7 +568,7 @@ impl pallet_treasury::Config for Runtime {
 	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
 	type ProposalBondMaximum = ();
 	type SpendPeriod = SpendPeriod;
-	type Burn = ();
+	type Burn = Burn;
 	type BurnDestination = ();
 	type PalletId = TreasuryPalletId;
 	type SpendFunds = ();
@@ -577,7 +583,7 @@ parameter_types! {
 impl pallet_preimage::Config for Runtime {
 	type BaseDeposit = PreimageBaseDeposit;
 	type ByteDeposit = PreimageByteDeposit;
-	type Currency = Balances;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type RuntimeEvent = RuntimeEvent;
 	type ManagerOrigin = EnsureRoot<AccountId>;
 	type WeightInfo = pallet_preimage::weights::SubstrateWeight<Runtime>;
@@ -657,7 +663,7 @@ parameter_types! {
 
 impl pallet_vesting::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type Currency = Balances;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
 	type MinVestedTransfer = MinVestedTransfer;
 	type WeightInfo = ();
@@ -720,7 +726,7 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 impl pallet_proxy::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
-	type Currency = Balances;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type ProxyType = ProxyType;
 	type ProxyDepositBase = ProxyDepositBase;
 	type ProxyDepositFactor = ProxyDepositFactor;
@@ -736,6 +742,7 @@ type EnsureRootOrHalfCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
 >;
+
 impl pallet_membership::Config<pallet_membership::Instance1> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type AddOrigin = EnsureRootOrHalfCouncil;
