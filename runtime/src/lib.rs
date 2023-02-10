@@ -528,8 +528,8 @@ parameter_types! {
 	pub const TechnicalCollectiveMotionDuration: BlockNumber = 5 * DAYS;
 }
 
-type technicalCollective = pallet_collective::Instance2;
-impl pallet_collective::Config<technicalCollective> for Runtime {
+type TechnicalCollective = pallet_collective::Instance2;
+impl pallet_collective::Config<TechnicalCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
