@@ -27,7 +27,7 @@ declare -a pallets=(
     [8] = pallet_membership
 )
 
-# Loop through the pallets and run the benchmark
+#Loop through the pallets and run the benchmark
 for pallet in ${pallets[@]}
 do
 	output_file="${pallet//::/_}"
