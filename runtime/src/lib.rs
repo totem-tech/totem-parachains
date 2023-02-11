@@ -670,7 +670,7 @@ impl pallet_democracy::Config for Runtime {
 }
 
 parameter_types! {
-	pub const MinVestedTransfer: Balance = 1;
+	pub const MinVestedTransfer: Balance = 100_000_000;
 	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
 		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
 }
@@ -680,7 +680,7 @@ impl pallet_vesting::Config for Runtime {
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
 	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = ();
+	type WeightInfo = weights::pallet_vesting::WeightInfo<Runtime>;
 	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
 	const MAX_VESTING_SCHEDULES: u32 = 28;
 }

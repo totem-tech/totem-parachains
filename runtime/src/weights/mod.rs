@@ -28,6 +28,7 @@ pub mod pallet_proxy;
 pub mod pallet_preimage;
 pub mod pallet_scheduler;
 pub mod pallet_treasury;
+pub mod pallet_vesting;
 
 pub use block_weights::constants::BlockExecutionWeight;
 pub use extrinsic_weights::constants::ExtrinsicBaseWeight;
