@@ -794,24 +794,19 @@ impl pallet_proxy::Config for Runtime {
 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
 }
 
-type EnsureRootOrHalfCouncil = EitherOfDiverse<
-	EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
->;
-
 type Members = pallet_membership::Instance1;
 impl pallet_membership::Config<Members> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	// The origin needed for adding a member
-	type AddOrigin = EnsureRootOrHalfCouncil;
+	type AddOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for removing a member
-	type RemoveOrigin = EnsureRootOrHalfCouncil;
+	type RemoveOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for adding and removing a member at a go
-	type SwapOrigin = EnsureRootOrHalfCouncil;
+	type SwapOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for resetting membership
-	type ResetOrigin = EnsureRootOrHalfCouncil;
+	type ResetOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for setting or resetting a prime member
-	type PrimeOrigin = EnsureRootOrHalfCouncil;
+	type PrimeOrigin = EnsureRootOrHalfGeneralCouncil;
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
 	// The maximum members allowed in the membership
@@ -819,24 +814,19 @@ impl pallet_membership::Config<Members> for Runtime {
 	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
 }
 
-type EnsureRootOrMoreThanHalfOfCouncil = EitherOfDiverse<
-	EnsureRoot<AccountId>,
-	pallet_collective::EnsureProportionMoreThan<AccountId, CouncilCollective, 1, 2>,
->;
-
 type TechnicalMembers = pallet_membership::Instance2;
 impl pallet_membership::Config<TechnicalMembers> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	// The origin needed for adding a techincal member
-	type AddOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type AddOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for removing a techical member
-	type RemoveOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type RemoveOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for adding and removing a technical member at a go
-	type SwapOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type SwapOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for resetting technical membership
-	type ResetOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type ResetOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for setting or resetting a prime member
-	type PrimeOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	type PrimeOrigin = EnsureRootOrHalfGeneralCouncil;
 	type MembershipInitialized = TechnicalCouncil;
 	type MembershipChanged = TechnicalCouncil;
 	// The maximum members allowed in the membership
