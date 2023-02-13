@@ -782,7 +782,7 @@ impl pallet_proxy::Config for Runtime {
 	type ProxyDepositBase = ProxyDepositBase;
 	// The amount of currency/funds needed per proxy addition
 	type ProxyDepositFactor = ProxyDepositFactor;
-	// The maximum amount of proxies for a singel account
+	// The maximum amount of proxies for a single account
 	type MaxProxies = ConstU32<32>;
 	type WeightInfo = ();
 	// The maximum amount of time delayed annoucements that are allowed to be pending

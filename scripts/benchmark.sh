@@ -16,15 +16,15 @@ benchmarkOutput=./weights
 # Set the pallets to benchmark
 # Should include all pallets in the runtime
 declare -a pallets=(
-#    [0] = pallet_balances_totem
-#    [1] = pallet_democracy
-#    [2] = pallet_scheduler
-#    [3] = pallet_collective
-#    [4] = pallet_treasury
-#    [5] = pallet_preimage
-    [0] = pallet_vesting
-    [1] = pallet_proxy
- #   [8] = pallet_membership
+    [0] = pallet_balances_totem
+    [1] = pallet_democracy
+    [2] = pallet_scheduler
+    [3] = pallet_collective
+    [4] = pallet_treasury
+    [5] = pallet_preimage
+    [6] = pallet_vesting
+    [7] = pallet_proxy
+    [8] = pallet_membership
 )
 
 #Loop through the pallets and run the benchmark
