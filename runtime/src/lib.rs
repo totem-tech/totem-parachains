@@ -510,6 +510,7 @@ impl pallet_sudo::Config for Runtime {
 }
 
 parameter_types! {
+	// Time out for motions in the council
 	pub const CouncilMotionDuration: BlockNumber = 5 * DAYS;
 }
 
@@ -529,6 +530,7 @@ impl pallet_collective::Config<CouncilCollective> for Runtime {
 }
 
 parameter_types! {
+	// Time out for motions in the technical council
 	pub const TechnicalCollectiveMotionDuration: BlockNumber = 5 * DAYS;
 }
 
@@ -548,6 +550,7 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 }
 
 parameter_types! {
+	// The maximum weight per block to be scheduled
 	pub MaximumSchedulerWeight: Weight = Perbill::from_percent(80) *
 		RuntimeBlockWeights::get().max_block;
 }
@@ -575,9 +578,13 @@ pub type EnsureRootOrHalfGeneralCouncil = EitherOfDiverse<
 
 parameter_types! {
 	pub const TreasuryPalletId: PalletId = PalletId(*b"eg/trsry");
+	// The fraction of a proposal's value to be bonded for a proposal to be placed
 	pub const ProposalBond: Permill = Permill::from_percent(5);
+	// The minimum deposit amount to be bonded for a proposal
 	pub const ProposalBondMinimum: Balance = 100;
+	// The period between successive spends
 	pub const SpendPeriod: BlockNumber = 100;
+	// The percentage of spend funds that can be burnt per spend period
 	pub const Burn: Permill = Permill::from_percent(0);
 }
 
@@ -609,7 +616,9 @@ impl pallet_treasury::Config for Runtime {
 }
 
 parameter_types! {
+	// The base deposit needed for putting a preimage on chain
 	pub const PreimageBaseDeposit: Balance = UNIT;
+	// The per-byte deposit needed for puttinga preimage on chain
 	pub const PreimageByteDeposit: Balance = 10;
 }
 
@@ -697,6 +706,7 @@ impl pallet_democracy::Config for Runtime {
 }
 
 parameter_types! {
+	// The minimum amount transferred for calling the vested_transfer extrinsic
 	pub const MinVestedTransfer: Balance = 100_000_000;
 	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
 		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
