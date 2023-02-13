@@ -233,10 +233,11 @@ const MAXIMUM_BLOCK_WEIGHT: Weight = Weight::from_parts(
 	cumulus_primitives_core::relay_chain::v2::MAX_POV_SIZE as u64,
 );
 
-const SUPPLY_FACTOR: Balance = 100;
-const STORAGE_BYTE_FEE: Balance = 100 * MICROUNIT * SUPPLY_FACTOR;
+
+/// Calculate the storage deposit based on the number of storage items and the
+/// combined byte size of those items.
 const fn deposit(items: u32, bytes: u32) -> Balance {
-	items as Balance * 100 * MILLIUNIT * SUPPLY_FACTOR + (bytes as Balance) * STORAGE_BYTE_FEE
+	items as Balance * 56 * MILLIUNIT + (bytes as Balance) * 50 * MICROUNIT
 }
 
 /// The version information used to identify this runtime when compiled natively.
@@ -516,8 +517,11 @@ type CouncilCollective = pallet_collective::Instance1;
 impl pallet_collective::Config<CouncilCollective> for Runtime {
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
 	type RuntimeEvent = RuntimeEvent;
+	// Maximum members to be allowed in the council
 	type MaxMembers = ConstU32<100>;
+	// Maximum number of active proposals allowed
 	type MaxProposals = ConstU32<100>;
+	// Time out for motions in the council
 	type MotionDuration = CouncilMotionDuration;
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
@@ -533,8 +537,11 @@ impl pallet_collective::Config<TechnicalCollective> for Runtime {
 	type RuntimeOrigin = RuntimeOrigin;
 	type Proposal = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
+	// Time out for motions in the technical council
 	type MotionDuration = TechnicalCollectiveMotionDuration;
+	// Maximum number of active proposals allowed
 	type MaxProposals = ConstU32<100>;
+	// Maximum members of the technical council/committee
 	type MaxMembers = ConstU32<100>;
 	type DefaultVote = pallet_collective::PrimeDefaultVote;
 	type WeightInfo = weights::pallet_collective::WeightInfo<Runtime>;
@@ -548,7 +555,9 @@ parameter_types! {
 impl pallet_scheduler::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type RuntimeEvent = RuntimeEvent;
+	// The maximum number of scheduled calls to be included in a block
 	type MaxScheduledPerBlock = ConstU32<50>;
+	// The maximum weight per block to be scheduled
 	type MaximumWeight = MaximumSchedulerWeight;
 	type RuntimeOrigin = RuntimeOrigin;
 	type OriginPrivilegeCmp = EqualPrivilegeOnly;
@@ -558,6 +567,7 @@ impl pallet_scheduler::Config for Runtime {
 	type Preimages = Preimage;
 }
 
+// allow root or half of the council collective
 pub type EnsureRootOrHalfGeneralCouncil = EitherOfDiverse<
 	EnsureRoot<AccountId>,
 	pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 2>,
@@ -573,16 +583,24 @@ parameter_types! {
 
 impl pallet_treasury::Config for Runtime {
 	type Currency = pallet_balances_totem::Pallet<Self>;
+	// The origin for approval
 	type ApproveOrigin = EnsureRootOrHalfGeneralCouncil;
+	// The origin for rejection
 	type RejectOrigin = EnsureRootOrHalfGeneralCouncil;
 	type RuntimeEvent = RuntimeEvent;
 	type OnSlash = ();
+	// The fraction of a proposal's value to be bonded for a proposal to be placed
 	type ProposalBond = ProposalBond;
+	// The minimum deposit amount to be bonded for a proposal
 	type ProposalBondMinimum = ProposalBondMinimum;
-	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
+	// The maximum deposit amount to be bonded for a proposal
 	type ProposalBondMaximum = ();
+	type SpendOrigin = frame_support::traits::NeverEnsureOrigin<u128>;
+	// The period between successive spends
 	type SpendPeriod = SpendPeriod;
+	// The percentage of spend funds that can be burnt per spend period
 	type Burn = Burn;
+	// The handler/address for funds that are burnt
 	type BurnDestination = ();
 	type PalletId = TreasuryPalletId;
 	type SpendFunds = ();
@@ -596,7 +614,9 @@ parameter_types! {
 }
 
 impl pallet_preimage::Config for Runtime {
+	// The base deposit needed for putting a preimage on chain
 	type BaseDeposit = PreimageBaseDeposit;
+	// The per-byte deposit needed for puttinga preimage on chain
 	type ByteDeposit = PreimageByteDeposit;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type RuntimeEvent = RuntimeEvent;
@@ -628,6 +648,7 @@ impl pallet_democracy::Config for Runtime {
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 2, 3>;
 	type CooloffPeriod = CooloffPeriod;
 	type Currency = pallet_balances_totem::Pallet<Self>;
+	// Period between a proposal is being approved and enacted
 	type EnactmentPeriod = EnactmentPeriod;
 	type RuntimeEvent = RuntimeEvent;
 	/// A unanimous council can have the next scheduled referendum be a straight
@@ -650,8 +671,11 @@ impl pallet_democracy::Config for Runtime {
 	type InstantAllowed = InstantAllowed;
 	type InstantOrigin =
 		pallet_collective::EnsureProportionAtLeast<AccountId, CouncilCollective, 1, 1>;
+	// How often new referenda are launched
 	type LaunchPeriod = LaunchPeriod;
+	// The maximum number of public proposals that can exist at any time
 	type MaxProposals = ConstU32<100>;
+	// The maximum number of votes for an account
 	type MaxVotes = ConstU32<100>;
 	// Same as EnactmentPeriod
 	type MinimumDeposit = MinimumDeposit;
@@ -662,11 +686,14 @@ impl pallet_democracy::Config for Runtime {
 	// however they can only do it once and it lasts only for the cool-off period.
 	type VetoOrigin = pallet_collective::EnsureMember<AccountId, CouncilCollective>;
 	type VoteLockingPeriod = EnactmentPeriod;
+	// How often to check for new votes
 	type VotingPeriod = VotingPeriod;
-	type WeightInfo = weights::pallet_democracy::WeightInfo<Runtime>;
 	type Preimages = Preimage;
+	// The maximum number of deposits for a proposal
 	type MaxDeposits = ConstU32<100>;
+	// The maximum number of item which can be blacklisted
 	type MaxBlacklisted = ConstU32<100>;
+	type WeightInfo = weights::pallet_democracy::WeightInfo<Runtime>;
 }
 
 parameter_types! {
@@ -679,19 +706,12 @@ impl pallet_vesting::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
+	// The minimum amount transferred for callind the vested_transfer extrinsic
 	type MinVestedTransfer = MinVestedTransfer;
 	type WeightInfo = weights::pallet_vesting::WeightInfo<Runtime>;
 	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
+	// The maximum number of vesting schedules an account may have at a given time
 	const MAX_VESTING_SCHEDULES: u32 = 28;
-}
-
-parameter_types! {
-	// One storage item; key size 32, value size 8; .
-	pub ProxyDepositBase: Balance = deposit(1, 8);
-	// Additional storage item size of 33 bytes.
-	pub ProxyDepositFactor: Balance = deposit(0, 33);
-	pub AnnouncementDepositBase: Balance = deposit(1, 8);
-	pub AnnouncementDepositFactor: Balance = deposit(0, 66);
 }
 
 /// The type used to represent the kinds of proxying allowed.
@@ -699,8 +719,11 @@ parameter_types! {
 RuntimeDebug, MaxEncodedLen, scale_info::TypeInfo,
 )]
 pub enum ProxyType {
+	/// Allow for any call.
 	Any,
+	/// Allow for calls that do not move tokens out of the caller's account.
 	NonTransfer,
+	/// Allow for governance-related calls.
 	Governance,
 }
 impl Default for ProxyType {
@@ -731,27 +754,43 @@ impl InstanceFilter<RuntimeCall> for ProxyType {
 	fn is_superset(&self, o: &Self) -> bool {
 		match (self, o) {
 			(x, y) if x == y => true,
+			// "anything" always contains any subset
 			(ProxyType::Any, _) => true,
 			(_, ProxyType::Any) => false,
+			// Any is part of NonTransfer
 			(ProxyType::NonTransfer, _) => true,
 			_ => false,
 		}
 	}
 }
 
+parameter_types! {
+	// One storage item; key size 32, value size 8; .
+	pub ProxyDepositBase: Balance = deposit(1, 8);
+	// Additional storage item size of 33 bytes.
+	pub ProxyDepositFactor: Balance = deposit(0, 33);
+	pub AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub AnnouncementDepositFactor: Balance = deposit(0, 66);
+}
 
 impl pallet_proxy::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type RuntimeCall = RuntimeCall;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type ProxyType = ProxyType;
+	// The base amount of currency needed to preserve a proxy
 	type ProxyDepositBase = ProxyDepositBase;
+	// The amount of currency/funds needed per proxy addition
 	type ProxyDepositFactor = ProxyDepositFactor;
+	// The maximum amount of proxies for a singel account
 	type MaxProxies = ConstU32<32>;
 	type WeightInfo = ();
+	// The maximum amount of time delayed annoucements that are allowed to be pending
 	type MaxPending = ConstU32<32>;
 	type CallHasher = BlakeTwo256;
+	// The base amount of deposit needed to create an announcement
 	type AnnouncementDepositBase = AnnouncementDepositBase;
+	// The amount of deposit needed per announcement made
 	type AnnouncementDepositFactor = AnnouncementDepositFactor;
 }
 
@@ -763,13 +802,19 @@ type EnsureRootOrHalfCouncil = EitherOfDiverse<
 type Members = pallet_membership::Instance1;
 impl pallet_membership::Config<Members> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	// The origin needed for adding a member
 	type AddOrigin = EnsureRootOrHalfCouncil;
+	// The origin needed for removing a member
 	type RemoveOrigin = EnsureRootOrHalfCouncil;
+	// The origin needed for adding and removing a member at a go
 	type SwapOrigin = EnsureRootOrHalfCouncil;
+	// The origin needed for resetting membership
 	type ResetOrigin = EnsureRootOrHalfCouncil;
+	// The origin needed for setting or resetting a prime member
 	type PrimeOrigin = EnsureRootOrHalfCouncil;
 	type MembershipInitialized = Council;
 	type MembershipChanged = Council;
+	// The maximum members allowed in the membership
 	type MaxMembers = ConstU32<100>;
 	type WeightInfo = pallet_membership::weights::SubstrateWeight<Runtime>;
 }
@@ -782,13 +827,19 @@ type EnsureRootOrMoreThanHalfOfCouncil = EitherOfDiverse<
 type TechnicalMembers = pallet_membership::Instance2;
 impl pallet_membership::Config<TechnicalMembers> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
+	// The origin needed for adding a techincal member
 	type AddOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	// The origin needed for removing a techical member
 	type RemoveOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	// The origin needed for adding and removing a technical member at a go
 	type SwapOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	// The origin needed for resetting technical membership
 	type ResetOrigin = EnsureRootOrMoreThanHalfOfCouncil;
+	// The origin needed for setting or resetting a prime member
 	type PrimeOrigin = EnsureRootOrMoreThanHalfOfCouncil;
 	type MembershipInitialized = TechnicalCouncil;
 	type MembershipChanged = TechnicalCouncil;
+	// The maximum members allowed in the membership
 	type MaxMembers = ConstU32<100>;
 	type WeightInfo = weights::pallet_membership::WeightInfo<Runtime>;
 }
