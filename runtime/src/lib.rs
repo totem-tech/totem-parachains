@@ -706,7 +706,7 @@ impl pallet_vesting::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type BlockNumberToBalance = sp_runtime::traits::ConvertInto;
-	// The minimum amount transferred for callind the vested_transfer extrinsic
+	// The minimum amount transferred for calling the vested_transfer extrinsic
 	type MinVestedTransfer = MinVestedTransfer;
 	type WeightInfo = weights::pallet_vesting::WeightInfo<Runtime>;
 	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
@@ -817,9 +817,9 @@ impl pallet_membership::Config<Members> for Runtime {
 type TechnicalMembers = pallet_membership::Instance2;
 impl pallet_membership::Config<TechnicalMembers> for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	// The origin needed for adding a techincal member
+	// The origin needed for adding a technical member
 	type AddOrigin = EnsureRootOrHalfGeneralCouncil;
-	// The origin needed for removing a techical member
+	// The origin needed for removing a technical member
 	type RemoveOrigin = EnsureRootOrHalfGeneralCouncil;
 	// The origin needed for adding and removing a technical member at a go
 	type SwapOrigin = EnsureRootOrHalfGeneralCouncil;
