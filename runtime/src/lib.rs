@@ -577,8 +577,8 @@ pub type EnsureRootOrHalfGeneralCouncil = EitherOfDiverse<
 >;
 
 parameter_types! {
-	pub const TreasuryPalletId: PalletId = PalletId(*b"eg/trsry");
-	// The fraction of a proposal's value to be bonded for a proposal to be placed
+	// Trasury Address 0x6d6f646c70792f74727372790000000000000000000000000000000000000000
+	pub const TreasuryPalletId: PalletId = PalletId(*b"py/trsry");
 	pub const ProposalBond: Permill = Permill::from_percent(5);
 	// The minimum deposit amount to be bonded for a proposal
 	pub const ProposalBondMinimum: Balance = 100;
@@ -634,13 +634,22 @@ impl pallet_preimage::Config for Runtime {
 }
 
 parameter_types! {
-	pub const LaunchPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
-	pub const VotingPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
-	pub const FastTrackVotingPeriod: BlockNumber = 3 * 24 * 60 * MINUTES;
+	// Original 28 Days shortened to 7 days
+	// pub const LaunchPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	pub const LaunchPeriod: BlockNumber = 7 * 24 * 60 * MINUTES;
+	// pub const VotingPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	pub const VotingPeriod: BlockNumber = 7 * 24 * 60 * MINUTES;
+	// 3 Days shortened to 1 day
+	// pub const FastTrackVotingPeriod: BlockNumber = 3 * 24 * 60 * MINUTES;
+	pub const FastTrackVotingPeriod: BlockNumber = 1 * 24 * 60 * MINUTES;
 	pub const InstantAllowed: bool = true;
 	pub const MinimumDeposit: Balance = 100 * UNIT;
-	pub const EnactmentPeriod: BlockNumber = 30 * 24 * 60 * MINUTES;
-	pub const CooloffPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	// Original 30 Days shortened to 7 days
+	// pub const EnactmentPeriod: BlockNumber = 30 * 24 * 60 * MINUTES;
+	pub const EnactmentPeriod: BlockNumber = 7 * 24 * 60 * MINUTES;
+	// 28 Days shortened to 3 day
+	// pub const CooloffPeriod: BlockNumber = 28 * 24 * 60 * MINUTES;
+	pub const CooloffPeriod: BlockNumber = 3 * 24 * 60 * MINUTES;
 }
 
 impl pallet_democracy::Config for Runtime {
