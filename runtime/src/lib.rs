@@ -625,7 +625,7 @@ parameter_types! {
 impl pallet_preimage::Config for Runtime {
 	// The base deposit needed for putting a preimage on chain
 	type BaseDeposit = PreimageBaseDeposit;
-	// The per-byte deposit needed for puttinga preimage on chain
+	// The per-byte deposit needed for putting a preimage on chain
 	type ByteDeposit = PreimageByteDeposit;
 	type Currency = pallet_balances_totem::Pallet<Self>;
 	type RuntimeEvent = RuntimeEvent;
