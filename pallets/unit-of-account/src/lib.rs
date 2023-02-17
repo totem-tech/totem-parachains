@@ -31,7 +31,7 @@ use sp_std::{
 	convert::{TryFrom, TryInto},
 	prelude::*,
 };
-use totem_primitives::unit_of_account::UnitOfAccountInterface;
+use totem_primitives::unit_of_account::{UnitOfAccountCurrency, UnitOfAccountInterface};
 
 pub use pallet::*;
 use totem_primitives::LedgerBalance;
@@ -42,6 +42,7 @@ pub mod pallet {
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use totem_primitives::LedgerBalance;
+	use totem_primitives::unit_of_account::UnitOfAccountCurrency;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -59,7 +60,7 @@ pub mod pallet {
 		type MaxWhitelistedAccounts: Get<u32>;
 
 		/// The max number of currencies allowed in the basket
-		type MaxCurrencies: Get<u32>;
+		type MaxCurrencyStringLength: Get<u32>;
 	}
 
 	#[pallet::genesis_config]
@@ -96,9 +97,8 @@ pub mod pallet {
 	pub type CurrencyBasket<T: Config<I>, I: 'static = ()> = StorageMap<
 		_,
 		Blake2_128Concat,
-		BoundedVec<u8, T::MaxCurrencies>,
-		(LedgerBalance, Option<LedgerBalance>),
-		ValueQuery,
+		BoundedVec<u8, T::MaxCurrencyStringLength>,
+		UnitOfAccountCurrency,
 	>;
 
 	/// The calculated Nominal Effective Exchange Rate which is
@@ -131,7 +131,7 @@ pub mod pallet {
 		/// Unknown whitelisted account
 		UnknownWhitelistedAccount,
 		/// Max currencies exceeded
-		MaxCurrenciesExceeded,
+		CurrencyStringLengthOutOfBound,
 	}
 
 	#[pallet::hooks]
@@ -148,7 +148,7 @@ pub mod pallet {
 			ensure_root(origin)?;
 
 			let already_whitelisted = Self::whitelisted_accounts(account.clone());
-			ensure!(already_whitelisted == None, Error::<T, I>::AlreadyWhitelistedAccount);
+			ensure!(already_whitelisted.is_some(), Error::<T, I>::AlreadyWhitelistedAccount);
 
 			<WhitelistedAccounts<T, I>>::insert(account.clone(), ());
 
@@ -173,11 +173,53 @@ pub mod pallet {
 
 			Ok(().into())
 		}
+
+		#[pallet::weight(0)]
+		#[pallet::call_index(2)]
+		pub fn add_currency(
+			origin: OriginFor<T>,
+			currency: Vec<u8>,
+			issuance: LedgerBalance,
+			price: LedgerBalance
+		) -> DispatchResultWithPostInfo {
+			let whitelisted_caller = ensure_signed(origin)?;
+
+			let already_whitelisted = Self::whitelisted_accounts(whitelisted_caller.clone());
+			ensure!(already_whitelisted == None, Error::<T, I>::UnknownWhitelistedAccount);
+
+			<Self as UnitOfAccountInterface>::add_currency(currency, issuance, price)?;
+
+			Ok(().into())
+		}
 	}
 }
 
-impl<T: Config<I>, I: 'static> UnitOfAccountInterface<T::AccountId> for Pallet<T, I> {
-	fn add_currency(currency: Vec<u8>, issuance: LedgerBalance) -> Result<(), DispatchError> {
+impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
+	fn add_currency(currency: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), DispatchError> {
+		let currency_issuance_inverse = 1 / issuance;
+
+		let unit_of_account_in_currency_basket: Vec<UnitOfAccountCurrency> =  CurrencyBasket::<T, I>::iter()
+			.map(|(_, v)| v)
+			.collect();
+
+		let total_weights_in_currency_basket = unit_of_account_in_currency_basket.iter()
+			.fold(0, |acc, unit| 1/acc + 1/unit.issuance);
+
+		let weight_of_currency = currency_issuance_inverse / total_weights_in_currency_basket;
+
+		let unit_of_account_currency = UnitOfAccountCurrency {
+			issuance,
+			price,
+			weight: Some(weight_of_currency)
+		};
+
+		let bounded_currency = BoundedVec::<u8, T::MaxCurrencyStringLength>::try_from(currency.clone())
+			.map_err(|_e| Error::<T, I>::CurrencyStringLengthOutOfBound)?;
+
+
+
+		CurrencyBasket::<T, I>::insert(bounded_currency, unit_of_account_currency);
+
 		Ok(())
 	}
 
