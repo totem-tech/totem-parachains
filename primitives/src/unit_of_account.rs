@@ -13,11 +13,19 @@ pub trait UnitOfAccountInterface {
 	fn remove_currency(symbol: Vec<u8>) -> Result<(), dispatch::DispatchError>;
 }
 
+/// Holds the currency details of each currency and the derivatives
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
-pub struct CurrencyDetails {
+pub struct CurrencyDetails<MaxSymbolOfCurrency: Get<u32>> {
+	/// The currency symbol
+	pub symbol: BoundedVec<u8, MaxSymbolOfCurrency>,
+	/// The total issuance of the currency
 	pub issuance: LedgerBalance,
+	/// The price of the currency
 	pub price: LedgerBalance,
+	/// weighting_per_currency = inverse_issuance / sum_total_inverse_issuances
 	pub weight: Option<LedgerBalance>,
+	/// weight_adjusted_price = weighting_per_currency * price_in_base_currency
 	pub weight_adjusted_price: Option<LedgerBalance>,
+	/// uoa_per_unit_currency = price_in_base_currency / (100_000 * unit_of_account)
 	pub unit_of_account: Option<LedgerBalance>
 }

@@ -26,7 +26,8 @@
 //! `remove_currency`: Removes a currency from the basket.
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-use frame_support::{pallet_prelude::DispatchError, BoundedVec};
+use frame_support::{pallet_prelude::DispatchError, BoundedVec, bounded_vec};
+use frame_support::traits::ConstU32;
 use sp_std::{
 	convert::{TryFrom, TryInto},
 	prelude::*,
@@ -60,7 +61,10 @@ pub mod pallet {
 		type MaxWhitelistedAccounts: Get<u32>;
 
 		/// The max number of currencies allowed in the basket
-		type MaxCurrencyStringLength: Get<u32>;
+		type MaxCurrencyInBasket: Get<u32>;
+
+		/// The max number of symbol for currency allowed in the basket
+		type MaxSymbolOfCurrency: Get<u32> + TypeInfo;
 	}
 
 	#[pallet::genesis_config]
@@ -91,14 +95,13 @@ pub mod pallet {
 	>;
 
 
-	/// The map of currency(represented in bytes) to the issuance and the weight of the currency
+	/// Holds the vec of all currencies in the basket
 	#[pallet::storage]
 	#[pallet::getter(fn currency_basket)]
-	pub type CurrencyBasket<T: Config<I>, I: 'static = ()> = StorageMap<
+	pub type CurrencyBasket<T: Config<I>, I: 'static = ()> = StorageValue<
 		_,
-		Blake2_128Concat,
-		BoundedVec<u8, T::MaxCurrencyStringLength>,
-		CurrencyDetails,
+		BoundedVec<CurrencyDetails<T::MaxSymbolOfCurrency>, T::MaxCurrencyInBasket>,
+		ValueQuery,
 	>;
 
 	/// The calculated Nominal Effective Exchange Rate which is
@@ -131,8 +134,10 @@ pub mod pallet {
 		/// Unknown whitelisted account
 		UnknownWhitelistedAccount,
 		/// Max currencies exceeded
-		CurrencySymbolLengthOutOfBound,
-		/// Currency bnot found from basket
+		MaxCurrenciesOutOfBound,
+		/// Symbol out of Bound
+		SymbolOutOfBound,
+		/// Currency not found from basket
 		CurrencyNotFoundFromBasket
 	}
 
@@ -189,7 +194,9 @@ pub mod pallet {
 			let already_whitelisted = Self::whitelisted_accounts(whitelisted_caller.clone());
 			ensure!(already_whitelisted == None, Error::<T, I>::UnknownWhitelistedAccount);
 
-			<Self as UnitOfAccountInterface>::add_currency(symbol, issuance, price)?;
+			<Self as UnitOfAccountInterface>::add_currency(symbol.clone(), issuance, price)?;
+
+			Self::deposit_event(Event::CurrencyAddedToBasket(symbol));
 
 			Ok(().into())
 		}
@@ -200,27 +207,38 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 	fn add_currency(symbol: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), DispatchError> {
 		let currency_issuance_inverse = 1 / issuance;
 
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
-			.map(|(_, v)| v)
-			.collect();
-
-		let total_weights_in_currency_basket = unit_of_account_in_currency_basket.iter()
-			.fold(0, |acc, unit| acc + 1/unit.issuance);
+		// we need to calculate the total inverse of the currencies in the  basket
+		let total_weights_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
 
 		let weight_of_currency = currency_issuance_inverse / total_weights_in_currency_basket;
 
+		let bounded_symbol = BoundedVec::<u8, T::MaxSymbolOfCurrency>::try_from(symbol.clone())
+			.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
+
 		let unit_of_account_currency = CurrencyDetails {
+			symbol: bounded_symbol,
 			issuance,
 			price,
 			weight: Some(weight_of_currency),
-			weight_adjusted_price: None,
+			weight_adjusted_price: Some(weight_of_currency * price),
 			unit_of_account: None
 		};
 
-		let bounded_currency = BoundedVec::<u8, T::MaxCurrencyStringLength>::try_from(symbol.clone())
-			.map_err(|_e| Error::<T, I>::CurrencySymbolLengthOutOfBound)?;
+		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
-		CurrencyBasket::<T, I>::insert(bounded_currency, unit_of_account_currency);
+		currency_basket
+			.try_push(unit_of_account_currency)
+			.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
+
+		// recalculate weight for each currency in the basket, since a new currency is just added
+		Self::calculate_individual_weights();
+		// calculates the total_inverse_issuance(weights) in the basket, since a new currency is just added
+		Self::calculate_total_inverse_issuance_in_basket();
+		// since a new currency has been added, we need to recalculate for each currency
+		Self::calculate_individual_currency_unit_of_account();
+		// newly calculated unit of account for the pallet
+		let unit_of_account = Self::calculate_unit_of_account();
+		UnitOfAccount::<T, I>::set(unit_of_account);
 
 		Ok(())
 	}
@@ -231,32 +249,30 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 }
 
 impl<T: Config<I>, I: 'static> Pallet<T, I> {
+	pub fn get_all_currency_details() -> Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> {
+		let unit_of_account_in_currency_basket:  Vec<CurrencyDetails<T::MaxSymbolOfCurrency>>  =  CurrencyBasket::<T, I>::get().into_iter().collect();
+		unit_of_account_in_currency_basket
+	}
 	pub fn calculate_individual_weights() {
 		let  total_inverse_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
 
-		for (bounded_currency, unit_of_account_currency) in CurrencyBasket::<T, I>::iter() {
-			let issuance = unit_of_account_currency.issuance;
+		let mut currency_basket = CurrencyBasket::<T, I>::get();
+
+		for currency_details in currency_basket.iter_mut() {
+			let issuance = currency_details.issuance;
 			let inverse_issuance = 1/issuance;
 			let currency_weight = inverse_issuance / total_inverse_in_currency_basket;
-			let weight_adjusted_price = currency_weight * unit_of_account_currency.price;
+			let weight_adjusted_price = currency_weight * currency_details.price;
 
-			CurrencyBasket::<T, I>::try_mutate(bounded_currency, |maybe_unit_of_account_currency| ->  Result<(), DispatchError> {
-				let mut unit_of_account_currency = maybe_unit_of_account_currency.as_mut().ok_or(Error::<T, I>::CurrencyNotFoundFromBasket)?;
-
-				unit_of_account_currency.weight = Some(currency_weight);
-				unit_of_account_currency.weight_adjusted_price = Some(weight_adjusted_price);
-
-				Ok(())
-			});
+			currency_details.weight = Some(currency_weight);
+			currency_details.weight_adjusted_price = Some(weight_adjusted_price);
 		}
 
-
+		CurrencyBasket::<T, I>::set(currency_basket);
 	}
 
 	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance  {
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
-			.map(|(_, v)| v)
-			.collect();
+		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
 		let total_inverse_in_currency_basket = unit_of_account_in_currency_basket.iter()
 			.fold(0, |acc, unit| acc + 1/unit.issuance);
@@ -265,9 +281,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 
 	pub fn calculate_unit_of_account() -> LedgerBalance  {
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
-			.map(|(_, v)| v)
-			.collect();
+		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
 		let unit_of_account  =  unit_of_account_in_currency_basket.iter()
 			.fold(0, |acc, unit| acc + (unit.weight.unwrap() * unit.price));
@@ -278,17 +292,14 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn calculate_individual_currency_unit_of_account() {
 		let  unit_of_account = Self::calculate_unit_of_account();
 
-		for (bounded_currency, unit_of_account_currency) in CurrencyBasket::<T, I>::iter() {
-			CurrencyBasket::<T, I>::try_mutate(bounded_currency, |maybe_unit_of_account_currency| ->  Result<(), DispatchError> {
-				let mut unit_of_account_currency = maybe_unit_of_account_currency.as_mut().ok_or(Error::<T, I>::CurrencyNotFoundFromBasket)?;
+		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
-				let unit_of_account_for_currency = unit_of_account_currency.price / (DIVISOR_UNIT * unit_of_account);
-				unit_of_account_currency.unit_of_account = Some(unit_of_account_for_currency);
+		for currency_details in currency_basket.iter_mut() {
 
-				Ok(())
-			});
+			let unit_of_account_for_currency = currency_details.price / (DIVISOR_UNIT * unit_of_account);
+			currency_details.unit_of_account = Some(unit_of_account_for_currency);
 		}
 
-
+		CurrencyBasket::<T, I>::set(currency_basket);
 	}
 }
