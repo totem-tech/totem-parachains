@@ -31,7 +31,7 @@ use sp_std::{
 	convert::{TryFrom, TryInto},
 	prelude::*,
 };
-use totem_primitives::unit_of_account::{UnitOfAccountCurrency, UnitOfAccountInterface};
+use totem_primitives::unit_of_account::{DIVISOR_UNIT, CurrencyDetails, UnitOfAccountInterface};
 
 pub use pallet::*;
 use totem_primitives::LedgerBalance;
@@ -42,7 +42,7 @@ pub mod pallet {
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use totem_primitives::LedgerBalance;
-	use totem_primitives::unit_of_account::UnitOfAccountCurrency;
+	use totem_primitives::unit_of_account::CurrencyDetails;
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -98,14 +98,14 @@ pub mod pallet {
 		_,
 		Blake2_128Concat,
 		BoundedVec<u8, T::MaxCurrencyStringLength>,
-		UnitOfAccountCurrency,
+		CurrencyDetails,
 	>;
 
 	/// The calculated Nominal Effective Exchange Rate which is
 	/// also known as the unit of account
 	#[pallet::storage]
-	#[pallet::getter(fn neer)]
-	pub type Neer<T: Config<I>, I: 'static = ()> = StorageValue<
+	#[pallet::getter(fn unit_of_account)]
+	pub type UnitOfAccount<T: Config<I>, I: 'static = ()> = StorageValue<
 		_,
 		LedgerBalance,
 		ValueQuery,
@@ -131,7 +131,9 @@ pub mod pallet {
 		/// Unknown whitelisted account
 		UnknownWhitelistedAccount,
 		/// Max currencies exceeded
-		CurrencyStringLengthOutOfBound,
+		CurrencySymbolLengthOutOfBound,
+		/// Currency bnot found from basket
+		CurrencyNotFoundFromBasket
 	}
 
 	#[pallet::hooks]
@@ -178,7 +180,7 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		pub fn add_currency(
 			origin: OriginFor<T>,
-			currency: Vec<u8>,
+			symbol: Vec<u8>,
 			issuance: LedgerBalance,
 			price: LedgerBalance
 		) -> DispatchResultWithPostInfo {
@@ -187,7 +189,7 @@ pub mod pallet {
 			let already_whitelisted = Self::whitelisted_accounts(whitelisted_caller.clone());
 			ensure!(already_whitelisted == None, Error::<T, I>::UnknownWhitelistedAccount);
 
-			<Self as UnitOfAccountInterface>::add_currency(currency, issuance, price)?;
+			<Self as UnitOfAccountInterface>::add_currency(symbol, issuance, price)?;
 
 			Ok(().into())
 		}
@@ -195,28 +197,28 @@ pub mod pallet {
 }
 
 impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
-	fn add_currency(currency: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), DispatchError> {
+	fn add_currency(symbol: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), DispatchError> {
 		let currency_issuance_inverse = 1 / issuance;
 
-		let unit_of_account_in_currency_basket: Vec<UnitOfAccountCurrency> =  CurrencyBasket::<T, I>::iter()
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
 			.map(|(_, v)| v)
 			.collect();
 
 		let total_weights_in_currency_basket = unit_of_account_in_currency_basket.iter()
-			.fold(0, |acc, unit| 1/acc + 1/unit.issuance);
+			.fold(0, |acc, unit| acc + 1/unit.issuance);
 
 		let weight_of_currency = currency_issuance_inverse / total_weights_in_currency_basket;
 
-		let unit_of_account_currency = UnitOfAccountCurrency {
+		let unit_of_account_currency = CurrencyDetails {
 			issuance,
 			price,
-			weight: Some(weight_of_currency)
+			weight: Some(weight_of_currency),
+			weight_adjusted_price: None,
+			unit_of_account: None
 		};
 
-		let bounded_currency = BoundedVec::<u8, T::MaxCurrencyStringLength>::try_from(currency.clone())
-			.map_err(|_e| Error::<T, I>::CurrencyStringLengthOutOfBound)?;
-
-
+		let bounded_currency = BoundedVec::<u8, T::MaxCurrencyStringLength>::try_from(symbol.clone())
+			.map_err(|_e| Error::<T, I>::CurrencySymbolLengthOutOfBound)?;
 
 		CurrencyBasket::<T, I>::insert(bounded_currency, unit_of_account_currency);
 
@@ -225,5 +227,68 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 
 	fn remove_currency(currency: Vec<u8>) -> Result<(), DispatchError> {
 		Ok(())
+	}
+}
+
+impl<T: Config<I>, I: 'static> Pallet<T, I> {
+	pub fn calculate_individual_weights() {
+		let  total_inverse_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
+
+		for (bounded_currency, unit_of_account_currency) in CurrencyBasket::<T, I>::iter() {
+			let issuance = unit_of_account_currency.issuance;
+			let inverse_issuance = 1/issuance;
+			let currency_weight = inverse_issuance / total_inverse_in_currency_basket;
+			let weight_adjusted_price = currency_weight * unit_of_account_currency.price;
+
+			CurrencyBasket::<T, I>::try_mutate(bounded_currency, |maybe_unit_of_account_currency| ->  Result<(), DispatchError> {
+				let mut unit_of_account_currency = maybe_unit_of_account_currency.as_mut().ok_or(Error::<T, I>::CurrencyNotFoundFromBasket)?;
+
+				unit_of_account_currency.weight = Some(currency_weight);
+				unit_of_account_currency.weight_adjusted_price = Some(weight_adjusted_price);
+
+				Ok(())
+			});
+		}
+
+
+	}
+
+	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance  {
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
+			.map(|(_, v)| v)
+			.collect();
+
+		let total_inverse_in_currency_basket = unit_of_account_in_currency_basket.iter()
+			.fold(0, |acc, unit| acc + 1/unit.issuance);
+
+		total_inverse_in_currency_basket
+	}
+
+	pub fn calculate_unit_of_account() -> LedgerBalance  {
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails> =  CurrencyBasket::<T, I>::iter()
+			.map(|(_, v)| v)
+			.collect();
+
+		let unit_of_account  =  unit_of_account_in_currency_basket.iter()
+			.fold(0, |acc, unit| acc + (unit.weight.unwrap() * unit.price));
+
+		unit_of_account
+	}
+
+	pub fn calculate_individual_currency_unit_of_account() {
+		let  unit_of_account = Self::calculate_unit_of_account();
+
+		for (bounded_currency, unit_of_account_currency) in CurrencyBasket::<T, I>::iter() {
+			CurrencyBasket::<T, I>::try_mutate(bounded_currency, |maybe_unit_of_account_currency| ->  Result<(), DispatchError> {
+				let mut unit_of_account_currency = maybe_unit_of_account_currency.as_mut().ok_or(Error::<T, I>::CurrencyNotFoundFromBasket)?;
+
+				let unit_of_account_for_currency = unit_of_account_currency.price / (DIVISOR_UNIT * unit_of_account);
+				unit_of_account_currency.unit_of_account = Some(unit_of_account_for_currency);
+
+				Ok(())
+			});
+		}
+
+
 	}
 }
