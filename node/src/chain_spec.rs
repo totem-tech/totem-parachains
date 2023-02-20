@@ -1,5 +1,5 @@
 use cumulus_primitives_core::ParaId;
-use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
+use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT, MembershipConfig, TechnicalMembershipConfig};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
@@ -249,6 +249,19 @@ fn testnet_genesis(
 		parachain_system: Default::default(),
 		polkadot_xcm: totem_parachain_runtime::PolkadotXcmConfig {
 			safe_xcm_version: Some(SAFE_XCM_VERSION),
+		},
+		council: Default::default(),
+		technical_council: Default::default(),
+		democracy: Default::default(),
+		treasury: Default::default(),
+		vesting: Default::default(),
+		membership: MembershipConfig {
+			members: vec![].try_into().unwrap(),
+			phantom: Default::default(),
+		},
+		technical_membership: TechnicalMembershipConfig {
+			members: vec![].try_into().unwrap(),
+			phantom: Default::default(),
 		},
 	}
 }

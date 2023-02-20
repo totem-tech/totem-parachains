@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # To run this, you must be in the root directory.
 # Execute ./scripts/benchmark.sh
-# Runtime is dev by default because this contains the benchmarking methods 
+# Runtime is dev by default because this contains the benchmarking methods
 # After completion the generated benchmark files should be copied to the relevant pallets directory
 # and renamed to `weights.rs`
 
@@ -15,11 +15,19 @@ benchmarkOutput=./weights
 
 # Set the pallets to benchmark
 # Should include all pallets in the runtime
-pallets=(
-    pallet_balances_totem
+declare -a pallets=(
+    [0] = pallet_balances_totem
+    [1] = pallet_democracy
+    [2] = pallet_scheduler
+    [3] = pallet_collective
+    [4] = pallet_treasury
+    [5] = pallet_preimage
+    [6] = pallet_vesting
+    [7] = pallet_proxy
+    [8] = pallet_membership
 )
 
-# Loop through the pallets and run the benchmark
+#Loop through the pallets and run the benchmark
 for pallet in ${pallets[@]}
 do
 	output_file="${pallet//::/_}"
