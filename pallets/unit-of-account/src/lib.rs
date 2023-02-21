@@ -200,6 +200,24 @@ pub mod pallet {
 
 			Ok(().into())
 		}
+
+		#[pallet::weight(0)]
+		#[pallet::call_index(3)]
+		pub fn remove_currency(
+			origin: OriginFor<T>,
+			symbol: Vec<u8>,
+		) -> DispatchResultWithPostInfo {
+			let whitelisted_caller = ensure_signed(origin)?;
+
+			let already_whitelisted = Self::whitelisted_accounts(whitelisted_caller.clone());
+			ensure!(already_whitelisted == None, Error::<T, I>::UnknownWhitelistedAccount);
+
+			<Self as UnitOfAccountInterface>::remove_currency(symbol.clone())?;
+
+			Self::deposit_event(Event::CurrencyRemovedFromTheBasket(symbol));
+
+			Ok(().into())
+		}
 	}
 }
 
@@ -243,7 +261,24 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		Ok(())
 	}
 
-	fn remove_currency(currency: Vec<u8>) -> Result<(), DispatchError> {
+	fn remove_currency(symbol: Vec<u8>) -> Result<(), DispatchError> {
+		let mut currency_details = CurrencyBasket::<T, I>::get();
+		let index = currency_details.iter()
+			.position(|item| item.symbol == symbol).ok_or_else(|| Error::<T, I>::CurrencyNotFoundFromBasket)?;
+		currency_details.remove(index);
+
+		CurrencyBasket::<T, I>::set(currency_details);
+
+		// recalculate weight for each currency in the basket, since a currency is removed
+		Self::calculate_individual_weights();
+		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
+		Self::calculate_total_inverse_issuance_in_basket();
+		// since a currency has been removed, we need to recalculate for each currency
+		Self::calculate_individual_currency_unit_of_account();
+		// newly calculated unit of account for the pallet
+		let unit_of_account = Self::calculate_unit_of_account();
+		UnitOfAccount::<T, I>::set(unit_of_account);
+
 		Ok(())
 	}
 }
