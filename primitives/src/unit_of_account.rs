@@ -14,7 +14,8 @@ pub trait UnitOfAccountInterface {
 }
 
 /// Holds the currency details of each currency and the derivatives
-#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo)]
+#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug)]
+#[scale_info(skip_type_params(MaxSymbolOfCurrency))]
 pub struct CurrencyDetails<MaxSymbolOfCurrency: Get<u32>> {
 	/// The currency symbol
 	pub symbol: BoundedVec<u8, MaxSymbolOfCurrency>,

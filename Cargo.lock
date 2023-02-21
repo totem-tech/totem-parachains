@@ -5800,6 +5800,7 @@ dependencies = [
  "frame-system",
  "frame-system-benchmarking",
  "log",
+ "pallet-balances-totem",
  "parity-scale-codec",
  "scale-info",
  "serde",
