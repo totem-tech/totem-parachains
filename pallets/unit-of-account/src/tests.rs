@@ -59,32 +59,38 @@ fn should_add_currency_successfully() {
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0,0,0,0,0,0,0],
-			100_000_000_000,
-			140_000_000_000
+			140000000000000020,
+			140000000000000020
 		);
 		assert_ok!(res);
 
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0,0,0,0,0,0,1],
-			200_000_000_000,
-			150_000_000_000
+			150000000000000000,
+			150000000000000000
 		);
 		assert_ok!(res);
+
+		let currency_basket = PalletUnitOfAccount::currency_basket();
+		//dbg!(currency_basket);
 
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0,0,0,0,0,0,2],
-			300_000_000_000,
-			160_000_000_000
+			160000000000000000,
+			160000000000000000
 		);
 		assert_ok!(res);
+
+		let currency_basket = PalletUnitOfAccount::currency_basket();
+		//dbg!(currency_basket);
 
 		let unit_of_account = PalletUnitOfAccount::unit_of_account();
 		dbg!(unit_of_account);
 
 		let currency_basket = PalletUnitOfAccount::currency_basket();
-		dbg!(currency_basket.len());
+		dbg!(currency_basket);
 	});
 }
 

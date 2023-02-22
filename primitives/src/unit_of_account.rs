@@ -4,6 +4,7 @@ use crate::LedgerBalance;
 use frame_support::{dispatch::{ DispatchResult, EncodeLike, TypeInfo }, pallet_prelude::*};
 
 pub const DIVISOR_UNIT: LedgerBalance = 100_000;
+pub const STORAGE_MULTIPLIER: LedgerBalance = 1_000_000_000_000_000_000;
 
 /// UnitOfAccount trait definition to be used in other pallets
 pub trait UnitOfAccountInterface {
