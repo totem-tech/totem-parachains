@@ -233,10 +233,10 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
 
 		// we need to calculate the total inverse of the currencies in the  basket
-		let total_weights_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
+		let total_inverse_issuance_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
 
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
-		if total_weights_in_currency_basket == 0 {
+		if total_inverse_issuance_in_currency_basket == 0 {
 			println!("total weights is 0 for {:?}", symbol.clone());
 
 			let unit_of_account_currency = CurrencyDetails {
@@ -256,12 +256,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 
 
 		} else {
-			println!("[weights not 0] for {:?}", symbol.clone());
-			let currency_issuance_inverse = (1  * STORAGE_MULTIPLIER) / issuance;
-			dbg!(currency_issuance_inverse);
-
-			let weight_of_currency = (currency_issuance_inverse  * STORAGE_MULTIPLIER) / total_weights_in_currency_basket;
-			dbg!(weight_of_currency);
+			let weight_of_currency = Self::calculate_weight_for_currency(issuance.clone());
 
 			let unit_of_account_currency = CurrencyDetails {
 				symbol: bounded_symbol,
@@ -321,20 +316,10 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		unit_of_account_in_currency_basket
 	}
 	pub fn calculate_individual_weights() {
-		let  total_inverse_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
-
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
 		for currency_details in currency_basket.iter_mut() {
-			//println!("total_inverse_in_currency_basket {}", &total_inverse_in_currency_basket);
-			dbg!(&total_inverse_in_currency_basket);
-			let issuance = currency_details.issuance;
-			dbg!(&issuance);
-			//println!("issuance {}", &issuance);
-			let inverse_issuance = (1 * STORAGE_MULTIPLIER)/issuance;
-			dbg!(inverse_issuance);
-			//println!("inverse_issuance {}", &inverse_issuance);
-			let currency_weight = (inverse_issuance * STORAGE_MULTIPLIER ) / total_inverse_in_currency_basket;
+			let currency_weight = Self::calculate_weight_for_currency(currency_details.issuance.clone());
 			dbg!(currency_weight);
 			//println!("currency_weight {}", &currency_weight);
 			let weight_adjusted_price = currency_weight * currency_details.price;
@@ -346,6 +331,20 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		}
 
 		CurrencyBasket::<T, I>::set(currency_basket);
+	}
+
+	pub fn calculate_weight_for_currency(issuance: LedgerBalance) -> LedgerBalance {
+		let total_inverse_issuance_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
+		dbg!(&total_inverse_issuance_in_currency_basket);
+
+		let currency_issuance_inverse = (1  * STORAGE_MULTIPLIER) / issuance;
+		dbg!(currency_issuance_inverse);
+
+		let weight_of_currency = (currency_issuance_inverse  * STORAGE_MULTIPLIER) / total_inverse_issuance_in_currency_basket;
+		dbg!(weight_of_currency);
+
+		weight_of_currency
+
 	}
 
 	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance  {
