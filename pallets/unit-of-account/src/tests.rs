@@ -50,16 +50,16 @@ fn should_add_currency_successfully() {
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0, 0, 0, 0, 0, 0, 0],
-			140000000000000020,
-			140000000000000020,
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
 
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0, 0, 0, 0, 0, 0, 1],
-			150000000000000000,
-			150000000000000000,
+			15_646_926_171_000,
+			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
 
@@ -69,8 +69,8 @@ fn should_add_currency_successfully() {
 		let res = PalletUnitOfAccount::add_currency(
 			RuntimeOrigin::signed(account.clone()),
 			vec![0, 0, 0, 0, 0, 0, 2],
-			160000000000000000,
-			160000000000000000,
+			12_141_252_300_000,
+			108000000000000000000, // 1.08
 		);
 		assert_ok!(res);
 

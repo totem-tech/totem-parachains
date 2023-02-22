@@ -257,7 +257,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			Self::calculate_total_inverse_issuance_in_basket();
 
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
-		if total_inverse_issuance_in_currency_basket == 0 {
+		if total_inverse_issuance_in_currency_basket == 0.0 {
 			//println!("total_inverse_issuance_in_currency_basket is 0 for {:?}", symbol.clone());
 
 			let unit_of_account_currency = CurrencyDetails {
@@ -283,7 +283,11 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 				issuance,
 				price,
 				weight: Some(weight_of_currency),
-				weight_adjusted_price: Some(weight_of_currency * price),
+				weight_adjusted_price: Some(
+					(((weight_of_currency as f64 / STORAGE_MULTIPLIER as f64) *
+						(price as f64 / STORAGE_MULTIPLIER as f64)) *
+						STORAGE_MULTIPLIER as f64) as LedgerBalance,
+				),
 				unit_of_account: None,
 			};
 
@@ -321,7 +325,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		Self::calculate_individual_weights();
 		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
 		Self::calculate_total_inverse_issuance_in_basket(); // todo!(pass as an argument for calculating individual weights)
-		// since a currency has been removed, we need to recalculate for each currency
+													// since a currency has been removed, we need to recalculate for each currency
 		Self::calculate_individual_currency_unit_of_account();
 		// newly calculated unit of account for the pallet
 		let unit_of_account = Self::calculate_unit_of_account();
@@ -344,7 +348,9 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 			let currency_weight =
 				Self::calculate_weight_for_currency(currency_details.issuance.clone());
 			//dbg!(currency_weight);
-			let weight_adjusted_price = currency_weight * currency_details.price;
+			let weight_adjusted_price = (((currency_weight as f64 / STORAGE_MULTIPLIER as f64) *
+				(currency_details.price as f64 / STORAGE_MULTIPLIER as f64)) *
+				STORAGE_MULTIPLIER as f64) as LedgerBalance;
 			//dbg!(weight_adjusted_price);
 
 			currency_details.weight = Some(currency_weight);
@@ -360,22 +366,24 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 			Self::calculate_total_inverse_issuance_in_basket();
 		//dbg!(&total_inverse_issuance_in_currency_basket);
 
-		let currency_issuance_inverse = (1 * STORAGE_MULTIPLIER) / issuance;
+		let currency_issuance_inverse = 1 as f64 / issuance as f64;
 		//dbg!(currency_issuance_inverse);
 
-		let weight_of_currency = (currency_issuance_inverse * STORAGE_MULTIPLIER) /
-			total_inverse_issuance_in_currency_basket;
+		let weight_of_currency =
+			currency_issuance_inverse / total_inverse_issuance_in_currency_basket;
 		//dbg!(weight_of_currency);
 
-		weight_of_currency
+		let weight_of_currency = weight_of_currency * STORAGE_MULTIPLIER as f64;
+
+		weight_of_currency as LedgerBalance
 	}
 
-	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance {
+	pub fn calculate_total_inverse_issuance_in_basket() -> f64 {
 		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
-		let total_inverse_in_currency_basket = unit_of_account_in_currency_basket
+		let total_inverse_in_currency_basket: f64 = unit_of_account_in_currency_basket
 			.iter()
-			.fold(0, |acc, unit| acc + ((1 * STORAGE_MULTIPLIER) / unit.issuance));
+			.fold(0 as f64, |acc, unit| acc + (1 as f64) / unit.issuance as f64);
 
 		//dbg!(total_inverse_in_currency_basket);
 
@@ -385,11 +393,13 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn calculate_unit_of_account() -> LedgerBalance {
 		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
-		let unit_of_account = unit_of_account_in_currency_basket
-			.iter()
-			.fold(0, |acc, unit| acc + (unit.weight.unwrap() * unit.price));
+		let unit_of_account =
+			unit_of_account_in_currency_basket.iter().fold(0 as f64, |acc, unit| {
+				acc + ((unit.weight.unwrap() as f64 / STORAGE_MULTIPLIER as f64) *
+					(unit.price as f64 / STORAGE_MULTIPLIER as f64))
+			});
 
-		unit_of_account
+		(unit_of_account * STORAGE_MULTIPLIER as f64) as LedgerBalance
 	}
 
 	pub fn calculate_individual_currency_unit_of_account() {
@@ -400,10 +410,14 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		//dbg!(currency_basket.len());
 
 		for currency_details in currency_basket.iter_mut() {
-			let unit_of_account_for_currency = (currency_details.price) / unit_of_account;
+			let unit_of_account_for_currency = ((currency_details.price) as f64 /
+				STORAGE_MULTIPLIER as f64) /
+				(unit_of_account as f64 / STORAGE_MULTIPLIER as f64);
 			//dbg!(&currency_details.symbol);
 			//dbg!(&unit_of_account_for_currency);
-			currency_details.unit_of_account = Some(unit_of_account_for_currency);
+			currency_details.unit_of_account = Some(
+				(unit_of_account_for_currency as f64 * STORAGE_MULTIPLIER as f64) as LedgerBalance,
+			);
 		}
 
 		CurrencyBasket::<T, I>::set(currency_basket);
