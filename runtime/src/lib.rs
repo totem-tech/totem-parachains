@@ -496,6 +496,13 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
+impl pallet_unit_of_account::Config<pallet_unit_of_account::Instance1> for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type MaxWhitelistedAccounts = ConstU32<100>;
+	type MaxCurrencyInBasket = ConstU32<100>;
+	type MaxSymbolOfCurrency = ConstU32<7>;
+}
+
 // /// Configure the pallet template in pallets/template.
 // impl pallet_template::Config for Runtime {
 // 	type RuntimeEvent = RuntimeEvent;
@@ -553,6 +560,8 @@ construct_runtime!(
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
+		PalletUnitOfAccount: pallet_unit_of_account::<Instance1>::{Pallet, Call, Storage, Event<T>} = 100,
+
 	}
 );
 

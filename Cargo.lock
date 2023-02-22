@@ -11027,6 +11027,7 @@ dependencies = [
  "pallet-timestamp",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-payment-totem",
+ "pallet-unit-of-account",
  "pallet-utility",
  "pallet-xcm",
  "parachain-info",

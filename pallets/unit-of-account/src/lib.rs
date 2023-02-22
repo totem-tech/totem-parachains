@@ -31,13 +31,14 @@ mod mock;
 #[cfg(test)]
 mod tests;
 
-use frame_support::{pallet_prelude::DispatchError, BoundedVec, bounded_vec};
-use frame_support::traits::ConstU32;
+use frame_support::{pallet_prelude::DispatchError, traits::ConstU32, BoundedVec};
 use sp_std::{
 	convert::{TryFrom, TryInto},
 	prelude::*,
 };
-use totem_primitives::unit_of_account::{DIVISOR_UNIT, CurrencyDetails, UnitOfAccountInterface, STORAGE_MULTIPLIER};
+use totem_primitives::unit_of_account::{
+	CurrencyDetails, UnitOfAccountInterface, DIVISOR_UNIT, STORAGE_MULTIPLIER,
+};
 
 pub use pallet::*;
 use totem_primitives::LedgerBalance;
@@ -47,8 +48,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
-	use totem_primitives::LedgerBalance;
-	use totem_primitives::unit_of_account::CurrencyDetails;
+	use totem_primitives::{unit_of_account::CurrencyDetails, LedgerBalance};
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
@@ -60,7 +60,7 @@ pub mod pallet {
 	pub trait Config<I: 'static = ()>: frame_system::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self, I>>
-		+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
+			+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		/// The max length of a whitelisted account
 		type MaxWhitelistedAccounts: Get<u32>;
@@ -90,15 +90,11 @@ pub mod pallet {
 	}
 
 	/// The list of whitelisted accounts
+	// TODO: make it a storage value that holds a bounded vec
 	#[pallet::storage]
 	#[pallet::getter(fn whitelisted_accounts)]
-	pub type WhitelistedAccounts<T: Config<I>, I: 'static = ()> = StorageMap<
-		_,
-		Blake2_128Concat,
-		T::AccountId,
-		()
-	>;
-
+	pub type WhitelistedAccounts<T: Config<I>, I: 'static = ()> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, ()>;
 
 	/// Holds the vec of all currencies in the basket
 	#[pallet::storage]
@@ -113,11 +109,8 @@ pub mod pallet {
 	/// also known as the unit of account
 	#[pallet::storage]
 	#[pallet::getter(fn unit_of_account)]
-	pub type UnitOfAccount<T: Config<I>, I: 'static = ()> = StorageValue<
-		_,
-		LedgerBalance,
-		ValueQuery,
-	>;
+	pub type UnitOfAccount<T: Config<I>, I: 'static = ()> =
+		StorageValue<_, LedgerBalance, ValueQuery>;
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
@@ -143,7 +136,7 @@ pub mod pallet {
 		/// Symbol out of Bound
 		SymbolOutOfBound,
 		/// Currency not found from basket
-		CurrencyNotFoundFromBasket
+		CurrencyNotFoundFromBasket,
 	}
 
 	#[pallet::hooks]
@@ -151,6 +144,11 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
+		/// Whitelist an account for the pallet
+		///
+		/// Parameters:
+		/// - `origin`: A Root sudo origin
+		/// - `account:` Account to whitelist
 		#[pallet::weight(0)]
 		#[pallet::call_index(0)]
 		pub fn whitelist_account(
@@ -168,6 +166,11 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Removes an account that is already whitelisted
+		///
+		/// Parameters:
+		/// - `origin`: A Root sudo origin
+		/// - `account:` Account to remove from whitelist
 		#[pallet::weight(0)]
 		#[pallet::call_index(1)]
 		pub fn remove_account(
@@ -186,18 +189,27 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Add currency into the basket of currency
+		///
+		/// Parameters:
+		/// - `origin`: A whitelisted callet origin
+		/// - `symbol:` The currency symbol
+		/// - `issuance`: The total currency issuance
+		/// - `price`: The price to USD  for the currency
 		#[pallet::weight(0)]
 		#[pallet::call_index(2)]
 		pub fn add_currency(
 			origin: OriginFor<T>,
 			symbol: Vec<u8>,
 			issuance: LedgerBalance,
-			price: LedgerBalance
+			price: LedgerBalance,
 		) -> DispatchResultWithPostInfo {
 			let whitelisted_caller = ensure_signed(origin)?;
 
 			let already_whitelisted = Self::whitelisted_accounts(whitelisted_caller.clone());
 			ensure!(already_whitelisted.is_some(), Error::<T, I>::UnknownWhitelistedAccount);
+
+			//TODO: check that currency symbol does not already exist in the basket of currency
 
 			<Self as UnitOfAccountInterface>::add_currency(symbol.clone(), issuance, price)?;
 
@@ -206,6 +218,11 @@ pub mod pallet {
 			Ok(().into())
 		}
 
+		/// Removes currency from the basket of currency
+		///
+		/// Parameters:
+		/// - `origin`: A whitelisted callet origin
+		/// - `symbol:` The currency symbol to remove
 		#[pallet::weight(0)]
 		#[pallet::call_index(3)]
 		pub fn remove_currency(
@@ -227,17 +244,21 @@ pub mod pallet {
 }
 
 impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
-	fn add_currency(symbol: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), DispatchError> {
-		//println!("add currency");
+	fn add_currency(
+		symbol: Vec<u8>,
+		issuance: LedgerBalance,
+		price: LedgerBalance,
+	) -> Result<(), DispatchError> {
 		let bounded_symbol = BoundedVec::<u8, T::MaxSymbolOfCurrency>::try_from(symbol.clone())
 			.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
 
 		// we need to calculate the total inverse of the currencies in the  basket
-		let total_inverse_issuance_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
+		let total_inverse_issuance_in_currency_basket =
+			Self::calculate_total_inverse_issuance_in_basket();
 
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
 		if total_inverse_issuance_in_currency_basket == 0 {
-			println!("total weights is 0 for {:?}", symbol.clone());
+			//println!("total_inverse_issuance_in_currency_basket is 0 for {:?}", symbol.clone());
 
 			let unit_of_account_currency = CurrencyDetails {
 				symbol: bounded_symbol,
@@ -245,7 +266,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 				price,
 				weight: None,
 				weight_adjusted_price: None,
-				unit_of_account: None
+				unit_of_account: None,
 			};
 
 			currency_basket
@@ -253,9 +274,8 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 				.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
 
 			CurrencyBasket::<T, I>::set(currency_basket);
-
-
 		} else {
+			// calculate weight for the currency added
 			let weight_of_currency = Self::calculate_weight_for_currency(issuance.clone());
 
 			let unit_of_account_currency = CurrencyDetails {
@@ -264,7 +284,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 				price,
 				weight: Some(weight_of_currency),
 				weight_adjusted_price: Some(weight_of_currency * price),
-				unit_of_account: None
+				unit_of_account: None,
 			};
 
 			currency_basket
@@ -284,14 +304,15 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			UnitOfAccount::<T, I>::set(unit_of_account);
 		}
 
-
 		Ok(())
 	}
 
 	fn remove_currency(symbol: Vec<u8>) -> Result<(), DispatchError> {
 		let mut currency_details = CurrencyBasket::<T, I>::get();
-		let index = currency_details.iter()
-			.position(|item| item.symbol == symbol).ok_or_else(|| Error::<T, I>::CurrencyNotFoundFromBasket)?;
+		let index = currency_details
+			.iter()
+			.position(|item| item.symbol == symbol)
+			.ok_or_else(|| Error::<T, I>::CurrencyNotFoundFromBasket)?;
 		currency_details.remove(index);
 
 		CurrencyBasket::<T, I>::set(currency_details);
@@ -299,7 +320,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		// recalculate weight for each currency in the basket, since a currency is removed
 		Self::calculate_individual_weights();
 		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
-		Self::calculate_total_inverse_issuance_in_basket();
+		Self::calculate_total_inverse_issuance_in_basket(); // todo!(pass as an argument for calculating individual weights)
 		// since a currency has been removed, we need to recalculate for each currency
 		Self::calculate_individual_currency_unit_of_account();
 		// newly calculated unit of account for the pallet
@@ -312,19 +333,19 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 
 impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn get_all_currency_details() -> Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> {
-		let unit_of_account_in_currency_basket:  Vec<CurrencyDetails<T::MaxSymbolOfCurrency>>  =  CurrencyBasket::<T, I>::get().into_iter().collect();
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
+			CurrencyBasket::<T, I>::get().into_iter().collect();
 		unit_of_account_in_currency_basket
 	}
 	pub fn calculate_individual_weights() {
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
 		for currency_details in currency_basket.iter_mut() {
-			let currency_weight = Self::calculate_weight_for_currency(currency_details.issuance.clone());
-			dbg!(currency_weight);
-			//println!("currency_weight {}", &currency_weight);
+			let currency_weight =
+				Self::calculate_weight_for_currency(currency_details.issuance.clone());
+			//dbg!(currency_weight);
 			let weight_adjusted_price = currency_weight * currency_details.price;
-			dbg!(weight_adjusted_price);
-			//println!("weight_adjusted_price {}", &weight_adjusted_price);
+			//dbg!(weight_adjusted_price);
 
 			currency_details.weight = Some(currency_weight);
 			currency_details.weight_adjusted_price = Some(weight_adjusted_price);
@@ -334,52 +355,54 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 
 	pub fn calculate_weight_for_currency(issuance: LedgerBalance) -> LedgerBalance {
-		let total_inverse_issuance_in_currency_basket = Self::calculate_total_inverse_issuance_in_basket();
-		dbg!(&total_inverse_issuance_in_currency_basket);
+		//TODO: we don't need to do this everytime, remove
+		let total_inverse_issuance_in_currency_basket =
+			Self::calculate_total_inverse_issuance_in_basket();
+		//dbg!(&total_inverse_issuance_in_currency_basket);
 
-		let currency_issuance_inverse = (1  * STORAGE_MULTIPLIER) / issuance;
-		dbg!(currency_issuance_inverse);
+		let currency_issuance_inverse = (1 * STORAGE_MULTIPLIER) / issuance;
+		//dbg!(currency_issuance_inverse);
 
-		let weight_of_currency = (currency_issuance_inverse  * STORAGE_MULTIPLIER) / total_inverse_issuance_in_currency_basket;
-		dbg!(weight_of_currency);
+		let weight_of_currency = (currency_issuance_inverse * STORAGE_MULTIPLIER) /
+			total_inverse_issuance_in_currency_basket;
+		//dbg!(weight_of_currency);
 
 		weight_of_currency
-
 	}
 
-	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance  {
+	pub fn calculate_total_inverse_issuance_in_basket() -> LedgerBalance {
 		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
-		let total_inverse_in_currency_basket = unit_of_account_in_currency_basket.iter()
-			.fold(0, |acc, unit| acc + ((1*STORAGE_MULTIPLIER)/unit.issuance));
+		let total_inverse_in_currency_basket = unit_of_account_in_currency_basket
+			.iter()
+			.fold(0, |acc, unit| acc + ((1 * STORAGE_MULTIPLIER) / unit.issuance));
 
-		dbg!(total_inverse_in_currency_basket);
-		//println!("total_inverse_in_currency_basket {}", total_inverse_in_currency_basket);
+		//dbg!(total_inverse_in_currency_basket);
 
 		total_inverse_in_currency_basket
 	}
 
-	pub fn calculate_unit_of_account() -> LedgerBalance  {
+	pub fn calculate_unit_of_account() -> LedgerBalance {
 		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
 
-		let unit_of_account  =  unit_of_account_in_currency_basket.iter()
+		let unit_of_account = unit_of_account_in_currency_basket
+			.iter()
 			.fold(0, |acc, unit| acc + (unit.weight.unwrap() * unit.price));
 
 		unit_of_account
 	}
 
 	pub fn calculate_individual_currency_unit_of_account() {
-		let  unit_of_account = Self::calculate_unit_of_account();
-		dbg!(unit_of_account);
+		let unit_of_account = Self::calculate_unit_of_account();
+		//dbg!(unit_of_account);
 
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
-		dbg!(currency_basket.len());
+		//dbg!(currency_basket.len());
 
 		for currency_details in currency_basket.iter_mut() {
-
-			let unit_of_account_for_currency = (currency_details.price) /  unit_of_account;
-			dbg!(&currency_details.symbol);
-			dbg!(&unit_of_account_for_currency);
+			let unit_of_account_for_currency = (currency_details.price) / unit_of_account;
+			//dbg!(&currency_details.symbol);
+			//dbg!(&unit_of_account_for_currency);
 			currency_details.unit_of_account = Some(unit_of_account_for_currency);
 		}
 

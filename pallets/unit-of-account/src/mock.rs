@@ -1,14 +1,13 @@
 use super::*;
 use crate::{self as pallet_unit_of_account};
 
-
 use frame_support::parameter_types;
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, ConstU32, IdentityLookup, IdentifyAccount, Verify},
-	MultiSignature
+	traits::{BlakeTwo256, ConstU32, IdentifyAccount, IdentityLookup, Verify},
+	MultiSignature,
 };
 use sp_std::convert::{TryFrom, TryInto};
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
