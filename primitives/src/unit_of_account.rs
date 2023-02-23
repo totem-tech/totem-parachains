@@ -31,3 +31,11 @@ pub struct CurrencyDetails<MaxSymbolOfCurrency: Get<u32>> {
 	/// uoa_per_unit_currency = price_in_base_currency / (100_000 * unit_of_account)
 	pub unit_of_account: Option<LedgerBalance>
 }
+
+pub fn convert_float_to_storage(amount: f64) -> LedgerBalance {
+	(amount * STORAGE_MULTIPLIER as f64) as LedgerBalance
+}
+
+pub fn convert_storage_to_float(amount: LedgerBalance) -> f64 {
+	amount as f64 / STORAGE_MULTIPLIER as f64
+}
