@@ -329,11 +329,11 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 
 			// recalculate weight for each currency in the basket, since a new currency is just added
 			Self::calculate_individual_weights(total_inverse_issuance_in_currency_basket);
-			// since a new currency has been added, we need to recalculate for each currency
-			Self::calculate_individual_currency_unit_of_account();
 			// newly calculated unit of account for the pallet
 			let unit_of_account = Self::calculate_unit_of_account();
-			UnitOfAccount::<T, I>::set(unit_of_account);
+			UnitOfAccount::<T, I>::set(unit_of_account.clone());
+			// since a new currency has been added, we need to recalculate for each currency
+			Self::calculate_individual_currency_unit_of_account(unit_of_account);
 		}
 
 		Ok(())
@@ -353,11 +353,11 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		let total_inverse_issuance = Self::calculate_total_inverse_issuance_in_basket();
 		// recalculate weight for each currency in the basket, since a currency is removed
 		Self::calculate_individual_weights(total_inverse_issuance);
-		// since a currency has been removed, we need to recalculate for each currency
-		Self::calculate_individual_currency_unit_of_account();
 		// newly calculated unit of account for the pallet
 		let unit_of_account = Self::calculate_unit_of_account();
-		UnitOfAccount::<T, I>::set(unit_of_account);
+		UnitOfAccount::<T, I>::set(unit_of_account.clone());
+		// since a currency has been removed, we need to recalculate for each currency
+		Self::calculate_individual_currency_unit_of_account(unit_of_account);
 
 		Ok(())
 	}
@@ -449,9 +449,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		convert_float_to_storage(unit_of_account)
 	}
 
-	pub fn calculate_individual_currency_unit_of_account() {
-		let unit_of_account = Self::calculate_unit_of_account();
-
+	pub fn calculate_individual_currency_unit_of_account(unit_of_account: LedgerBalance) {
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
 		for currency_details in currency_basket.iter_mut() {
