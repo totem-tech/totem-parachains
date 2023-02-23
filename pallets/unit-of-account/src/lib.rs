@@ -230,7 +230,6 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let whitelisted_caller = ensure_signed(origin)?;
 
-			let whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 			ensure!(
 				Self::whitelisted_account_exists(whitelisted_caller),
 				Error::<T, I>::UnknownWhitelistedAccount
@@ -259,7 +258,6 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			let whitelisted_caller = ensure_signed(origin)?;
 
-			let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 			ensure!(
 				Self::whitelisted_account_exists(whitelisted_caller),
 				Error::<T, I>::UnknownWhitelistedAccount
