@@ -30,6 +30,7 @@
 mod mock;
 #[cfg(test)]
 mod tests;
+mod benchmarking;
 
 use frame_support::{pallet_prelude::DispatchError, traits::ConstU32, BoundedVec};
 use sp_std::{
