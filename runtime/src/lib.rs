@@ -501,6 +501,7 @@ impl pallet_unit_of_account::Config<pallet_unit_of_account::Instance1> for Runti
 	type MaxWhitelistedAccounts = ConstU32<100>;
 	type MaxCurrencyInBasket = ConstU32<100>;
 	type MaxSymbolOfCurrency = ConstU32<7>;
+	type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;
 }
 
 // /// Configure the pallet template in pallets/template.

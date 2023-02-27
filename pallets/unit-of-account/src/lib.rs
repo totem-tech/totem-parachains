@@ -31,6 +31,7 @@ mod mock;
 #[cfg(test)]
 mod tests;
 mod benchmarking;
+pub mod weights;
 
 use frame_support::{pallet_prelude::DispatchError, traits::ConstU32, BoundedVec};
 use sp_std::{
@@ -44,6 +45,7 @@ use totem_primitives::unit_of_account::{
 use core::cmp::Ordering;
 pub use pallet::*;
 use totem_primitives::LedgerBalance;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -73,6 +75,9 @@ pub mod pallet {
 
 		/// The max number of symbol for currency allowed in the basket
 		type MaxSymbolOfCurrency: Get<u32>;
+
+		/// Weightinfo for pallet.
+		type WeightInfo: WeightInfo;
 	}
 
 	#[pallet::genesis_config]
@@ -156,6 +161,7 @@ pub mod pallet {
 		/// Parameters:
 		/// - `origin`: A Root sudo origin
 		/// - `account:` Account to whitelist
+		//#[pallet::weight(T::WeightInfo::whitelist_account())]
 		#[pallet::weight(0)]
 		#[pallet::call_index(0)]
 		pub fn whitelist_account(
@@ -185,6 +191,7 @@ pub mod pallet {
 		/// Parameters:
 		/// - `origin`: A Root sudo origin
 		/// - `account:` Account to remove from whitelist
+		//#[pallet::weight(T::WeightInfo::remove_account())]
 		#[pallet::weight(0)]
 		#[pallet::call_index(1)]
 		pub fn remove_account(
@@ -221,6 +228,7 @@ pub mod pallet {
 		/// - `symbol:` The currency symbol
 		/// - `issuance`: The total currency issuance
 		/// - `price`: The price to USD  for the currency
+		//#[pallet::weight(T::WeightInfo::add_currency())]
 		#[pallet::weight(0)]
 		#[pallet::call_index(2)]
 		pub fn add_currency(
@@ -251,6 +259,7 @@ pub mod pallet {
 		/// Parameters:
 		/// - `origin`: A whitelisted callet origin
 		/// - `symbol:` The currency symbol to remove
+		//#[pallet::weight(T::WeightInfo::remove_currency())]
 		#[pallet::weight(0)]
 		#[pallet::call_index(3)]
 		pub fn remove_currency(

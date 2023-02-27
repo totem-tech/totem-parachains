@@ -14,7 +14,6 @@ const MAX_PARAMETER_LENGTH: u32 = 20000;
 
 benchmarks_instance_pallet! {
 	whitelist_account {
-		let c in 0..MAX_PARAMETER_LENGTH;
 		let account: T::AccountId = whitelisted_caller();
 	}: _(RawOrigin::Root, account.clone())
 	verify {
@@ -22,7 +21,6 @@ benchmarks_instance_pallet! {
 	}
 
 	remove_account {
-		let c in 0..MAX_PARAMETER_LENGTH;
 		let account: T::AccountId = whitelisted_caller();
 
 		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
@@ -39,7 +37,6 @@ benchmarks_instance_pallet! {
 	}
 
 	add_currency {
-		let c in 0..MAX_PARAMETER_LENGTH;
 		let account: T::AccountId = whitelisted_caller();
 
 		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
@@ -66,7 +63,6 @@ benchmarks_instance_pallet! {
 	}
 
 	remove_currency {
-		let c in 0..MAX_PARAMETER_LENGTH;
 		let account: T::AccountId = whitelisted_caller();
 
 		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();

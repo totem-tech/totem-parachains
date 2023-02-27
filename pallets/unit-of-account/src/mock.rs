@@ -62,6 +62,7 @@ impl system::Config for Test {
 	type SS58Prefix = SS58Prefix;
 	type SystemWeightInfo = ();
 	type Version = ();
+	type WeightInfo = ();
 }
 
 parameter_types! {
