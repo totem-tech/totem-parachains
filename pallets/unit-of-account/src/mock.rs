@@ -62,7 +62,6 @@ impl system::Config for Test {
 	type SS58Prefix = SS58Prefix;
 	type SystemWeightInfo = ();
 	type Version = ();
-	type WeightInfo = ();
 }
 
 parameter_types! {
@@ -81,6 +80,7 @@ impl pallet_unit_of_account::Config for Test {
 	type MaxWhitelistedAccounts = ConstU32<100>;
 	type MaxCurrencyInBasket = ConstU32<100>;
 	type MaxSymbolOfCurrency = ConstU32<7>;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
