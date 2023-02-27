@@ -35,7 +35,7 @@ benchmarks_instance_pallet! {
 
 	}: _(RawOrigin::Root, account.clone())
 	verify {
-		assert_last_event::<T, I>(Event::AccountWhitelisted(account).into());
+		assert_last_event::<T, I>(Event::AccountRemoved(account).into());
 	}
 
 	add_currency {

@@ -560,7 +560,7 @@ construct_runtime!(
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
-		PalletUnitOfAccount: pallet_unit_of_account::<Instance1>::{Pallet, Call, Storage, Event<T>} = 100,
+		UnitOfAccount: pallet_unit_of_account::<Instance1>::{Pallet, Call, Storage, Event<T>} = 100,
 
 	}
 );
@@ -578,6 +578,7 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
+		[pallet_unit_of_account, UnitOfAccount]
 	);
 }
 
