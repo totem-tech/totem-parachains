@@ -80,23 +80,6 @@ pub mod pallet {
 		type WeightInfo: WeightInfo;
 	}
 
-	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config<I>, I: 'static = ()> {
-		pub phantom: (PhantomData<T>, PhantomData<I>),
-	}
-
-	#[cfg(feature = "std")]
-	impl<T: Config<I>, I: 'static> Default for GenesisConfig<T, I> {
-		fn default() -> Self {
-			Self { phantom: Default::default() }
-		}
-	}
-
-	#[pallet::genesis_build]
-	impl<T: Config<I>, I: 'static> GenesisBuild<T, I> for GenesisConfig<T, I> {
-		fn build(&self) {}
-	}
-
 	/// The list of whitelisted accounts
 	// TODO: make it a storage value that holds a bounded vec
 	#[pallet::storage]
@@ -131,6 +114,8 @@ pub mod pallet {
 		CurrencyAddedToBasket(Vec<u8>),
 		/// Currency removed from the basket
 		CurrencyRemovedFromTheBasket(Vec<u8>),
+		/// Currency updated in the basket
+		CurrencyUpdatedInTheBasket(Vec<u8>),
 	}
 
 	#[pallet::error]
@@ -149,6 +134,10 @@ pub mod pallet {
 		CurrencySymbolAlreadyExists,
 		/// Currency not found from basket
 		CurrencyNotFoundFromBasket,
+		/// Invalid Issuance Value
+		InvalidIssuanceValue,
+		/// Invalid Price Value
+		InvalidPriceValue,
 	}
 
 	#[pallet::hooks]
@@ -171,7 +160,7 @@ pub mod pallet {
 
 			let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 			ensure!(
-				!Self::whitelisted_account_exists(account.clone()),
+				!Self::whitelisted_account_exists(account.clone()).unwrap_or(false),
 				Error::<T, I>::AlreadyWhitelistedAccount
 			);
 
@@ -200,7 +189,7 @@ pub mod pallet {
 
 			let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 			ensure!(
-				Self::whitelisted_account_exists(account.clone()),
+				Self::whitelisted_account_exists(account.clone()).unwrap_or(false),
 				Error::<T, I>::UnknownWhitelistedAccount
 			);
 
@@ -237,14 +226,18 @@ pub mod pallet {
 			let whitelisted_caller = ensure_signed(origin)?;
 
 			ensure!(
-				Self::whitelisted_account_exists(whitelisted_caller),
+				Self::whitelisted_account_exists(whitelisted_caller).unwrap_or(false),
 				Error::<T, I>::UnknownWhitelistedAccount
 			);
 
-			let does_currency_symbol_exists = Self::symbol_exists(symbol.clone());
+			let does_currency_symbol_exists = Self::symbol_exists(symbol.clone()).unwrap_or(false);
 			ensure!(!does_currency_symbol_exists, Error::<T, I>::CurrencySymbolAlreadyExists);
 
-			<Self as UnitOfAccountInterface>::add_currency(symbol.clone(), issuance, price)?;
+			ensure!(issuance != 0, Error::<T, I>::InvalidIssuanceValue);
+
+			ensure!(price != 0, Error::<T, I>::InvalidPriceValue);
+
+			<Self as UnitOfAccountInterface>::add(symbol.clone(), issuance, price)?;
 
 			Self::deposit_event(Event::CurrencyAddedToBasket(symbol));
 
@@ -265,13 +258,42 @@ pub mod pallet {
 			let whitelisted_caller = ensure_signed(origin)?;
 
 			ensure!(
-				Self::whitelisted_account_exists(whitelisted_caller),
+				Self::whitelisted_account_exists(whitelisted_caller).unwrap_or(false),
 				Error::<T, I>::UnknownWhitelistedAccount
 			);
 
-			<Self as UnitOfAccountInterface>::remove_currency(symbol.clone())?;
+			<Self as UnitOfAccountInterface>::remove(symbol.clone())?;
 
 			Self::deposit_event(Event::CurrencyRemovedFromTheBasket(symbol));
+
+			Ok(().into())
+		}
+
+		/// Updates currency in the basket of currency
+		///
+		/// Parameters:
+		/// - `origin`: A whitelisted callet origin
+		/// - `symbol:` The currency symbol to remove
+		/// - `issuance:` The new currency issuance which can be None if not set
+		/// - `price:` The new currency price which can be None if not set
+		#[pallet::weight(0)]
+		#[pallet::call_index(4)]
+		pub fn update_currency(
+			origin: OriginFor<T>,
+			symbol: Vec<u8>,
+			issuance: Option<LedgerBalance>,
+			price: Option<LedgerBalance>,
+		) -> DispatchResultWithPostInfo {
+			let whitelisted_caller = ensure_signed(origin)?;
+
+			ensure!(
+				Self::whitelisted_account_exists(whitelisted_caller).unwrap_or(false),
+				Error::<T, I>::UnknownWhitelistedAccount
+			);
+
+			<Self as UnitOfAccountInterface>::update(symbol.clone(), issuance, price)?;
+
+			Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
 
 			Ok(().into())
 		}
@@ -279,7 +301,7 @@ pub mod pallet {
 }
 
 impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
-	fn add_currency(
+	fn add(
 		symbol: Vec<u8>,
 		issuance: LedgerBalance,
 		price: LedgerBalance,
@@ -287,27 +309,13 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		let bounded_symbol = BoundedVec::<u8, T::MaxSymbolOfCurrency>::try_from(symbol.clone())
 			.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
 
-		// we need to calculate the total inverse of the currencies in the  basket
-		let total_inverse_issuance_in_currency_basket =
-			Self::calculate_total_inverse_issuance_in_basket();
-
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
-		if total_inverse_issuance_in_currency_basket == 0.0 {
-			let unit_of_account_currency = CurrencyDetails {
-				symbol: bounded_symbol,
-				issuance,
-				price,
-				weight: None,
-				weight_adjusted_price: None,
-				unit_of_account: None,
-			};
-
-			currency_basket
-				.try_push(unit_of_account_currency)
-				.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
-
-			CurrencyBasket::<T, I>::set(currency_basket);
-		} else {
+		// we need to calculate the total inverse of the currencies in the  basket
+		let some_total_inverse_issuance_in_currency_basket =
+			Self::calculate_total_inverse_issuance_in_basket();
+		if let Some(total_inverse_issuance_in_currency_basket) =
+			some_total_inverse_issuance_in_currency_basket
+		{
 			// calculate weight for the currency added
 			let currency_weight = Self::calculate_weight_for_currency(
 				total_inverse_issuance_in_currency_basket.clone(),
@@ -338,12 +346,27 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			UnitOfAccount::<T, I>::set(unit_of_account.clone());
 			// since a new currency has been added, we need to recalculate for each currency
 			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+		} else {
+			let unit_of_account_currency = CurrencyDetails {
+				symbol: bounded_symbol,
+				issuance,
+				price,
+				weight: None,
+				weight_adjusted_price: None,
+				unit_of_account: None,
+			};
+
+			currency_basket
+				.try_push(unit_of_account_currency)
+				.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
+
+			CurrencyBasket::<T, I>::set(currency_basket);
 		}
 
 		Ok(())
 	}
 
-	fn remove_currency(symbol: Vec<u8>) -> Result<(), DispatchError> {
+	fn remove(symbol: Vec<u8>) -> Result<(), DispatchError> {
 		let mut currency_details = CurrencyBasket::<T, I>::get();
 		let index = currency_details
 			.iter()
@@ -354,38 +377,71 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		CurrencyBasket::<T, I>::set(currency_details);
 
 		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
-		let total_inverse_issuance = Self::calculate_total_inverse_issuance_in_basket();
-		// recalculate weight for each currency in the basket, since a currency is removed
-		Self::calculate_individual_weights(total_inverse_issuance);
-		// newly calculated unit of account for the pallet
-		let unit_of_account = Self::calculate_unit_of_account();
-		UnitOfAccount::<T, I>::set(unit_of_account.clone());
-		// since a currency has been removed, we need to recalculate for each currency
-		Self::calculate_individual_currency_unit_of_account(unit_of_account);
+		let some_total_inverse_issuance = Self::calculate_total_inverse_issuance_in_basket();
+		if let Some(total_inverse_issuance) = some_total_inverse_issuance {
+			// recalculate weight for each currency in the basket, since a currency is removed
+			Self::calculate_individual_weights(total_inverse_issuance);
+			// newly calculated unit of account for the pallet
+			let unit_of_account = Self::calculate_unit_of_account();
+			UnitOfAccount::<T, I>::set(unit_of_account.clone());
+			// since a currency has been removed, we need to recalculate for each currency
+			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+		}
+
+		Ok(())
+	}
+
+	fn update(
+		symbol: Vec<u8>,
+		issuance: Option<LedgerBalance>,
+		price: Option<LedgerBalance>,
+	) -> Result<(), DispatchError> {
+		// we need to calculate the total inverse of the currencies in the  basket
+		<CurrencyBasket<T, I>>::mutate(|basket| {
+			if let Some(currency) = basket.iter_mut().find(|c| c.symbol == symbol) {
+				if issuance.is_some() {
+					currency.price = issuance.unwrap();
+				}
+
+				if price.is_some() {
+					currency.price = price.unwrap();
+				}
+			}
+		});
+
+		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
+		let some_total_inverse_issuance = Self::calculate_total_inverse_issuance_in_basket();
+		if let Some(total_inverse_issuance) = some_total_inverse_issuance {
+			// recalculate weight for each currency in the basket, since a currency is removed
+			Self::calculate_individual_weights(total_inverse_issuance);
+			// newly calculated unit of account for the pallet
+			let unit_of_account = Self::calculate_unit_of_account();
+			UnitOfAccount::<T, I>::set(unit_of_account.clone());
+			// since a currency has been removed, we need to recalculate for each currency
+			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+		}
 
 		Ok(())
 	}
 }
 
 impl<T: Config<I>, I: 'static> Pallet<T, I> {
-	fn whitelisted_account_exists(account_id: T::AccountId) -> bool {
+	fn whitelisted_account_exists(account_id: T::AccountId) -> Option<bool> {
 		let whitelisted_accounts = <WhitelistedAccounts<T, I>>::get();
 
-		whitelisted_accounts
+		let is_whitelisted_account = whitelisted_accounts
 			.iter()
-			.any(|whitelisted_account| whitelisted_account.cmp(&account_id) == Ordering::Equal)
+			.any(|whitelisted_account| whitelisted_account.cmp(&account_id) == Ordering::Equal);
+
+		Some(is_whitelisted_account)
 	}
 
-	fn symbol_exists(symbol: Vec<u8>) -> bool {
+	fn symbol_exists(symbol: Vec<u8>) -> Option<bool> {
 		let currency_basket = <CurrencyBasket<T, I>>::get();
 
-		currency_basket.iter().any(|currency_details| currency_details.symbol == symbol)
-	}
-
-	pub fn get_all_currency_details() -> Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> {
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
-			CurrencyBasket::<T, I>::get().into_iter().collect();
-		unit_of_account_in_currency_basket
+		let does_symbol_exist =
+			currency_basket.iter().any(|currency_details| currency_details.symbol == symbol);
+		Some(does_symbol_exist)
 	}
 
 	pub fn calculate_individual_weights(total_inverse_issuance: f64) {
@@ -431,18 +487,24 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		weight_of_currency
 	}
 
-	pub fn calculate_total_inverse_issuance_in_basket() -> f64 {
-		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
+	pub fn calculate_total_inverse_issuance_in_basket() -> Option<f64> {
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
+			CurrencyBasket::<T, I>::get().into_iter().collect();
 
 		let total_inverse_in_currency_basket: f64 = unit_of_account_in_currency_basket
 			.iter()
 			.fold(0 as f64, |acc, unit| acc + (1 as f64) / unit.issuance as f64);
 
-		total_inverse_in_currency_basket
+		if total_inverse_in_currency_basket == 0.0 {
+			return None
+		} else {
+			return Some(total_inverse_in_currency_basket)
+		}
 	}
 
 	pub fn calculate_unit_of_account() -> LedgerBalance {
-		let unit_of_account_in_currency_basket = Self::get_all_currency_details();
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
+			CurrencyBasket::<T, I>::get().into_iter().collect();
 
 		let unit_of_account =
 			unit_of_account_in_currency_basket.iter().fold(0 as f64, |acc, unit| {

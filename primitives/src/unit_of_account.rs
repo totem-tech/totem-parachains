@@ -9,9 +9,12 @@ pub const STORAGE_MULTIPLIER: LedgerBalance = 100_000_000_000_000_000_000;
 /// UnitOfAccount trait definition to be used in other pallets
 pub trait UnitOfAccountInterface {
 	/// Registers a new currency
-	fn add_currency(symbol: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), dispatch::DispatchError>;
+	fn add(symbol: Vec<u8>, issuance: LedgerBalance, price: LedgerBalance) -> Result<(), dispatch::DispatchError>;
 	/// Removes a currency
-	fn remove_currency(symbol: Vec<u8>) -> Result<(), dispatch::DispatchError>;
+	fn remove(symbol: Vec<u8>) -> Result<(), dispatch::DispatchError>;
+	/// Updates a currency
+	fn update(symbol: Vec<u8>, issuance: Option<LedgerBalance>, price: Option<LedgerBalance>) -> Result<(), dispatch::DispatchError>;
+
 }
 
 /// Holds the currency details of each currency and the derivatives
