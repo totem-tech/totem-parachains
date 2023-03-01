@@ -158,7 +158,7 @@ fn should_update_currency_successfully() {
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_2.clone(),
 			Some(13_141_252_300_000),
-			Some(158000000000000000000), // 1.08
+			Some(158000000000000000000),
 		);
 		assert_ok!(res);
 

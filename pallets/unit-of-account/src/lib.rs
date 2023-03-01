@@ -281,8 +281,8 @@ pub mod pallet {
 		pub fn update_currency(
 			origin: OriginFor<T>,
 			symbol: Vec<u8>,
-			issuance: Option<LedgerBalance>,
-			price: Option<LedgerBalance>,
+			maybe_issuance: Option<LedgerBalance>,
+			maybe_price: Option<LedgerBalance>,
 		) -> DispatchResultWithPostInfo {
 			let whitelisted_caller = ensure_signed(origin)?;
 
@@ -291,7 +291,15 @@ pub mod pallet {
 				Error::<T, I>::UnknownWhitelistedAccount
 			);
 
-			<Self as UnitOfAccountInterface>::update(symbol.clone(), issuance, price)?;
+			if let Some(issuance) = maybe_issuance {
+				ensure!(issuance != 0, Error::<T, I>::InvalidIssuanceValue);
+			}
+
+			if let Some(price) = maybe_price {
+				ensure!(price != 0, Error::<T, I>::InvalidPriceValue);
+			}
+
+			<Self as UnitOfAccountInterface>::update(symbol.clone(), maybe_issuance, maybe_price)?;
 
 			Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
 
