@@ -51,7 +51,7 @@ benchmarks_instance_pallet! {
 		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
 		let cny_price = 14000000000000002000u128 as LedgerBalance;
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add_currency(cny_symbol, cny_issuance, cny_price);
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol, cny_issuance, cny_price);
 
 		let usd_symbol =  b"usd".to_vec();
 		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
@@ -77,23 +77,54 @@ benchmarks_instance_pallet! {
 		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
 		let cny_price = 14000000000000002000u128 as LedgerBalance;
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add_currency(cny_symbol.clone(), cny_issuance, cny_price);
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol.clone(), cny_issuance, cny_price);
 
 		let usd_symbol =  b"usd".to_vec();
 		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
 		let usd_price =  100000000000000000000u128 as LedgerBalance;
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add_currency(usd_symbol, usd_issuance, usd_price);
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(usd_symbol, usd_issuance, usd_price);
 
 		let eur_symbol =  b"eur".to_vec();
 		let eur_issuance = 12_141_252_300_000u128 as LedgerBalance;
 		let eur_price =  108000000000000000000u128 as LedgerBalance;
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add_currency(eur_symbol, eur_issuance, eur_price);
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(eur_symbol, eur_issuance, eur_price);
 
 	}: _(RawOrigin::Signed(account.clone()), cny_symbol.clone())
 	verify {
 		assert_last_event::<T, I>(Event::CurrencyRemovedFromTheBasket(cny_symbol).into());
+	}
+
+	update_currency {
+		let account: T::AccountId = whitelisted_caller();
+
+		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
+
+		whitelisted_accounts
+				.try_push(account.clone())
+				.unwrap();
+
+		WhitelistedAccounts::<T, I>::set(whitelisted_accounts);
+
+		let cny_symbol = b"cny".to_vec().into();
+		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
+		let cny_price = 14000000000000002000u128 as LedgerBalance;
+
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol, cny_issuance, cny_price);
+
+		let usd_symbol =  b"usd".to_vec();
+		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
+		let usd_price =  100000000000000000000u128 as LedgerBalance;
+
+		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(usd_symbol.clone(), usd_issuance, usd_price);
+
+		let new_usd_issuance = 25_646_926_171_000u128 as LedgerBalance;
+		let new_usd_price =  200000000000000000000u128 as LedgerBalance;
+
+	}: _(RawOrigin::Signed(account.clone()), usd_symbol.clone(), Some(new_usd_issuance), Some(new_usd_price))
+	verify {
+		assert_last_event::<T, I>(Event::CurrencyAddedToBasket(usd_symbol).into());
 	}
 }
 

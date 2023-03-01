@@ -21,7 +21,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		PalletUnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>, Config<T>}
+		PalletUnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>}
 	}
 );
 

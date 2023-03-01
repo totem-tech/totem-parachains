@@ -15,9 +15,9 @@ benchmarkOutput=./weights
 
 # Set the pallets to benchmark
 # Should include all pallets in the runtime
-pallets=(
-    pallet_balances_totem
-    pallet_unit_of_account
+declare -a pallets=(
+    [0] = pallet_balances_totem
+    [1] = pallet_unit_of_account
 )
 
 # Loop through the pallets and run the benchmark
