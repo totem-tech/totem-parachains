@@ -276,7 +276,7 @@ pub mod pallet {
 		/// - `symbol:` The currency symbol to remove
 		/// - `issuance:` The new currency issuance which can be None if not set
 		/// - `price:` The new currency price which can be None if not set
-		#[pallet::weight(0)]
+		#[pallet::weight(T::WeightInfo::update_currency())]
 		#[pallet::call_index(4)]
 		pub fn update_currency(
 			origin: OriginFor<T>,

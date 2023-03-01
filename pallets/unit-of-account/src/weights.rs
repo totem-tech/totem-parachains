@@ -34,6 +34,7 @@ pub trait WeightInfo {
 	fn remove_account() -> Weight;
 	fn add_currency() -> Weight;
 	fn remove_currency() -> Weight;
+	fn update_currency() -> Weight;
 
 }
 
@@ -42,15 +43,15 @@ pub struct TotemWeight<T>(PhantomData<T>);
 impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 	// Storage: UnitOfAccount WhitelistedAccounts (r:1 w:1)
 	fn whitelist_account() -> Weight {
-		// Minimum execution time: 47_328 nanoseconds.
-		Weight::from_ref_time(56_662_000)
+		// Minimum execution time: 44_876 nanoseconds.
+		Weight::from_ref_time(46_905_000)
 			.saturating_add(T::DbWeight::get().reads(1))
 			.saturating_add(T::DbWeight::get().writes(1))
 	}
 	// Storage: UnitOfAccount WhitelistedAccounts (r:1 w:1)
 	fn remove_account() -> Weight {
-		// Minimum execution time: 51_164 nanoseconds.
-		Weight::from_ref_time(106_750_000)
+		// Minimum execution time: 50_328 nanoseconds.
+		Weight::from_ref_time(53_924_000)
 			.saturating_add(T::DbWeight::get().reads(1))
 			.saturating_add(T::DbWeight::get().writes(1))
 	}
@@ -58,8 +59,8 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 	// Storage: UnitOfAccount CurrencyBasket (r:1 w:1)
 	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)
 	fn add_currency() -> Weight {
-		// Minimum execution time: 191_031 nanoseconds.
-		Weight::from_ref_time(197_109_000)
+		// Minimum execution time: 77_041 nanoseconds.
+		Weight::from_ref_time(111_498_000)
 			.saturating_add(T::DbWeight::get().reads(2))
 			.saturating_add(T::DbWeight::get().writes(2))
 	}
@@ -67,8 +68,17 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 	// Storage: UnitOfAccount CurrencyBasket (r:1 w:1)
 	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)
 	fn remove_currency() -> Weight {
-		// Minimum execution time: 74_980 nanoseconds.
-		Weight::from_ref_time(88_366_000)
+		// Minimum execution time: 74_660 nanoseconds.
+		Weight::from_ref_time(77_600_000)
+			.saturating_add(T::DbWeight::get().reads(2))
+			.saturating_add(T::DbWeight::get().writes(2))
+	}
+	// Storage: UnitOfAccount WhitelistedAccounts (r:1 w:0)
+	// Storage: UnitOfAccount CurrencyBasket (r:1 w:1)
+	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)
+	fn update_currency() -> Weight {
+		// Minimum execution time: 73_872 nanoseconds.
+		Weight::from_ref_time(81_961_000)
 			.saturating_add(T::DbWeight::get().reads(2))
 			.saturating_add(T::DbWeight::get().writes(2))
 	}
@@ -77,25 +87,31 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 // For backwards compatibility and tests
 impl WeightInfo for () {
 	fn whitelist_account() -> Weight {
-		Weight::from_ref_time(56_662_000)
+		Weight::from_ref_time(46_905_000)
 			.saturating_add(RocksDbWeight::get().reads(1))
 			.saturating_add(RocksDbWeight::get().writes(1))
 	}
 
 	fn remove_account() -> Weight {
-		Weight::from_ref_time(106_750_000)
+		Weight::from_ref_time(53_924_000)
 			.saturating_add(RocksDbWeight::get().reads(1))
 			.saturating_add(RocksDbWeight::get().writes(1))
 	}
 
 	fn add_currency() -> Weight {
-		Weight::from_ref_time(197_109_000)
+		Weight::from_ref_time(111_498_000)
 			.saturating_add(RocksDbWeight::get().reads(2))
 			.saturating_add(RocksDbWeight::get().writes(2))
 	}
 
 	fn remove_currency() -> Weight {
-		Weight::from_ref_time(88_366_000)
+		Weight::from_ref_time(77_600_000)
+			.saturating_add(RocksDbWeight::get().reads(2))
+			.saturating_add(RocksDbWeight::get().writes(2))
+	}
+
+	fn update_currency() -> Weight {
+		Weight::from_ref_time(81_961_000)
 			.saturating_add(RocksDbWeight::get().reads(2))
 			.saturating_add(RocksDbWeight::get().writes(2))
 	}
