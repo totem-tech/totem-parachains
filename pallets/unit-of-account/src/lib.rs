@@ -313,39 +313,43 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		// we need to calculate the total inverse of the currencies in the  basket
 		let some_total_inverse_issuance_in_currency_basket =
 			Self::calculate_total_inverse_issuance_in_basket();
+
 		if let Some(total_inverse_issuance_in_currency_basket) =
 			some_total_inverse_issuance_in_currency_basket
 		{
 			// calculate weight for the currency added
-			let currency_weight = Self::calculate_weight_for_currency(
+			if let Some(currency_weight) = Self::calculate_weight_for_currency(
 				total_inverse_issuance_in_currency_basket.clone(),
 				issuance.clone(),
-			);
-			let weight_adjusted_price =
-				Self::calculate_weight_adjusted_price(currency_weight.clone(), price.clone());
+			) {
+				if let Some(weight_adjusted_price) =
+					Self::calculate_weight_adjusted_price(currency_weight.clone(), price.clone())
+				{
+					let unit_of_account_currency = CurrencyDetails {
+						symbol: bounded_symbol,
+						issuance,
+						price,
+						weight: Some(currency_weight),
+						weight_adjusted_price: Some(weight_adjusted_price),
+						unit_of_account: None,
+					};
 
-			let unit_of_account_currency = CurrencyDetails {
-				symbol: bounded_symbol,
-				issuance,
-				price,
-				weight: Some(currency_weight),
-				weight_adjusted_price: Some(weight_adjusted_price),
-				unit_of_account: None,
-			};
+					currency_basket
+						.try_push(unit_of_account_currency)
+						.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
 
-			currency_basket
-				.try_push(unit_of_account_currency)
-				.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
+					CurrencyBasket::<T, I>::set(currency_basket);
 
-			CurrencyBasket::<T, I>::set(currency_basket);
-
-			// recalculate weight for each currency in the basket, since a new currency is just added
-			Self::calculate_individual_weights(total_inverse_issuance_in_currency_basket);
-			// newly calculated unit of account for the pallet
-			let unit_of_account = Self::calculate_unit_of_account();
-			UnitOfAccount::<T, I>::set(unit_of_account.clone());
-			// since a new currency has been added, we need to recalculate for each currency
-			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+					// recalculate weight for each currency in the basket, since a new currency is just added
+					Self::calculate_individual_weights(total_inverse_issuance_in_currency_basket);
+					// newly calculated unit of account for the pallet
+					if let Some(unit_of_account) = Self::calculate_unit_of_account() {
+						UnitOfAccount::<T, I>::set(unit_of_account.clone());
+						// since a new currency has been added, we need to recalculate for each currency
+						Self::calculate_individual_currency_unit_of_account(unit_of_account);
+					}
+				}
+			}
 		} else {
 			let unit_of_account_currency = CurrencyDetails {
 				symbol: bounded_symbol,
@@ -382,10 +386,11 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			// recalculate weight for each currency in the basket, since a currency is removed
 			Self::calculate_individual_weights(total_inverse_issuance);
 			// newly calculated unit of account for the pallet
-			let unit_of_account = Self::calculate_unit_of_account();
-			UnitOfAccount::<T, I>::set(unit_of_account.clone());
-			// since a currency has been removed, we need to recalculate for each currency
-			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+			if let Some(unit_of_account) = Self::calculate_unit_of_account() {
+				UnitOfAccount::<T, I>::set(unit_of_account.clone());
+				// since a currency has been removed, we need to recalculate for each currency
+				Self::calculate_individual_currency_unit_of_account(unit_of_account);
+			}
 		}
 
 		Ok(())
@@ -415,10 +420,11 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 			// recalculate weight for each currency in the basket, since a currency is removed
 			Self::calculate_individual_weights(total_inverse_issuance);
 			// newly calculated unit of account for the pallet
-			let unit_of_account = Self::calculate_unit_of_account();
-			UnitOfAccount::<T, I>::set(unit_of_account.clone());
-			// since a currency has been removed, we need to recalculate for each currency
-			Self::calculate_individual_currency_unit_of_account(unit_of_account);
+			if let Some(unit_of_account) = Self::calculate_unit_of_account() {
+				UnitOfAccount::<T, I>::set(unit_of_account.clone());
+				// since a currency has been removed, we need to recalculate for each currency
+				Self::calculate_individual_currency_unit_of_account(unit_of_account);
+			}
 		}
 
 		Ok(())
@@ -448,17 +454,18 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
 
 		for currency_details in currency_basket.iter_mut() {
-			let currency_weight = Self::calculate_weight_for_currency(
+			if let Some(currency_weight) = Self::calculate_weight_for_currency(
 				total_inverse_issuance.clone(),
 				currency_details.issuance.clone(),
-			);
-			let weight_adjusted_price = Self::calculate_weight_adjusted_price(
-				currency_weight.clone(),
-				currency_details.price,
-			);
-
-			currency_details.weight = Some(currency_weight);
-			currency_details.weight_adjusted_price = Some(weight_adjusted_price);
+			) {
+				if let Some(weight_adjusted_price) = Self::calculate_weight_adjusted_price(
+					currency_weight.clone(),
+					currency_details.price,
+				) {
+					currency_details.weight = Some(currency_weight);
+					currency_details.weight_adjusted_price = Some(weight_adjusted_price);
+				}
+			}
 		}
 
 		CurrencyBasket::<T, I>::set(currency_basket);
@@ -467,16 +474,18 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	pub fn calculate_weight_adjusted_price(
 		currency_weight: LedgerBalance,
 		price: LedgerBalance,
-	) -> LedgerBalance {
-		convert_float_to_storage(
+	) -> Option<LedgerBalance> {
+		let storage_value = convert_float_to_storage(
 			convert_storage_to_float(currency_weight) * convert_storage_to_float(price),
-		)
+		);
+
+		Some(storage_value)
 	}
 
 	pub fn calculate_weight_for_currency(
 		total_inverse_issuance_in_currency_basket: f64,
 		issuance: LedgerBalance,
-	) -> LedgerBalance {
+	) -> Option<LedgerBalance> {
 		let currency_issuance_inverse = 1 as f64 / issuance as f64;
 
 		let weight_of_currency =
@@ -484,7 +493,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 
 		let weight_of_currency = convert_float_to_storage(weight_of_currency);
 
-		weight_of_currency
+		Some(weight_of_currency)
 	}
 
 	pub fn calculate_total_inverse_issuance_in_basket() -> Option<f64> {
@@ -502,7 +511,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 		}
 	}
 
-	pub fn calculate_unit_of_account() -> LedgerBalance {
+	pub fn calculate_unit_of_account() -> Option<LedgerBalance> {
 		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
 			CurrencyBasket::<T, I>::get().into_iter().collect();
 
@@ -512,7 +521,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 					convert_storage_to_float(unit.price))
 			});
 
-		convert_float_to_storage(unit_of_account)
+		Some(convert_float_to_storage(unit_of_account))
 	}
 
 	pub fn calculate_individual_currency_unit_of_account(unit_of_account: LedgerBalance) {

@@ -10,7 +10,7 @@ fn should_add_a_whitelisted_account_successfully() {
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
 		assert_ok!(res);
 
-		assert_eq!(PalletUnitOfAccount::whitelisted_account_exists(account), true);
+		assert_eq!(PalletUnitOfAccount::whitelisted_account_exists(account), Some(true));
 	});
 }
 
@@ -23,7 +23,7 @@ fn should_remove_a_whitelisted_account_successfully() {
 
 		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), account.clone());
 
-		assert_eq!(PalletUnitOfAccount::whitelisted_account_exists(account), false);
+		assert_eq!(PalletUnitOfAccount::whitelisted_account_exists(account), Some(false));
 	});
 }
 
@@ -42,7 +42,7 @@ fn should_add_currency_successfully() {
 			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
 
 		let currency_symbol_2 = vec![0, 0, 0, 0, 0, 0, 1];
 		let res = PalletUnitOfAccount::add_currency(
@@ -52,7 +52,7 @@ fn should_add_currency_successfully() {
 			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
 
 		let currency_symbol_3 = vec![0, 0, 0, 0, 0, 0, 2];
 		let res = PalletUnitOfAccount::add_currency(
@@ -62,7 +62,7 @@ fn should_add_currency_successfully() {
 			108000000000000000000, // 1.08
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3), Some(true));
 
 		let unit_of_account = PalletUnitOfAccount::unit_of_account();
 		dbg!(unit_of_account);
@@ -87,7 +87,7 @@ fn should_remove_currency_successfully() {
 			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
 
 		let currency_symbol_2 = vec![0, 0, 0, 0, 0, 0, 1];
 		let res = PalletUnitOfAccount::add_currency(
@@ -97,7 +97,7 @@ fn should_remove_currency_successfully() {
 			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
 
 		let currency_symbol_3 = vec![0, 0, 0, 0, 0, 0, 2];
 		let res = PalletUnitOfAccount::add_currency(
@@ -107,7 +107,7 @@ fn should_remove_currency_successfully() {
 			108000000000000000000, // 1.08
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), true);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), Some(true));
 
 		let unit_of_account = PalletUnitOfAccount::unit_of_account();
 		dbg!(unit_of_account);
@@ -117,7 +117,7 @@ fn should_remove_currency_successfully() {
 			currency_symbol_3.clone(),
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3), false);
+		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3), Some(false));
 
 		let unit_of_account_after_removal = PalletUnitOfAccount::unit_of_account();
 		assert_ne!(unit_of_account, unit_of_account_after_removal);
