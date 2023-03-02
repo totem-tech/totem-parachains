@@ -1,7 +1,9 @@
 use super::*;
+use crate::*;
 use crate::mock::*;
 use frame_benchmarking::account;
-use frame_support::assert_ok;
+use frame_support::{assert_ok, assert_err};
+use sp_runtime::ModuleError;
 
 #[test]
 fn should_add_a_whitelisted_account_successfully() {
@@ -15,6 +17,51 @@ fn should_add_a_whitelisted_account_successfully() {
 }
 
 #[test]
+fn whitelisted_account_should_fail_when_max_bound_is_reached() {
+	new_test_ext().execute_with(|| {
+		let account_0 = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_0.clone());
+		assert_ok!(res);
+		let account_1 = account::<AccountId>("", 1, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_1.clone());
+		assert_ok!(res);
+		let account_2 = account::<AccountId>("", 2, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_2.clone());
+		assert_ok!(res);
+		let account_3 = account::<AccountId>("", 3, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_3.clone());
+		assert_ok!(res);
+		let account_4 = account::<AccountId>("", 4, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_4.clone());
+		assert_ok!(res);
+
+		let account_5 = account::<AccountId>("", 5, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_5.clone());
+		assert_err!(res, DispatchError::Module(ModuleError {
+				index: 1,
+				error: [0, 0, 0, 0], // MaxWhitelistedAccountOutOfBounds,
+				message: None,
+			}));
+	});
+}
+
+#[test]
+fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
+	new_test_ext().execute_with(|| {
+		let account_0 = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_0.clone());
+		assert_ok!(res);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_0.clone());
+
+		assert_err!(res, DispatchError::Module(ModuleError {
+				index: 1,
+				error: [1, 0, 0, 0], // AlreadyWhitelistedAccount,
+				message: None,
+			}));
+	});
+}
+
+#[test]
 fn should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
@@ -22,8 +69,23 @@ fn should_remove_a_whitelisted_account_successfully() {
 		assert_ok!(res);
 
 		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), account.clone());
+		assert_ok!(res);
 
 		assert_eq!(PalletUnitOfAccount::whitelisted_account_exists(account), Some(false));
+	});
+}
+
+#[test]
+fn remove_account_should_fail_when_account_is_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		let account_0 = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account_0.clone());
+
+		assert_err!(res, DispatchError::Module(ModuleError {
+				index: 2,
+				error: [2, 0, 0, 0], // UnknownWhitelistedAccount,
+				message: None,
+			}));
 	});
 }
 

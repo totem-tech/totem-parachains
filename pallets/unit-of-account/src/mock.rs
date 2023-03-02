@@ -77,8 +77,8 @@ parameter_types! {
 
 impl pallet_unit_of_account::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type MaxWhitelistedAccounts = ConstU32<100>;
-	type MaxCurrencyInBasket = ConstU32<100>;
+	type MaxWhitelistedAccounts = ConstU32<5>;
+	type MaxCurrencyInBasket = ConstU32<5>;
 	type MaxSymbolOfCurrency = ConstU32<7>;
 	type WeightInfo = ();
 }
