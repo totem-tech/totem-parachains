@@ -1,15 +1,54 @@
+//                              Næ§@@@ÑÉ©
+//                        æ@@@@@@@@@@@@@@@@@@
+//                    Ñ@@@@?.?@@@@@@@@@@@@@@@@@@@N
+//                 ¶@@@@@?^%@@.=@@@@@@@@@@@@@@@@@@@@
+//               N@@@@@@@?^@@@»^@@@@@@@@@@@@@@@@@@@@@@
+//               @@@@@@@@?^@@@».............?@@@@@@@@@É
+//              Ñ@@@@@@@@?^@@@@@@@@@@@@@@@@@@'?@@@@@@@@Ñ
+//              @@@@@@@@@?^@@@»..............»@@@@@@@@@@
+//              @@@@@@@@@?^@@@»^@@@@@@@@@@@@@@@@@@@@@@@@
+//              @@@@@@@@@?^ë@@&.@@@@@@@@@@@@@@@@@@@@@@@@
+//               @@@@@@@@?^´@@@o.%@@@@@@@@@@@@@@@@@@@@©
+//                @@@@@@@?.´@@@@@ë.........*.±@@@@@@@æ
+//                 @@@@@@@@?´.I@@@@@@@@@@@@@@.&@@@@@N
+//                  N@@@@@@@@@@ë.*=????????=?@@@@@Ñ
+//                    @@@@@@@@@@@@@@@@@@@@@@@@@@@¶
+//                        É@@@@@@@@@@@@@@@@Ñ¶
+//                             Næ§@@@ÑÉ©
+
+// Copyright 2020 Chris D'Costa
+// This file is part of Totem Live Accounting.
+// Authors:
+// - Damilare Akinlose      email: dami@totemaccounting.com
+// - Chris D'Costa          email: chris.dcosta@totemaccounting.com
+
+// Totem is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// Totem is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with Totem.  If not, see <http://www.gnu.org/licenses/>.
+
 //! # Unit-Of-Account
 //!
-//! A module for calculating unit of account based on issued/stored currencies
+//! A module for calculating unit of account based on a basket of assets
 //!
 //! ## Overview
 //!
-//! The Unit-of-accounting module provides functionality for the following:
+//! The Unit-of-Account module provides functionality for the following:
 //!
 //! * Add whitelisted account
 //! * Remove whitelisted account
-//! * Add new currency
-//! * Remove currency
+//! * Add new asset to the basket
+//! * Remove asset from the basket
+//! * updating the price of an asset in the basket
+//! * updating the issuance of an asset in the basket
 //!
 //! The supported dispatchable functions are documented in the [`Call`] enum.
 //!
@@ -24,6 +63,7 @@
 //! `add_currency`: Adds a currency with it's issuance to the basket.
 //!
 //! `remove_currency`: Removes a currency from the basket.
+
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 mod benchmarking;
@@ -33,32 +73,38 @@ mod mock;
 mod tests;
 pub mod weights;
 
-use frame_support::{pallet_prelude::DispatchError, traits::ConstU32, BoundedVec};
+use frame_support::{
+	dispatch::DispatchResultWithPostInfo,
+	traits::ConstU32, 
+	BoundedVec
+};
 use sp_std::{
 	convert::{TryFrom, TryInto},
 	prelude::*,
 };
-use totem_primitives::unit_of_account::{
-	convert_float_to_storage, convert_storage_to_float, CurrencyDetails, UnitOfAccountInterface,
+// use totem_primitives::LedgerBalance;
+use totem_primitives::{
+	LedgerBalance, 
+	unit_of_account::{
+		convert_float_to_storage, 
+		convert_storage_to_float, 
+		CurrencyDetails, 
+		UnitOfAccountInterface,
+	}
 };
 
 use core::cmp::Ordering;
 pub use pallet::*;
-use totem_primitives::LedgerBalance;
 pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	use core::cmp::Ordering;
-	use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
+	// use core::cmp::Ordering;
+	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use totem_primitives::{unit_of_account::CurrencyDetails, LedgerBalance};
-
-	#[pallet::pallet]
-	#[pallet::generate_store(pub(super) trait Store)]
-
-	pub struct Pallet<T, I = ()>(_);
+    // use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
+	// use totem_primitives::{unit_of_account::CurrencyDetails, LedgerBalance};
 
 	#[pallet::config]
 	/// The module configuration trait.
@@ -71,77 +117,24 @@ pub mod pallet {
 		type MaxWhitelistedAccounts: Get<u32>;
 
 		/// The max number of currencies allowed in the basket
-		type MaxCurrencyInBasket: Get<u32>;
+		type MaxAssetsInBasket: Get<u32>;
 
 		/// The max number of symbol for currency allowed in the basket
-		type MaxSymbolOfCurrency: Get<u32>;
+		type MaxAssets: Get<u32>;
 
 		/// Weightinfo for pallet.
 		type WeightInfo: WeightInfo;
+
 	}
 
-	/// The list of whitelisted accounts
-	// TODO: make it a storage value that holds a bounded vec
-	#[pallet::storage]
-	#[pallet::getter(fn whitelisted_accounts)]
-	pub type WhitelistedAccounts<T: Config<I>, I: 'static = ()> =
-		StorageValue<_, BoundedVec<T::AccountId, T::MaxCurrencyInBasket>, ValueQuery>;
-
-	/// Holds the vec of all currencies in the basket
-	#[pallet::storage]
-	#[pallet::getter(fn currency_basket)]
-	pub type CurrencyBasket<T: Config<I>, I: 'static = ()> = StorageValue<
-		_,
-		BoundedVec<CurrencyDetails<T::MaxSymbolOfCurrency>, T::MaxCurrencyInBasket>,
-		ValueQuery,
-	>;
-
-	/// The calculated Nominal Effective Exchange Rate which is
-	/// also known as the unit of account
-	#[pallet::storage]
-	#[pallet::getter(fn unit_of_account)]
-	pub type UnitOfAccount<T: Config<I>, I: 'static = ()> =
-		StorageValue<_, LedgerBalance, ValueQuery>;
-
-	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config<I>, I: 'static = ()> {
-		/// Account Whitelisted
-		AccountWhitelisted(T::AccountId),
-		/// Account removed from whitelisted accounts
-		AccountRemoved(T::AccountId),
-		/// Currency added to the basket
-		CurrencyAddedToBasket(Vec<u8>),
-		/// Currency removed from the basket
-		CurrencyRemovedFromTheBasket(Vec<u8>),
-		/// Currency updated in the basket
-		CurrencyUpdatedInTheBasket(Vec<u8>),
-	}
-
-	#[pallet::error]
-	pub enum Error<T, I = ()> {
-		/// Whitelisted account out of bounds
-		MaxWhitelistedAccountOutOfBounds,
-		/// Already Whitelisted account
-		AlreadyWhitelistedAccount,
-		/// Unknown whitelisted account
-		UnknownWhitelistedAccount,
-		/// Max currencies exceeded
-		MaxCurrenciesOutOfBound,
-		/// Symbol out of Bound
-		SymbolOutOfBound,
-		/// Currency Symbol already exists
-		CurrencySymbolAlreadyExists,
-		/// Currency not found from basket
-		CurrencyNotFoundFromBasket,
-		/// Invalid Issuance Value
-		InvalidIssuanceValue,
-		/// Invalid Price Value
-		InvalidPriceValue,
-	}
-
-	#[pallet::hooks]
-	impl<T: Config<I>, I: 'static> Hooks<BlockNumberFor<T>> for Pallet<T, I> {}
+	/// The current storage version.
+	const STORAGE_VERSION: frame_support::traits::StorageVersion =
+	frame_support::traits::StorageVersion::new(1);
+	
+	#[pallet::pallet]
+	#[pallet::generate_store(pub(super) trait Store)]
+	#[pallet::storage_version(STORAGE_VERSION)]
+	pub struct Pallet<T, I = ()>(PhantomData<(T, I)>);
 
 	#[pallet::call]
 	impl<T: Config<I>, I: 'static> Pallet<T, I> {
@@ -158,11 +151,12 @@ pub mod pallet {
 		) -> DispatchResultWithPostInfo {
 			ensure_root(origin)?;
 
-			let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 			ensure!(
 				!Self::whitelisted_account_exists(account.clone()).unwrap_or(false),
 				Error::<T, I>::AlreadyWhitelistedAccount
 			);
+
+			let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
 
 			whitelisted_accounts
 				.try_push(account.clone())
@@ -306,6 +300,76 @@ pub mod pallet {
 			Ok(().into())
 		}
 	}
+
+	#[pallet::event]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config<I>, I: 'static = ()> {
+		/// Account Whitelisted
+		AccountWhitelisted(T::AccountId),
+		/// Account removed from whitelisted accounts
+		AccountRemoved(T::AccountId),
+		/// Currency added to the basket
+		CurrencyAddedToBasket(Vec<u8>),
+		/// Currency removed from the basket
+		CurrencyRemovedFromTheBasket(Vec<u8>),
+		/// Currency updated in the basket
+		CurrencyUpdatedInTheBasket(Vec<u8>),
+	}
+
+	#[pallet::error]
+	pub enum Error<T, I = ()> {
+		/// Whitelisted account out of bounds
+		MaxWhitelistedAccountOutOfBounds,
+		/// Already Whitelisted account
+		AlreadyWhitelistedAccount,
+		/// Unknown whitelisted account
+		UnknownWhitelistedAccount,
+		/// Max currencies exceeded
+		MaxCurrenciesOutOfBound,
+		/// Symbol out of Bound
+		SymbolOutOfBound,
+		/// Currency Symbol already exists
+		CurrencySymbolAlreadyExists,
+		/// Currency not found from basket
+		CurrencyNotFoundFromBasket,
+		/// Invalid Issuance Value
+		InvalidIssuanceValue,
+		/// Invalid Price Value
+		InvalidPriceValue,
+	}
+
+	/// The list of whitelisted accounts
+	// TODO: make it a storage value that holds a bounded vec
+	#[pallet::storage]
+	#[pallet::getter(fn whitelisted_accounts)]
+	pub type WhitelistedAccounts<T: Config<I>, I: 'static = ()> = StorageValue<
+		_, 
+		BoundedVec<T::AccountId, T::MaxWhitelistedAccounts>, 
+		ValueQuery
+	>;
+
+	/// Holds the vec of all currencies in the basket
+	#[pallet::storage]
+	#[pallet::getter(fn currency_basket)]
+	pub type CurrencyBasket<T: Config<I>, I: 'static = ()> = StorageValue<
+		_,
+		BoundedVec<CurrencyDetails<T::MaxAssets>, T::MaxAssetsInBasket>,
+		ValueQuery,
+	>;
+
+	/// The calculated Nominal Effective Exchange Rate which is
+	/// also known as the unit of account
+	#[pallet::storage]
+	#[pallet::getter(fn unit_of_account)]
+	pub type UnitOfAccount<T: Config<I>, I: 'static = ()> = StorageValue<
+		_, 
+		LedgerBalance, 
+		ValueQuery
+	>;
+
+	// #[pallet::hooks]
+	// impl<T: Config<I>, I: 'static> Hooks<BlockNumberFor<T>> for Pallet<T, I> {}
+
 }
 
 impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
@@ -314,7 +378,7 @@ impl<T: Config<I>, I: 'static> UnitOfAccountInterface for Pallet<T, I> {
 		issuance: LedgerBalance,
 		price: LedgerBalance,
 	) -> Result<(), DispatchError> {
-		let bounded_symbol = BoundedVec::<u8, T::MaxSymbolOfCurrency>::try_from(symbol.clone())
+		let bounded_symbol = BoundedVec::<u8, T::MaxAssets>::try_from(symbol.clone())
 			.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
 
 		let mut currency_basket = CurrencyBasket::<T, I>::get();
@@ -505,7 +569,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 
 	pub fn calculate_total_inverse_issuance_in_basket() -> Option<f64> {
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxAssets>> =
 			CurrencyBasket::<T, I>::get().into_iter().collect();
 
 		let total_inverse_in_currency_basket: f64 = unit_of_account_in_currency_basket
@@ -520,7 +584,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 	}
 
 	pub fn calculate_unit_of_account() -> Option<LedgerBalance> {
-		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxSymbolOfCurrency>> =
+		let unit_of_account_in_currency_basket: Vec<CurrencyDetails<T::MaxAssets>> =
 			CurrencyBasket::<T, I>::get().into_iter().collect();
 
 		let unit_of_account =
