@@ -496,11 +496,13 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-impl pallet_unit_of_account::Config<pallet_unit_of_account::Instance1> for Runtime {
+impl pallet_unit_of_account::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type MaxWhitelistedAccounts = ConstU32<100>;
-	type MaxCurrencyInBasket = ConstU32<100>;
-	type MaxSymbolOfCurrency = ConstU32<7>;
+	type Currency = pallet_balances_totem::Pallet<Runtime>;
+	type MaxWhitelistedAccounts: u32 = 50;
+	type MaxAssetsInBasket: u32 = 1000;
+	type SymbolMaxChars = ConstU32<7>;
+	type WhitelistDeposit: u128 = 1_000_000_000_000_000;
 	type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;
 }
 
@@ -550,18 +552,18 @@ construct_runtime!(
 
 		// Totem
 		Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
-		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
-		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
-		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
-		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
-		// Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
-		// Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
-		// Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
-		// Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
-		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
+		UnitOfAccount: pallet_unit_of_account::{Pallet, Storage, Event<T>, Config} = 41,
+		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 42,
+		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 43,
+		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 44,
+		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 45,
+		// Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 46,
+		// Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 47,
+		// Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 48,
+		// Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 49,
+		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 50,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
-		UnitOfAccount: pallet_unit_of_account::<Instance1>::{Pallet, Call, Storage, Event<T>} = 100,
 
 	}
 );
