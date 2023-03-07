@@ -35,28 +35,48 @@ pub trait UnitOfAccountInterface {
 	) -> Result<(), dispatch::DispatchError>;
 }
 
-/// Holds the details for each asset
+/// Holds the details for each asset for storage
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug)]
 #[scale_info(skip_type_params(SymbolMaxChars))]
 pub struct AssetDetails<SymbolMaxChars: Get<u32>> {
 	/// The symbol of the asset
 	pub symbol: BoundedVec<u8, SymbolMaxChars>,
-	/// The total issuance of the asset
+	/// The total issuance of the asset converted
 	pub issuance: LedgerBalance,
 	/// The price of the asset in base currency (e.g. USD, but later TODO can be any asset)
 	pub price: LedgerBalance,
-	/// weighting_per_asset = inverse_issuance / sum_total_inverse_issuances
+	/// weighting_per_asset converted
 	pub weighting_per_asset: LedgerBalance,
-	/// weight_adjusted_price = weighting_per_asset * price_in_base_asset
+	/// weight_adjusted_price in unit of account
 	pub weight_adjusted_price: LedgerBalance,
-	/// uoa_per_unit_asset = price_in_base_asset / (100_000 * unit_of_account)
-	pub unit_of_account: LedgerBalance,
+	/// uoa_per_asset converted
+	pub uoa_per_asset: LedgerBalance,
+}
+
+/// Holds the details for each asset for processing
+#[derive(Clone, Decode, Encode, Debug)]
+pub struct AssetData<SymbolMaxChars: Get<u32>> {
+	/// The symbol of the asset
+	pub symbol: BoundedVec<u8, SymbolMaxChars>,
+	/// The total issuance of the asset
+	pub issuance: u128,
+	pub inverse_issuance: Option<f64>,
+	/// The price of the asset in base currency (e.g. USD, but later TODO can be any asset)
+	pub price: u128,
+	/// weighting_per_asset = inverse_issuance / sum_total_inverse_issuances
+	pub weighting_per_asset: Option<f64>,
+	/// weight_adjusted_price = weighting_per_asset * price_in_base_asset
+	pub weight_adjusted_price: Option<f64>,
+	/// uoa_per_asset = price_in_base_asset / (100_000 * unit_of_account)
+	pub uoa_per_asset: Option<f64>,
 }
 
 pub fn convert_float_to_storage(amount: f64) -> LedgerBalance {
+	// TODO This needs to be checked for overflow
 	(amount * STORAGE_MULTIPLIER as f64) as LedgerBalance
 }
 
 pub fn convert_storage_to_float(amount: LedgerBalance) -> f64 {
+	// TODO This needs to be checked for overflow
 	amount as f64 / STORAGE_MULTIPLIER as f64
 }

@@ -59,7 +59,7 @@ benchmarks_instance_pallet! {
 
 	}: _(RawOrigin::Signed(account.clone()), usd_symbol.clone(), usd_issuance, usd_price)
 	verify {
-		assert_last_event::<T, I>(Event::CurrencyAddedToBasket(usd_symbol).into());
+		assert_last_event::<T, I>(Event::AssetAddedToBasket(usd_symbol).into());
 	}
 
 	remove_currency {
