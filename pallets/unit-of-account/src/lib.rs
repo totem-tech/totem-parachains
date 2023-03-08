@@ -84,11 +84,14 @@ use frame_support::{
 		},
 	},
 	BoundedVec,
-	sp_runtime::traits::{ 
-		Convert,
-		UniqueSaturatedInto,
-		BadOrigin,
-	},
+	sp_runtime::{
+		DispatchError,
+		traits::{ 
+			Convert,
+			UniqueSaturatedInto,
+			BadOrigin,
+		},
+	}
 };
 use sp_std::{
 	convert::{TryFrom, TryInto},
@@ -152,10 +155,6 @@ pub mod pallet {
 		
 		/// For converting [u8; 32] bytes to AccountId
 		type BytesToAccountId: Convert<[u8; 32], Self::AccountId>;
-		
-		/// For converting LedgerBalance to u128
-		type LedgerBalanceToU128: TryConvert<LedgerBalance, u128>;
-		
 	}
 	
 	// type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -214,9 +213,20 @@ pub mod pallet {
 	
 	/// The calculated Nominal Effective Exchange Rate which is
 	/// also known as the Unit of Account
+	/// should vary with price changes, but should remain historically stable
 	#[pallet::storage]
 	#[pallet::getter(fn unit_of_account)]
 	pub type UnitOfAccount<T: Config> = StorageValue<
+	_,
+	LedgerBalance, 
+	ValueQuery
+	>;
+
+	/// The Total Inverse Issuance of all assets
+	/// This is also used as a cached value when new prices are updated
+	#[pallet::storage]
+	#[pallet::getter(fn total_inverse_issuance)]
+	pub type TotalInverseIssuance<T: Config> = StorageValue<
 	_,
 	LedgerBalance, 
 	ValueQuery
@@ -336,18 +346,22 @@ pub mod pallet {
 			issuance: u128,
 			price: u128,
 		) -> DispatchResultWithPostInfo {
+			// ------------- Checks ------------- //
+			// check that the origin is signed otherwise the extrinsic can be spammed
 			let who = ensure_signed(origin)?;
+
 			// check that the caller is whitelisted
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
 			
-			// TODO Ensure that the total number of assets is not greater than the maximum allowed
-			// check the count of assets in the array
-			
 			// Ensure that the length of the symbol is not greater than the nr bytes in parameters
 			let symbol_ok = BoundedVec::<u8, T::SymbolMaxChars>::try_from(symbol.clone()).map_err(|_e| Error::<T>::SymbolLengthOutOfBounds)?;
+
+			// Ensure that the total number of assets is not greater than the maximum allowed
+			let mut assets = AssetSymbol::<T>::get();
+			assets.try_push(symbol_ok.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
 			
 			// TODO Convert to uppercase to ensure that the symbol is unique and not case sensitive
-			// Note this should not be a rudimentary check. It needs to consider the UTF-8 encoding of the symbol characters and may require looping through the characters
+			// Note this should not be a rudimentary check. It needs to consider the UTF-8 encoding of the symbol characters and the fact that each character is a u8
 			
 			// Check that the symbol is not already in use.
 			ensure!(!Self::asset_in_array(&symbol_ok), Error::<T>::SymbolAlreadyExists);
@@ -358,60 +372,42 @@ pub mod pallet {
 			// check that the price is not zero
 			ensure!(!price == u128::MIN, Error::<T>::InvalidPriceValue);
 			
-			// Get the list of existing assets
-			let mut current_asset_basket = AssetBasket::<T>::get();
-			let mut intermediate_basket = Vec::new();
-			
-			let new_entry = AssetData {
-				symbol: symbol_ok.clone(),
-				issuance: issuance.clone(),
-				inverse_issuance: Self::invert_issuance(issuance),
-				price: price,
-				weighting_per_asset: None,
-				weight_adjusted_price: None,
-				uoa_per_asset: None,
-			};
-			intermediate_basket.push(new_entry);
-			
-			// Move data to new array erasing values that are to be recalculated
-			for asset in current_asset_basket {
-				let existing_entry = AssetData {
-					symbol: asset.symbol.clone(),
-					issuance: asset.issuance.clone() as u128,
-					inverse_issuance: Self::invert_issuance(asset.issuance as u128),
-					price: asset.price as u128,
-					weighting_per_asset: None,
-					weight_adjusted_price: None,
-					uoa_per_asset: None,
-				};
-				intermediate_basket.push(existing_entry);
-			}
+			// --------------- Processing ---------------- //
+			// Create an intermediate basket including new asset
+			let mut intermediate_basket = Self::generate_intermediate_basket(
+				&symbol_ok,
+				&issuance,
+				&price,
+			);
 			
 			// get the total inverse issuance (f64)
 			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
 			
 			// Partially recalculate the basket to get weighting_per_asset and weight_adjusted_price
-			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv);
+			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
 			
 			// from the updated basket calculate the unit of account
 			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
 			
 			// final recalculations of the basket
-			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account);
+			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
 			
 			// Convert the new basket values to LedgerBalance types
-			
+			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
+	
 			// -------------- Update Storage ---------------- //
-			// TODO Update counter for the number of assets in the basket in Storage
-			
 			// Add the symbol to the array of symbols in Storage
-			
+			AssetSymbol::<T>::set(assets);
+
 			// Update the Unit of Account Value in Storage
-			
+			UnitOfAccount::<T>::set(convert_float_to_storage(unit_of_account));
+
 			// Update Total Inverse Issuance in Storage
+			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
 			
 			// Update the basket of assets in Storage
-			
+			AssetBasket::<T>::set(new_basket);
+
 			Self::deposit_event(Event::AssetAddedToBasket(symbol_ok));
 			
 			Ok(().into())
@@ -439,8 +435,7 @@ pub mod pallet {
 			Ok(().into())
 		}
 		
-		/// Updates assets in the basket
-		/// This updates multiple assets in the basket
+		/// Updates multiple assets in the basket
 		/// The input should be a boundedvec of values and must be limited to only 100 assets
 		/// All the assets to update must exist or else the transaction fail for all assets to be updated
 		/// An event can be used to communicate to the Front-end which asset caused the issue
@@ -491,12 +486,14 @@ pub mod pallet {
 		UnknownWhitelistedAccount,
 		/// Not a whitelisted account
 		NotWhitelistedAccount,
-		/// Max currencies exceeded
-		// MaxCurrenciesOutOfBound,
+		/// Max assets exceeded
+		MaxAssetsOutOfBounds,
 		/// Symbol too long
 		SymbolLengthOutOfBounds,
-		/// Currency Symbol already exists
+		/// Asset Symbol already exists
 		SymbolAlreadyExists,
+		/// Asset cannot be added to the basket
+		AssetCannotBeAddedToBasket,
 		/// Currency not found from basket
 		AssetNotFound,
 		/// Invalid Issuance Value
@@ -568,6 +565,71 @@ impl<T: Config> Pallet<T> {
 		});
 		
 		return unit_of_account
+	}
+
+	fn conversion_of_basket_to_storage(
+		basket: Vec<AssetData<T::SymbolMaxChars>>, 
+		// new_basket: &mut BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>
+	) -> Result<BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
+		let mut new_basket: BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket> = Default::default();
+			for asset in basket {
+				let converted_entry = AssetDetails {
+					symbol: asset.symbol.clone(),
+					issuance: asset.issuance as LedgerBalance,
+					price: asset.price as LedgerBalance,
+					weighting_per_asset: match asset.weighting_per_asset {
+						Some(wpa) => convert_float_to_storage(wpa),
+						None => 0 as LedgerBalance,
+					},
+					weight_adjusted_price: match asset.weight_adjusted_price {
+						Some(wap) => convert_float_to_storage(wap),
+						None => 0 as LedgerBalance,
+					},
+					uoa_per_asset: match asset.uoa_per_asset {
+						Some(uoa) => convert_float_to_storage(uoa),
+						None => 0 as LedgerBalance,
+					}
+				};
+				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxAssetsOutOfBounds)?;
+			}
+
+		Ok(new_basket)
+	}
+
+	fn generate_intermediate_basket(
+		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
+		issuance: &u128,
+		price: &u128,
+	) -> Vec<AssetData<T::SymbolMaxChars>> {
+
+		let mut current_asset_basket = AssetBasket::<T>::get();
+		let mut intermediate_basket = Vec::new();
+		
+		let new_entry = AssetData {
+			symbol: symbol.clone(),
+			issuance: issuance.clone(),
+			inverse_issuance: Self::invert_issuance(issuance.clone()),
+			price: price.clone(),
+			weighting_per_asset: None,
+			weight_adjusted_price: None,
+			uoa_per_asset: None,
+		};
+		intermediate_basket.push(new_entry);
+		
+		// Move data to new array erasing values that are to be recalculated
+		for asset in current_asset_basket {
+			let existing_entry = AssetData {
+				symbol: asset.symbol.clone(),
+				issuance: asset.issuance.clone() as u128,
+				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
+				price: asset.price as u128,
+				weighting_per_asset: None,
+				weight_adjusted_price: None,
+				uoa_per_asset: None,
+			};
+			intermediate_basket.push(existing_entry);
+		}
+		intermediate_basket
 	}
 
 // 	pub fn calculate_weight_adjusted_price(
@@ -650,7 +712,7 @@ impl<T: Config> Pallet<T> {
 
 // 				asset_basket
 // 					.try_push(unit_of_account_currency)
-// 					.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
+// 					.map_err(|_e| Error::<T, I>::MaxAssetsOutOfBounds)?;
 
 // 				AssetBasket::<T>::set(asset_basket);
 
@@ -676,7 +738,7 @@ impl<T: Config> Pallet<T> {
 
 // 		asset_basket
 // 			.try_push(unit_of_account_currency)
-// 			.map_err(|_e| Error::<T, I>::MaxCurrenciesOutOfBound)?;
+// 			.map_err(|_e| Error::<T, I>::MaxAssetsOutOfBounds)?;
 
 // 		AssetBasket::<T>::set(asset_basket);
 // 	}

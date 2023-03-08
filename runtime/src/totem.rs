@@ -8,6 +8,16 @@ impl pallet_accounting::Config for Runtime {
     type RandomThing = RandomnessCollectiveFlip;
 }
 
+impl pallet_unit_of_account::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = pallet_balances_totem::Pallet<Runtime>;
+    type MaxWhitelistedAccounts: u32 = 50;
+    type MaxAssetsInBasket: u32 = 1000;
+    type SymbolMaxChars = ConstU32<7>;
+    type WhitelistDeposit: u128 = 1_000_000_000_000_000;
+    type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;
+}
+
 // impl pallet_archive::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
 //     type Timekeeping = pallet_timekeeping::Pallet<Self>;

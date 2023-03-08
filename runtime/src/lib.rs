@@ -496,21 +496,6 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-impl pallet_unit_of_account::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = pallet_balances_totem::Pallet<Runtime>;
-	type MaxWhitelistedAccounts: u32 = 50;
-	type MaxAssetsInBasket: u32 = 1000;
-	type SymbolMaxChars = ConstU32<7>;
-	type WhitelistDeposit: u128 = 1_000_000_000_000_000;
-	type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;
-}
-
-// /// Configure the pallet template in pallets/template.
-// impl pallet_template::Config for Runtime {
-// 	type RuntimeEvent = RuntimeEvent;
-// }
-
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
