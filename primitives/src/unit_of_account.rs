@@ -4,8 +4,8 @@ use crate::LedgerBalance;
 use frame_support::{
 	pallet_prelude::*,
 	dispatch::{ 
-		DispatchResult, 
-		EncodeLike, 
+		// DispatchResult, 
+		// EncodeLike, 
 		TypeInfo 
 	}, 
 };
@@ -36,7 +36,7 @@ pub trait UnitOfAccountInterface {
 }
 
 /// Holds the details for each asset for storage
-#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug)]
+#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug, PartialEq)]
 #[scale_info(skip_type_params(SymbolMaxChars))]
 pub struct AssetDetails<SymbolMaxChars: Get<u32>> {
 	/// The symbol of the asset
@@ -54,7 +54,7 @@ pub struct AssetDetails<SymbolMaxChars: Get<u32>> {
 }
 
 /// Holds the details for each asset for processing
-#[derive(Clone, Decode, Encode, Debug)]
+#[derive(Clone, Decode, Encode, Debug, PartialEq)]
 pub struct AssetData<SymbolMaxChars: Get<u32>> {
 	/// The symbol of the asset
 	pub symbol: BoundedVec<u8, SymbolMaxChars>,
@@ -71,6 +71,7 @@ pub struct AssetData<SymbolMaxChars: Get<u32>> {
 	pub uoa_per_asset: Option<f64>,
 }
 
+// TODO Thes two functions should be moved to the file that contains all the unit conversion functions under the common directory.
 pub fn convert_float_to_storage(amount: f64) -> LedgerBalance {
 	// TODO This needs to be checked for overflow
 	(amount * STORAGE_MULTIPLIER as f64) as LedgerBalance

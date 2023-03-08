@@ -38,7 +38,7 @@
 
 //! # Unit-Of-Account
 //!
-//! A module for calculating asset of account based on a basket of assets
+//! A module for calculating unit of account based on a basket of assets
 //!
 //! ## Overview
 //!
@@ -48,22 +48,19 @@
 //! * Remove whitelisted account
 //! * Add new asset to the basket
 //! * Remove asset from the basket
-//! * updating the price of an asset in the basket
-//! * updating the issuance of an asset in the basket
+//! * updating the price of up to 100 assets in the basket
+//! * updating the issuance up to 100 assets in the basket
+//! * jointly updating all assets and prices
 //!
 //! The supported dispatchable functions are documented in the [`Call`] enum.
 //!
 //! ### Goals
 //!
-//! The Unit-Of-Account in Totem is designed to make the following possible:
+//! The Unit-Of-Account Pallet in Totem is designed to provide an exchange rate to the functional currency of the accounting engine.
 //!
-//! * Add a new currency to the basket of currencies and then generate/calulate the weight and PEER of currencies
+//! The purpose is that during the update of the accounts from another asset, the record will contain both the value of the asset
+//! and the value in the functional currency, so that translation to the presentation currency can be done at the time of reporting.
 //!
-//! ## UnitOfAccountInterface Interface
-//!
-//! `add_currency`: Adds a currency with it's issuance to the basket.
-//!
-//! `remove_currency`: Removes a currency from the basket.
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -78,7 +75,7 @@ use frame_support::{
 	dispatch::DispatchResultWithPostInfo,
 	traits::{ 
 		Currency, 
-		ConstU32,
+		// ConstU32,
 		ExistenceRequirement::{
 			AllowDeath,
 		},
@@ -94,35 +91,26 @@ use frame_support::{
 	}
 };
 use sp_std::{
-	convert::{TryFrom, TryInto},
+	convert::{TryInto},
 	prelude::*,
 };
-// use totem_primitives::LedgerBalance;
 use totem_primitives::{
 	LedgerBalance, 
 	unit_of_account::{
 		convert_float_to_storage, 
-		convert_storage_to_float, 
 		AssetDetails, 
 		AssetData, 
-		UnitOfAccountInterface,
 	}
 };
 
-use totem_common::TryConvert;
-
-// use core::cmp::Ordering;
 pub use pallet::*;
 pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 pub mod pallet {
 	use super::*;
-	// use core::cmp::Ordering;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	// use frame_support::{dispatch::DispatchResultWithPostInfo, pallet_prelude::*};
-	// use totem_primitives::{unit_of_account::AssetDetails, LedgerBalance};
 	
 	#[pallet::config]
 	/// The module configuration trait.
@@ -141,6 +129,10 @@ pub mod pallet {
 		/// The max number of assets allowed in the basket
 		#[pallet::constant]
 		type MaxAssetsInBasket: Get<u32>;
+
+		/// The max number of assets allowed to be updated in one extrinsic
+		#[pallet::constant]
+		type MaxAssetsInput: Get<u32>;
 		
 		/// The max number of characters in the symbol for the asset
 		#[pallet::constant]
@@ -156,8 +148,6 @@ pub mod pallet {
 		/// For converting [u8; 32] bytes to AccountId
 		type BytesToAccountId: Convert<[u8; 32], Self::AccountId>;
 	}
-	
-	// type BalanceOf<T> = <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 	
 	/// The current storage version.
 	const STORAGE_VERSION: frame_support::traits::StorageVersion =
@@ -293,11 +283,14 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		pub fn remove_account(
 			origin: OriginFor<T>,
-			account: T::AccountId,
+			_account: Option<T::AccountId>,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
+			// TODO perform a check for the sudo account
+			// If sudo then remove the account from the whitelist
+			// else use the origin account to remove from the whitelist
 			let who = ensure_signed(origin)?;
 			
 			// Check that the account exists in the whitelist
@@ -347,6 +340,9 @@ pub mod pallet {
 			price: u128,
 		) -> DispatchResultWithPostInfo {
 			// ------------- Checks ------------- //
+			if ensure_none(origin.clone()).is_ok() {
+				return Err(BadOrigin.into())
+			}
 			// check that the origin is signed otherwise the extrinsic can be spammed
 			let who = ensure_signed(origin)?;
 
@@ -354,17 +350,18 @@ pub mod pallet {
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
 			
 			// Ensure that the length of the symbol is not greater than the nr bytes in parameters
-			let symbol_ok = BoundedVec::<u8, T::SymbolMaxChars>::try_from(symbol.clone()).map_err(|_e| Error::<T>::SymbolLengthOutOfBounds)?;
+			// This line may be needed if the extrinsic does not reject a vec that is longer than SymbolMaxChars i.e. we need to test this
+			// let symbol_ok = BoundedVec::<u8, T::SymbolMaxChars>::try_from(symbol.clone()).map_err(|_e| Error::<T>::SymbolLengthOutOfBounds)?;
 
 			// Ensure that the total number of assets is not greater than the maximum allowed
 			let mut assets = AssetSymbol::<T>::get();
-			assets.try_push(symbol_ok.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
+			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
 			
 			// TODO Convert to uppercase to ensure that the symbol is unique and not case sensitive
 			// Note this should not be a rudimentary check. It needs to consider the UTF-8 encoding of the symbol characters and the fact that each character is a u8
 			
 			// Check that the symbol is not already in use.
-			ensure!(!Self::asset_in_array(&symbol_ok), Error::<T>::SymbolAlreadyExists);
+			ensure!(!Self::asset_in_array(&symbol), Error::<T>::SymbolAlreadyExists);
 			
 			// check that the issuance is not zero
 			ensure!(!issuance == u128::MIN, Error::<T>::InvalidIssuanceValue);
@@ -374,8 +371,8 @@ pub mod pallet {
 			
 			// --------------- Processing ---------------- //
 			// Create an intermediate basket including new asset
-			let mut intermediate_basket = Self::generate_intermediate_basket(
-				&symbol_ok,
+			let mut intermediate_basket = Self::combined_intermediate_basket(
+				&symbol,
 				&issuance,
 				&price,
 			);
@@ -408,7 +405,7 @@ pub mod pallet {
 			// Update the basket of assets in Storage
 			AssetBasket::<T>::set(new_basket);
 
-			Self::deposit_event(Event::AssetAddedToBasket(symbol_ok));
+			Self::deposit_event(Event::AssetAddedToBasket(symbol));
 			
 			Ok(().into())
 		}
@@ -426,11 +423,31 @@ pub mod pallet {
 		#[pallet::call_index(3)]
 		pub fn remove_currency(
 			origin: OriginFor<T>,
-			symbol: Vec<u8>,
+			symbol: BoundedVec::<u8, T::SymbolMaxChars>,
 		) -> DispatchResultWithPostInfo {
-			let who = ensure_root(origin)?;
+			if ensure_none(origin.clone()).is_ok() {
+				return Err(BadOrigin.into())
+			}
+			ensure_root(origin)?;
 			
-			// Self::deposit_event(Event::AssetRemovedFromTheBasket(symbol));
+			let assets = Self::find_and_remove_asset(&symbol)?;
+
+			let mut intermediate_basket = Self::reduced_intermediate_basket(
+				&symbol,
+			);
+
+			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
+			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
+			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
+			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
+			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
+	
+			AssetSymbol::<T>::set(assets);
+			UnitOfAccount::<T>::set(convert_float_to_storage(unit_of_account));
+			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
+			AssetBasket::<T>::set(new_basket);
+
+			Self::deposit_event(Event::AssetRemoved(symbol));
 			
 			Ok(().into())
 		}
@@ -448,13 +465,12 @@ pub mod pallet {
 		#[pallet::weight(T::WeightInfo::update_currency())]
 		#[pallet::call_index(4)]
 		pub fn update_currency(
-			origin: OriginFor<T>,
-			symbol: Vec<u8>,
-			maybe_issuance: Option<u128>,
-			maybe_price: Option<u128>,
+			_origin: OriginFor<T>,
+			// assets: Vec<AssetDetails<T::SymbolMaxChars>>,
 		) -> DispatchResultWithPostInfo {
-			// let whitelisted_caller = ensure_signed(origin)?;
-			
+			if ensure_none(_origin.clone()).is_ok() {
+				return Err(BadOrigin.into())
+			}
 			// Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
 			
 			Ok(().into())
@@ -471,9 +487,9 @@ pub mod pallet {
 		/// Asset added to the basket
 		AssetAddedToBasket(BoundedVec<u8, T::SymbolMaxChars>),
 		/// Asset removed from the basket
-		AssetRemovedFromTheBasket(BoundedVec<u8, T::SymbolMaxChars>),
+		AssetRemoved(BoundedVec<u8, T::SymbolMaxChars>),
 		/// Asset updated in the basket
-		AssetUpdatedInTheBasket(BoundedVec<u8, T::SymbolMaxChars>),
+		AssetUpdated(BoundedVec<u8, T::SymbolMaxChars>),
 	}
 	
 	#[pallet::error]
@@ -494,7 +510,7 @@ pub mod pallet {
 		SymbolAlreadyExists,
 		/// Asset cannot be added to the basket
 		AssetCannotBeAddedToBasket,
-		/// Currency not found from basket
+		/// Asset not found during removal
 		AssetNotFound,
 		/// Invalid Issuance Value
 		InvalidIssuanceValue,
@@ -513,6 +529,19 @@ impl<T: Config> Pallet<T> {
 			true => true,
 			false => false,
 		} 
+	}
+	
+	fn find_and_remove_asset(
+		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
+	) -> Result<BoundedVec<BoundedVec<u8, T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
+		let mut assets = AssetSymbol::<T>::get();
+		match assets.iter().position(|s| s == symbol) {
+			Some(idx) => {
+				assets.remove(idx);
+				Ok(assets)
+			},
+			None => Err(Error::<T>::AssetNotFound.into())
+		}
 	}
 	
 	fn invert_issuance(issuance: u128) -> Option<f64> {
@@ -569,7 +598,6 @@ impl<T: Config> Pallet<T> {
 
 	fn conversion_of_basket_to_storage(
 		basket: Vec<AssetData<T::SymbolMaxChars>>, 
-		// new_basket: &mut BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>
 	) -> Result<BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
 		let mut new_basket: BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket> = Default::default();
 			for asset in basket {
@@ -596,13 +624,13 @@ impl<T: Config> Pallet<T> {
 		Ok(new_basket)
 	}
 
-	fn generate_intermediate_basket(
+	fn combined_intermediate_basket(
 		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
 		issuance: &u128,
 		price: &u128,
 	) -> Vec<AssetData<T::SymbolMaxChars>> {
 
-		let mut current_asset_basket = AssetBasket::<T>::get();
+		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		
 		let new_entry = AssetData {
@@ -632,177 +660,27 @@ impl<T: Config> Pallet<T> {
 		intermediate_basket
 	}
 
-// 	pub fn calculate_weight_adjusted_price(
-// 		currency_weight: LedgerBalance,
-// 		price: LedgerBalance,
-// 	) -> Option<LedgerBalance> {
-// 		let storage_value = convert_float_to_storage(
-// 			convert_storage_to_float(currency_weight) * convert_storage_to_float(price),
-// 		);
-
-// 		Some(storage_value)
-// 	}
-
-// 	pub fn calculate_weight_for_currency(
-// 		total_inverse_issuance_in_asset_basket: f64,
-// 		issuance: LedgerBalance,
-// 	) -> Option<LedgerBalance> {
-// 		let currency_issuance_inverse = 1 as f64 / issuance as f64;
-
-// 		let weight_of_currency =
-// 			currency_issuance_inverse / total_inverse_issuance_in_asset_basket;
-
-// 		let weight_of_currency = convert_float_to_storage(weight_of_currency);
-
-// 		Some(weight_of_currency)
-// 	}
-
-
-
-
-// 	pub fn calculate_individual_currency_unit_of_account(unit_of_account: LedgerBalance) {
-// 		let mut asset_basket = AssetBasket::<T>::get();
-
-// 		for currency_details in asset_basket.iter_mut() {
-// 			let price_f64 = convert_storage_to_float(currency_details.price);
-// 			let unit_of_account_f64 = convert_storage_to_float(unit_of_account.clone());
-// 			let unit_of_account_for_currency_f64 = price_f64 / unit_of_account_f64;
-// 			let unit_of_account_for_currency =
-// 				convert_float_to_storage(unit_of_account_for_currency_f64);
-// 			currency_details.unit_of_account = Some(unit_of_account_for_currency);
-// 		}
-
-// 		AssetBasket::<T>::set(asset_basket);
-// 	}
+	fn reduced_intermediate_basket(
+		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
+	) -> Vec<AssetData<T::SymbolMaxChars>> {
+		let current_asset_basket = AssetBasket::<T>::get();
+		let mut intermediate_basket = Vec::new();
+		// Move data to new array erasing values that are to be recalculated
+		for asset in current_asset_basket {
+			if asset.symbol == *symbol {
+				continue
+			}
+			let existing_entry = AssetData {
+				symbol: asset.symbol.clone(),
+				issuance: asset.issuance.clone() as u128,
+				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
+				price: asset.price as u128,
+				weighting_per_asset: None,
+				weight_adjusted_price: None,
+				uoa_per_asset: None,
+			};
+			intermediate_basket.push(existing_entry);
+		}
+		intermediate_basket
+	}
 }
-							
-// impl<T: Config> UnitOfAccountInterface for Pallet<T> {
-// fn calculate_uoa(
-// 	symbol: Vec<u8>,
-// 	issuance: LedgerBalance,
-// 	price: LedgerBalance,
-// ) -> Result<(), DispatchError> {
-// 	// let bounded_symbol = BoundedVec::<u8, T::MaxAssets>::try_from(symbol.clone())
-// 	// 	.map_err(|_e| Error::<T, I>::SymbolOutOfBound)?;
-
-// 	let mut asset_basket = AssetBasket::<T>::get();
-// 	// we need to calculate the total inverse of the currencies in the  basket
-// 	let some_total_inverse_issuance_in_asset_basket =
-// 		Self::calculate_total_inverse_issuance_in_basket();
-
-// 	if let Some(total_inverse_issuance_in_asset_basket) =
-// 		some_total_inverse_issuance_in_asset_basket
-// 	{
-// 		// calculate weight for the currency added
-// 		if let Some(currency_weight) = Self::calculate_weight_for_currency(
-// 			total_inverse_issuance_in_asset_basket.clone(),
-// 			issuance.clone(),
-// 		) {
-// 			if let Some(weight_adjusted_price) =
-// 				Self::calculate_weight_adjusted_price(currency_weight.clone(), price.clone())
-// 			{
-// 				let unit_of_account_currency = AssetDetails {
-// 					symbol: bounded_symbol,
-// 					issuance,
-// 					price,
-// 					weight: Some(currency_weight),
-// 					weight_adjusted_price: Some(weight_adjusted_price),
-// 					unit_of_account: None,
-// 				};
-
-// 				asset_basket
-// 					.try_push(unit_of_account_currency)
-// 					.map_err(|_e| Error::<T, I>::MaxAssetsOutOfBounds)?;
-
-// 				AssetBasket::<T>::set(asset_basket);
-
-// 				// recalculate weight for each currency in the basket, since a new currency is just added
-// 				Self::calculate_individual_weights(total_inverse_issuance_in_asset_basket);
-// 				// newly calculated unit of account for the pallet
-// 				if let Some(unit_of_account) = Self::calculate_unit_of_account() {
-// 					assetOfAccount::<T>::set(unit_of_account.clone());
-// 					// since a new currency has been added, we need to recalculate for each currency
-// 					Self::calculate_individual_currency_unit_of_account(unit_of_account);
-// 				}
-// 			}
-// 		}
-// 	} else {
-// 		let unit_of_account_currency = AssetDetails {
-// 			symbol: bounded_symbol,
-// 			issuance,
-// 			price,
-// 			weight: None,
-// 			weight_adjusted_price: None,
-// 			unit_of_account: None,
-// 		};
-
-// 		asset_basket
-// 			.try_push(unit_of_account_currency)
-// 			.map_err(|_e| Error::<T, I>::MaxAssetsOutOfBounds)?;
-
-// 		AssetBasket::<T>::set(asset_basket);
-// 	}
-
-// 	Ok(())
-// }
-
-// 	fn remove(symbol: Vec<u8>) -> Result<(), DispatchError> {
-// 		let mut currency_details = AssetBasket::<T>::get();
-// 		let index = currency_details
-// 			.iter()
-// 			.position(|item| item.symbol == symbol)
-// 			.ok_or_else(|| Error::<T, I>::CurrencyNotFoundFromBasket)?;
-// 		currency_details.remove(index);
-
-// 		AssetBasket::<T>::set(currency_details);
-
-// 		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
-// 		let some_total_inverse_issuance = Self::get();
-// 		if let Some(total_inverse_issuance) = some_total_inverse_issuance {
-// 			// recalculate weight for each currency in the basket, since a currency is removed
-// 			Self::calculate_individual_weights(total_inverse_issuance);
-// 			// newly calculated unit of account for the pallet
-// 			if let Some(unit_of_account) = Self::calculate_unit_of_account() {
-// 				assetOfAccount::<T>::set(unit_of_account.clone());
-// 				// since a currency has been removed, we need to recalculate for each currency
-// 				Self::calculate_individual_currency_unit_of_account(unit_of_account);
-// 			}
-// 		}
-
-// 		Ok(())
-// 	}
-
-// 	fn update(
-// 		symbol: Vec<u8>,
-// 		issuance: Option<u128>,
-// 		price: Option<u128>,
-// 	) -> Result<(), DispatchError> {
-// 		// we need to calculate the total inverse of the currencies in the  basket
-// 		<AssetBasket<T>>::mutate(|basket| {
-// 			if let Some(currency) = basket.iter_mut().find(|c| c.symbol == symbol) {
-// 				if issuance.is_some() {
-// 					currency.price = issuance.unwrap();
-// 				}
-
-// 				if price.is_some() {
-// 					currency.price = price.unwrap();
-// 				}
-// 			}
-// 		});
-
-// 		// calculates the total_inverse_issuance(weights) in the basket, since a currency is removed
-// 		let some_total_inverse_issuance = Self::get();
-// 		if let Some(total_inverse_issuance) = some_total_inverse_issuance {
-// 			// recalculate weight for each currency in the basket, since a currency is removed
-// 			Self::calculate_individual_weights(total_inverse_issuance);
-// 			// newly calculated unit of account for the pallet
-// 			if let Some(unit_of_account) = Self::calculate_unit_of_account() {
-// 				assetOfAccount::<T>::set(unit_of_account.clone());
-// 				// since a currency has been removed, we need to recalculate for each currency
-// 				Self::calculate_individual_currency_unit_of_account(unit_of_account);
-// 			}
-// 		}
-
-// 		Ok(())
-// 	}
-// }
