@@ -1,7 +1,7 @@
 use super::*;
 use crate::{self as pallet_unit_of_account};
 
-use frame_support::parameter_types;
+use frame_support::{parameter_types, traits::ConstU64};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -10,6 +10,8 @@ use sp_runtime::{
 	MultiSignature,
 };
 use sp_std::convert::{TryFrom, TryInto};
+use totem_common::converter::Converter;
+
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
 
@@ -21,7 +23,11 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-		PalletUnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>}
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Pallet, Storage},
+		PalletUnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>},
+		Balances: pallet_balances_totem::{Pallet, Call, Storage, Event<T>},
+		Accounting: pallet_accounting::{Pallet, Storage, Event<T>},
 	}
 );
 
@@ -68,18 +74,51 @@ parameter_types! {
 	pub const ExistentialDeposit: u64 = 1;
 }
 
+impl pallet_timestamp::Config for Test {
+	/// A timestamp: milliseconds since the unix epoch.
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = ConstU64<100>;
+	type WeightInfo = ();
+}
+
+impl pallet_randomness_collective_flip::Config for Test {}
+
+impl pallet_accounting::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
+	type AccountingConverter = Converter;
+	type Currency = Balances;
+	type RandomThing = RandomnessCollectiveFlip;
+}
+
+impl pallet_balances_totem::Config for Test {
+	type Balance = u64;
+	type DustRemoval = ();
+	type RuntimeEvent = RuntimeEvent;
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = system::Pallet<Test>;
+	type MaxLocks = ();
+	type MaxReserves = ConstU32<2>;
+	type ReserveIdentifier = [u8; 8];
+	type WeightInfo = pallet_balances_totem::weights::SubstrateWeight<Test>;
+	type Accounting = pallet_accounting::Pallet<Test>;
+}
+
 parameter_types! {
-	pub const ParameterDeposit: u64 = 1;
-	pub const StringLimit: u32 = 50;
-	pub const MetadataDepositBase: u64 = 1;
-	pub const MetadataDepositPerByte: u64 = 1;
+	pub const WhitelistDeposit: u128 = 0;
+	pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
 }
 
 impl pallet_unit_of_account::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
+	type Currency = pallet_balances_totem::Pallet<Test>;
 	type MaxWhitelistedAccounts = ConstU32<5>;
-	type MaxCurrencyInBasket = ConstU32<3>;
+	type MaxAssetsInBasket = ConstU32<3>;
+	type MaxAssetsInput = ConstU32<100>;
 	type SymbolMaxChars = ConstU32<7>;
+	type AccountBytes = AccountBytes;
+	type BytesToAccountId = Converter;
+	type WhitelistDeposit = WhitelistDeposit;
 	type WeightInfo = ();
 }
 

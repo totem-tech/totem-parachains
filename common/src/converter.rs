@@ -35,6 +35,10 @@ impl Convert<[u8; 32], AccountId32> for Converter {
     }
 }
 
+impl Convert<u64, i128> for Converter {
+	fn convert(x: u64) -> i128 { x.into()  }
+}
+
 impl Convert<Vec<u8>, [u8; 8]> for Converter {
     fn convert(mut v: Vec<u8>) -> [u8; 8] {
         let mut a = [0; 8];
@@ -56,4 +60,10 @@ impl TryConvert<u128, i128> for Converter {
     fn try_convert(x: u128) -> Option<i128> {
         i128::try_from(x).ok()
     }
+}
+
+impl TryConvert<u64, i128> for Converter {
+	fn try_convert(x: u64) -> Option<i128> {
+		i128::try_from(x).ok()
+	}
 }
