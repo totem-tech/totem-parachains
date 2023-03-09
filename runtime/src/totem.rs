@@ -15,7 +15,7 @@ parameter_types! {
     pub const MaxAssetsInput: u32 = 100;
     pub const SymbolMaxChars: u32 = 7;
     pub const WhitelistDeposit: Balance = WHITELIST_DEPOSIT;
-    pub const BytesToAccountId: [u8; 32] = *b"totems/whitelist/deposit/account";
+    pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
 }
 
 impl pallet_unit_of_account::Config for Runtime {
@@ -26,6 +26,7 @@ impl pallet_unit_of_account::Config for Runtime {
     type MaxAssetsInBasket = MaxAssetsInBasket;
     type MaxAssetsInput = MaxAssetsInput;
     type SymbolMaxChars = SymbolMaxChars;
+    type AccountBytes = AccountBytes;
     type BytesToAccountId = Converter;
     type WhitelistDeposit = WhitelistDeposit;
 }
