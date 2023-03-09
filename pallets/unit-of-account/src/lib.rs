@@ -145,6 +145,9 @@ pub mod pallet {
 		/// Weightinfo for pallet
 		type WeightInfo: WeightInfo;
 		
+		#[pallet::constant]
+		type AccountBytes: Get<[u8; 32]>;
+
 		/// For converting [u8; 32] bytes to AccountId
 		type BytesToAccountId: Convert<[u8; 32], Self::AccountId>;
 	}
@@ -251,7 +254,7 @@ pub mod pallet {
 					Some(()) => return Err(Error::<T>::AlreadyWhitelistedAccount.into()),
 					None => {
 						// TODO This performs computation. We should cache this address to storage and read.
-						let deposit_account = T::BytesToAccountId::convert(*b"totems/whitelist/deposit/account");
+						let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
 						
 						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
@@ -297,7 +300,7 @@ pub mod pallet {
 			match Self::whitelisted_accounts(who.clone()) {
 				Some(()) => {
 					// TODO This performs computation. We should cache this address to storage and read.
-					let deposit_account = T::BytesToAccountId::convert(*b"totems/whitelist/deposit/account");
+					let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
 					
 					// Transfer 1000 KPX to the account. If this process fails, then return error.
 					T::Currency::transfer(
