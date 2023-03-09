@@ -140,7 +140,7 @@ pub mod pallet {
 		
 		/// The whitelisting deposit ammount
 		#[pallet::constant]
-		type WhitelistDeposit: Get<u32>;
+		type WhitelistDeposit: Get<u128>;
 		
 		/// Weightinfo for pallet
 		type WeightInfo: WeightInfo;
@@ -549,7 +549,7 @@ impl<T: Config> Pallet<T> {
 		return Some(inverted_issuance)
 	}
 	
-	fn get_total_inverse_issuance(basket: &Vec<AssetData<T::SymbolMaxChars>>) -> f64 {
+	fn get_total_inverse_issuance(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
 		let total_inverse_in_asset_basket = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.inverse_issuance {
@@ -559,7 +559,7 @@ impl<T: Config> Pallet<T> {
 		return total_inverse_in_asset_basket
 	}
 	
-	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<T::SymbolMaxChars>>, tiv: f64) -> &mut Vec<AssetData<T::SymbolMaxChars>> {
+	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, tiv: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
 		for asset in &mut *basket {
 			asset.weighting_per_asset = match asset.inverse_issuance.clone() {
 				Some(i) => Some(i / tiv.clone()),
@@ -574,7 +574,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 	
-	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<T::SymbolMaxChars>>, uoa: f64) -> &mut Vec<AssetData<T::SymbolMaxChars>> {
+	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, uoa: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
 		for asset in &mut *basket {
 			asset.uoa_per_asset = match asset.weight_adjusted_price.clone() {
 				Some(u) => Some(u / uoa.clone()),
@@ -585,7 +585,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 	
-	fn calculate_unit_of_account(basket: &Vec<AssetData<T::SymbolMaxChars>>) -> f64 {
+	fn calculate_unit_of_account(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
 		let unit_of_account = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.weight_adjusted_price {
@@ -597,7 +597,7 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn conversion_of_basket_to_storage(
-		basket: Vec<AssetData<T::SymbolMaxChars>>, 
+		basket: Vec<AssetData<f64, T::SymbolMaxChars>>, 
 	) -> Result<BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
 		let mut new_basket: BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket> = Default::default();
 			for asset in basket {
@@ -628,7 +628,7 @@ impl<T: Config> Pallet<T> {
 		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
 		issuance: &u128,
 		price: &u128,
-	) -> Vec<AssetData<T::SymbolMaxChars>> {
+	) -> Vec<AssetData<f64, T::SymbolMaxChars>> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
@@ -662,7 +662,7 @@ impl<T: Config> Pallet<T> {
 
 	fn reduced_intermediate_basket(
 		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
-	) -> Vec<AssetData<T::SymbolMaxChars>> {
+	) -> Vec<AssetData<f64, T::SymbolMaxChars>> {
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		// Move data to new array erasing values that are to be recalculated

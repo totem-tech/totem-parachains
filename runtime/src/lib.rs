@@ -212,6 +212,7 @@ pub const THOUSAND: Balance = 1_000;
 
 // Totem does not want users to lose funds accidentally. This will cause rounding errors.
 pub const EXISTENTIAL_DEPOSIT: Balance = 1;
+pub const WHITELIST_DEPOSIT: Balance = 1_000_000_000_000_000;
 
 /// We assume that ~5% of the block weight is consumed by `on_initialize` handlers. This is
 /// used to limit the maximal weight of a single extrinsic.
@@ -537,7 +538,7 @@ construct_runtime!(
 
 		// Totem
 		Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
-		UnitOfAccount: pallet_unit_of_account::{Pallet, Storage, Event<T>, Config} = 41,
+		UnitOfAccount: pallet_unit_of_account::{Pallet, Storage, Event<T>} = 41,
 		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 42,
 		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 43,
 		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 44,
