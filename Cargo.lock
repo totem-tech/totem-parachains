@@ -5808,6 +5808,7 @@ dependencies = [
  "sp-io",
  "sp-runtime",
  "sp-std",
+ "totem-common",
  "totem-primitives",
 ]
 

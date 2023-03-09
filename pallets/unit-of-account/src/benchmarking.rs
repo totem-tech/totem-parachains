@@ -23,29 +23,29 @@ benchmarks_instance_pallet! {
 	remove_account {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
+		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
 
 		whitelisted_accounts
 				.try_push(account.clone())
 				.unwrap();
 
-		WhitelistedAccounts::<T, I>::set(whitelisted_accounts);
+		WhitelistedAccounts::<T>::set(whitelisted_accounts);
 
 	}: _(RawOrigin::Root, account.clone())
 	verify {
 		assert_last_event::<T, I>(Event::AccountRemoved(account).into());
 	}
 
-	add_currency {
+	add_new_asset {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
+		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
 
 		whitelisted_accounts
 				.try_push(account.clone())
 				.unwrap();
 
-		WhitelistedAccounts::<T, I>::set(whitelisted_accounts);
+		WhitelistedAccounts::<T>::set(whitelisted_accounts);
 
 		let cny_symbol = b"cny".to_vec().into();
 		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
@@ -59,19 +59,19 @@ benchmarks_instance_pallet! {
 
 	}: _(RawOrigin::Signed(account.clone()), usd_symbol.clone(), usd_issuance, usd_price)
 	verify {
-		assert_last_event::<T, I>(Event::CurrencyAddedToBasket(usd_symbol).into());
+		assert_last_event::<T, I>(Event::AssetAddedToBasket(usd_symbol).into());
 	}
 
 	remove_currency {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
+		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
 
 		whitelisted_accounts
 				.try_push(account.clone())
 				.unwrap();
 
-		WhitelistedAccounts::<T, I>::set(whitelisted_accounts);
+		WhitelistedAccounts::<T>::set(whitelisted_accounts);
 
 		let cny_symbol:Vec<u8> = b"cny".to_vec().into();
 		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
@@ -99,13 +99,13 @@ benchmarks_instance_pallet! {
 	update_currency {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T, I>::get();
+		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
 
 		whitelisted_accounts
 				.try_push(account.clone())
 				.unwrap();
 
-		WhitelistedAccounts::<T, I>::set(whitelisted_accounts);
+		WhitelistedAccounts::<T>::set(whitelisted_accounts);
 
 		let cny_symbol = b"cny".to_vec().into();
 		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
