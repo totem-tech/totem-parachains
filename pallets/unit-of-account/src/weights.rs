@@ -32,7 +32,7 @@ use sp_std::marker::PhantomData;
 pub trait WeightInfo {
 	fn whitelist_account() -> Weight;
 	fn remove_account() -> Weight;
-	fn add_currency() -> Weight;
+	fn add_new_asset() -> Weight;
 	fn remove_currency() -> Weight;
 	fn update_currency() -> Weight;
 
@@ -58,7 +58,7 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 	// Storage: UnitOfAccount WhitelistedAccounts (r:1 w:0)
 	// Storage: UnitOfAccount CurrencyBasket (r:1 w:1)
 	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)
-	fn add_currency() -> Weight {
+	fn add_new_asset() -> Weight {
 		// Minimum execution time: 77_041 nanoseconds.
 		Weight::from_ref_time(111_498_000)
 			.saturating_add(T::DbWeight::get().reads(2))
@@ -98,7 +98,7 @@ impl WeightInfo for () {
 			.saturating_add(RocksDbWeight::get().writes(1))
 	}
 
-	fn add_currency() -> Weight {
+	fn add_new_asset() -> Weight {
 		Weight::from_ref_time(111_498_000)
 			.saturating_add(RocksDbWeight::get().reads(2))
 			.saturating_add(RocksDbWeight::get().writes(2))

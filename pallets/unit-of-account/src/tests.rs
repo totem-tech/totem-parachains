@@ -134,7 +134,7 @@ fn should_add_currency_successfully() {
 }
 
 #[test]
-fn add_currency_should_fail_when_currency_basket_is_out_of_bound() {
+fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
