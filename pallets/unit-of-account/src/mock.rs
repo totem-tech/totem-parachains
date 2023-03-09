@@ -112,7 +112,7 @@ parameter_types! {
 impl pallet_unit_of_account::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = pallet_balances_totem::Pallet<Test>;
-	type MaxWhitelistedAccounts = ConstU32<5>;
+	type MaxWhitelistedAccounts = ConstU32<2>;
 	type MaxAssetsInBasket = ConstU32<3>;
 	type MaxAssetsInput = ConstU32<100>;
 	type SymbolMaxChars = ConstU32<7>;

@@ -31,7 +31,7 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-// 
+//
 
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
@@ -73,8 +73,8 @@ pub mod weights;
 
 use frame_support::{
 	dispatch::DispatchResultWithPostInfo,
-	traits::{ 
-		Currency, 
+	traits::{
+		Currency,
 		// ConstU32,
 		ExistenceRequirement::{
 			AllowDeath,
@@ -83,7 +83,7 @@ use frame_support::{
 	BoundedVec,
 	sp_runtime::{
 		DispatchError,
-		traits::{ 
+		traits::{
 			Convert,
 			UniqueSaturatedInto,
 			BadOrigin,
@@ -95,11 +95,11 @@ use sp_std::{
 	prelude::*,
 };
 use totem_primitives::{
-	LedgerBalance, 
+	LedgerBalance,
 	unit_of_account::{
-		convert_float_to_storage, 
-		AssetDetails, 
-		AssetData, 
+		convert_float_to_storage,
+		AssetDetails,
+		AssetData,
 	}
 };
 
@@ -111,21 +111,21 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	
+
 	#[pallet::config]
 	/// The module configuration trait.
 	pub trait Config: frame_system::Config {
 		/// The overarching event type.
 		type RuntimeEvent: From<Event<Self>>
 		+ IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		
+
 		/// For transferring balances
 		type Currency: Currency<Self::AccountId>;
-		
+
 		/// The max length of a whitelisted account Initial 50
 		#[pallet::constant]
 		type MaxWhitelistedAccounts: Get<u32>;
-		
+
 		/// The max number of assets allowed in the basket
 		#[pallet::constant]
 		type MaxAssetsInBasket: Get<u32>;
@@ -133,56 +133,56 @@ pub mod pallet {
 		/// The max number of assets allowed to be updated in one extrinsic
 		#[pallet::constant]
 		type MaxAssetsInput: Get<u32>;
-		
+
 		/// The max number of characters in the symbol for the asset
 		#[pallet::constant]
 		type SymbolMaxChars: Get<u32>;
-		
+
 		/// The whitelisting deposit ammount
 		#[pallet::constant]
 		type WhitelistDeposit: Get<u128>;
-		
+
 		/// Weightinfo for pallet
 		type WeightInfo: WeightInfo;
-		
+
 		#[pallet::constant]
 		type AccountBytes: Get<[u8; 32]>;
 
 		/// For converting [u8; 32] bytes to AccountId
 		type BytesToAccountId: Convert<[u8; 32], Self::AccountId>;
 	}
-	
+
 	/// The current storage version.
 	const STORAGE_VERSION: frame_support::traits::StorageVersion =
 	frame_support::traits::StorageVersion::new(1);
-	
+
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T>(_);
-	
-	
+
+
 	/// The list of whitelisted accounts that can update the basket of assets
 	#[pallet::storage]
 	#[pallet::getter(fn whitelisted_accounts)]
 	pub type WhitelistedAccounts<T: Config> = StorageMap<
 	_,
 	Blake2_128Concat,
-	T::AccountId, 
-	Option<()>, 
+	T::AccountId,
+	Option<()>,
 	ValueQuery
 	>;
-	
+
 	/// A counter so that whitelist does not exceed the max number of accounts
 	/// Current Max is 256
 	#[pallet::storage]
 	#[pallet::getter(fn whitelisted_accounts_count)]
 	pub type WhitelistedAccountsCount<T: Config> = StorageValue<
-	_, 
-	u32, 
+	_,
+	u32,
 	ValueQuery
 	>;
-	
+
 	/// Holds an array of all assets in the basket and their details
 	/// Reading the storage will return the entire array
 	#[pallet::storage]
@@ -192,9 +192,9 @@ pub mod pallet {
 	BoundedVec<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>,
 	ValueQuery,
 	>;
-	
+
 	/// Holds an array of all assets by symbol
-	/// Used to quickly determine if an asset is in the basket 
+	/// Used to quickly determine if an asset is in the basket
 	/// without having to read the asset details
 	#[pallet::storage]
 	#[pallet::getter(fn asset_symbol)]
@@ -203,7 +203,7 @@ pub mod pallet {
 	BoundedVec<BoundedVec<u8, T::SymbolMaxChars>, T::MaxAssetsInBasket>,
 	ValueQuery,
 	>;
-	
+
 	/// The calculated Nominal Effective Exchange Rate which is
 	/// also known as the Unit of Account
 	/// should vary with price changes, but should remain historically stable
@@ -211,7 +211,7 @@ pub mod pallet {
 	#[pallet::getter(fn unit_of_account)]
 	pub type UnitOfAccount<T: Config> = StorageValue<
 	_,
-	LedgerBalance, 
+	LedgerBalance,
 	ValueQuery
 	>;
 
@@ -221,16 +221,16 @@ pub mod pallet {
 	#[pallet::getter(fn total_inverse_issuance)]
 	pub type TotalInverseIssuance<T: Config> = StorageValue<
 	_,
-	LedgerBalance, 
+	LedgerBalance,
 	ValueQuery
 	>;
-	
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// Whitelist an account. 
+		/// Whitelist an account.
 		/// A white-listed account is able to update the price or issuance quantity in the basket.
 		/// There are a limited number of accounts that can be added to the whitelist. Current limit is 50 accounts set as a parameter.
-		/// A white-listed account must pay a security deposit of to be added to the whitelist. This can be found in metadata. 
+		/// A white-listed account must pay a security deposit of to be added to the whitelist. This can be found in metadata.
 		/// Security deposit will be returned when the account is removed from the whitelist.
 		///
 		/// Parameters:
@@ -244,8 +244,8 @@ pub mod pallet {
 				return Err(BadOrigin.into())
 			}
 			let who = ensure_signed(origin)?;
-			
-			// Check that the number of whitelisted accounts has not already reached the maximum 
+
+			// Check that the number of whitelisted accounts has not already reached the maximum
 			let mut counter = Self::whitelisted_accounts_count();
 			if counter >= T::MaxWhitelistedAccounts::get() {
 				return Err(Error::<T>::MaxWhitelistedAccountOutOfBounds.into());
@@ -255,7 +255,7 @@ pub mod pallet {
 					None => {
 						// TODO This performs computation. We should cache this address to storage and read.
 						let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
-						
+
 						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
 							&who,
@@ -267,18 +267,18 @@ pub mod pallet {
 				}
 				counter += 1;
 			}
-			
+
 			WhitelistedAccountsCount::<T>::set(counter);
 			WhitelistedAccounts::<T>::set(who.clone(), Some(()));
-			
+
 			Self::deposit_event(Event::AccountWhitelisted(who));
 			Ok(().into())
 		}
-		
+
 		/// Removes an account that is already whitelisted
 		/// This can only be carried out by sudo or the whitelisted account itself
 		/// When the account is removed it also releases the lock whitelisting security deposit
-		/// This  
+		/// This
 		///
 		/// Parameters:
 		/// - `origin`: A whitelisted account
@@ -295,13 +295,13 @@ pub mod pallet {
 			// If sudo then remove the account from the whitelist
 			// else use the origin account to remove from the whitelist
 			let who = ensure_signed(origin)?;
-			
+
 			// Check that the account exists in the whitelist
 			match Self::whitelisted_accounts(who.clone()) {
 				Some(()) => {
 					// TODO This performs computation. We should cache this address to storage and read.
 					let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
-					
+
 					// Transfer 1000 KPX to the account. If this process fails, then return error.
 					T::Currency::transfer(
 						&deposit_account,
@@ -312,22 +312,22 @@ pub mod pallet {
 				},
 				None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
 			}
-			
+
 			let mut counter = Self::whitelisted_accounts_count();
 			// decrease the whitelist counter
 			counter -= 1;
-			
+
 			WhitelistedAccountsCount::<T>::set(counter);
 			// Then remove the account from the whitelist
 			WhitelistedAccounts::<T>::remove(who.clone());
-			
+
 			Self::deposit_event(Event::AccountRemoved(who));
-			
+
 			Ok(().into())
 		}
-		
+
 		/// Adds a single new asset to the basket of assets
-		/// 
+		///
 		///
 		/// Parameters:
 		/// - `origin`: A whitelisted callet origin
@@ -351,7 +351,7 @@ pub mod pallet {
 
 			// check that the caller is whitelisted
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
-			
+
 			// Ensure that the length of the symbol is not greater than the nr bytes in parameters
 			// This line may be needed if the extrinsic does not reject a vec that is longer than SymbolMaxChars i.e. we need to test this
 			// let symbol_ok = BoundedVec::<u8, T::SymbolMaxChars>::try_from(symbol.clone()).map_err(|_e| Error::<T>::SymbolLengthOutOfBounds)?;
@@ -359,19 +359,19 @@ pub mod pallet {
 			// Ensure that the total number of assets is not greater than the maximum allowed
 			let mut assets = AssetSymbol::<T>::get();
 			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
-			
+
 			// TODO Convert to uppercase to ensure that the symbol is unique and not case sensitive
 			// Note this should not be a rudimentary check. It needs to consider the UTF-8 encoding of the symbol characters and the fact that each character is a u8
-			
+
 			// Check that the symbol is not already in use.
 			ensure!(!Self::asset_in_array(&symbol), Error::<T>::SymbolAlreadyExists);
-			
+
 			// check that the issuance is not zero
-			ensure!(!issuance == u128::MIN, Error::<T>::InvalidIssuanceValue);
-			
+			ensure!(issuance != u128::MIN, Error::<T>::InvalidIssuanceValue);
+
 			// check that the price is not zero
-			ensure!(!price == u128::MIN, Error::<T>::InvalidPriceValue);
-			
+			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
+
 			// --------------- Processing ---------------- //
 			// Create an intermediate basket including new asset
 			let mut intermediate_basket = Self::combined_intermediate_basket(
@@ -379,22 +379,22 @@ pub mod pallet {
 				&issuance,
 				&price,
 			);
-			
+
 			// get the total inverse issuance (f64)
 			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
-			
+
 			// Partially recalculate the basket to get weighting_per_asset and weight_adjusted_price
 			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
-			
+
 			// from the updated basket calculate the unit of account
 			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
-			
+
 			// final recalculations of the basket
 			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
-			
+
 			// Convert the new basket values to LedgerBalance types
 			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-	
+
 			// -------------- Update Storage ---------------- //
 			// Add the symbol to the array of symbols in Storage
 			AssetSymbol::<T>::set(assets);
@@ -404,19 +404,19 @@ pub mod pallet {
 
 			// Update Total Inverse Issuance in Storage
 			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
-			
+
 			// Update the basket of assets in Storage
 			AssetBasket::<T>::set(new_basket);
 
 			Self::deposit_event(Event::AssetAddedToBasket(symbol));
-			
+
 			Ok(().into())
 		}
-		
+
 		/// Removes asset from the basket
 		/// Can only be performed by sudo because it does not remove the history of the asset
 		/// nor does it guarantee that it will not be added back again in the future
-		/// It should only be done in the exceptional cases where the storage limit is met and 
+		/// It should only be done in the exceptional cases where the storage limit is met and
 		/// the community decides that it does not wish to extend the storage limit
 		///
 		/// Parameters:
@@ -432,7 +432,7 @@ pub mod pallet {
 				return Err(BadOrigin.into())
 			}
 			ensure_root(origin)?;
-			
+
 			let assets = Self::find_and_remove_asset(&symbol)?;
 
 			let mut intermediate_basket = Self::reduced_intermediate_basket(
@@ -444,17 +444,17 @@ pub mod pallet {
 			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
 			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
 			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-	
+
 			AssetSymbol::<T>::set(assets);
 			UnitOfAccount::<T>::set(convert_float_to_storage(unit_of_account));
 			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
 			AssetBasket::<T>::set(new_basket);
 
 			Self::deposit_event(Event::AssetRemoved(symbol));
-			
+
 			Ok(().into())
 		}
-		
+
 		/// Updates multiple assets in the basket
 		/// The input should be a boundedvec of values and must be limited to only 100 assets
 		/// All the assets to update must exist or else the transaction fail for all assets to be updated
@@ -475,11 +475,11 @@ pub mod pallet {
 				return Err(BadOrigin.into())
 			}
 			// Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
-			
+
 			Ok(().into())
 		}
 	}
-	
+
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -494,7 +494,7 @@ pub mod pallet {
 		/// Asset updated in the basket
 		AssetUpdated(BoundedVec<u8, T::SymbolMaxChars>),
 	}
-	
+
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Whitelisted account out of bounds
@@ -531,9 +531,9 @@ impl<T: Config> Pallet<T> {
 		match asset_symbol.iter().any(|s| s == symbol) {
 			true => true,
 			false => false,
-		} 
+		}
 	}
-	
+
 	fn find_and_remove_asset(
 		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
 	) -> Result<BoundedVec<BoundedVec<u8, T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
@@ -546,12 +546,12 @@ impl<T: Config> Pallet<T> {
 			None => Err(Error::<T>::AssetNotFound.into())
 		}
 	}
-	
+
 	fn invert_issuance(issuance: u128) -> Option<f64> {
 		let inverted_issuance = 1u128 as f64 / issuance as f64;
 		return Some(inverted_issuance)
 	}
-	
+
 	fn get_total_inverse_issuance(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
 		let total_inverse_in_asset_basket = basket
 		.iter()
@@ -561,7 +561,7 @@ impl<T: Config> Pallet<T> {
 		});
 		return total_inverse_in_asset_basket
 	}
-	
+
 	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, tiv: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
 		for asset in &mut *basket {
 			asset.weighting_per_asset = match asset.inverse_issuance.clone() {
@@ -571,23 +571,23 @@ impl<T: Config> Pallet<T> {
 			asset.weight_adjusted_price = match asset.weighting_per_asset.clone() {
 				Some(w) => Some(w * asset.price as f64),
 				None => None
-			};			
+			};
 		}
-		
+
 		return basket
 	}
-	
+
 	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, uoa: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
 		for asset in &mut *basket {
 			asset.uoa_per_asset = match asset.weight_adjusted_price.clone() {
 				Some(u) => Some(u / uoa.clone()),
 				None => None
-			};		
+			};
 		}
-		
+
 		return basket
 	}
-	
+
 	fn calculate_unit_of_account(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
 		let unit_of_account = basket
 		.iter()
@@ -595,12 +595,12 @@ impl<T: Config> Pallet<T> {
 			Some(wap) => wap,
 			None => 0.0f64
 		});
-		
+
 		return unit_of_account
 	}
 
 	fn conversion_of_basket_to_storage(
-		basket: Vec<AssetData<f64, T::SymbolMaxChars>>, 
+		basket: Vec<AssetData<f64, T::SymbolMaxChars>>,
 	) -> Result<BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
 		let mut new_basket: BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket> = Default::default();
 			for asset in basket {
@@ -635,7 +635,7 @@ impl<T: Config> Pallet<T> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
-		
+
 		let new_entry = AssetData {
 			symbol: symbol.clone(),
 			issuance: issuance.clone(),
@@ -646,7 +646,7 @@ impl<T: Config> Pallet<T> {
 			uoa_per_asset: None,
 		};
 		intermediate_basket.push(new_entry);
-		
+
 		// Move data to new array erasing values that are to be recalculated
 		for asset in current_asset_basket {
 			let existing_entry = AssetData {
