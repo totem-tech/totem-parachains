@@ -424,7 +424,7 @@ pub mod pallet {
 		/// - `symbol:` The currency symbol to remove
 		#[pallet::weight(T::WeightInfo::remove_currency())]
 		#[pallet::call_index(3)]
-		pub fn remove_currency(
+		pub fn remove_asset(
 			origin: OriginFor<T>,
 			symbol: BoundedVec::<u8, T::SymbolMaxChars>,
 		) -> DispatchResultWithPostInfo {

@@ -164,46 +164,43 @@ fn should_add_new_asset_successfully() {
 	});
 }
 
-/*
+
 #[test]
 fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_1.clone(),
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
 
-		let currency_symbol_2: Vec<u8> = b"usd".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_2: BoundedVec<u8, ConstU32<7>> = b"usd".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_2.clone(),
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
 
-		let currency_symbol_3: Vec<u8> = b"eur".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_3: BoundedVec<u8, ConstU32<7>> = b"eur".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_3.clone(),
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), Some(true));
 
-		let currency_symbol_4: Vec<u8> = b"jpy".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_4: BoundedVec<u8, ConstU32<7>> = b"jpy".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_4.clone(),
 			1_381_664_000_000_000,
@@ -212,135 +209,68 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [3, 0, 0, 0], // MaxCurrenciesOutOfBound,
-				message: None,
+				index: 3,
+				error: [7, 0, 0, 0],
+				message: Some("AssetCannotBeAddedToBasket"),
 			})
 		);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_4.clone()), Some(false));
 	});
 }
 
+
 #[test]
-fn add_currency_should_fail_when_currency_symbol_is_out_of_bound() {
+fn add_asset_should_fail_when_asset_symbol_already_exists() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_1.clone(),
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
 
-		let currency_symbol_2: Vec<u8> = b"usd".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_2: BoundedVec<u8, ConstU32<7>> = b"usd".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_2.clone(),
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
 
-		let currency_symbol_3: Vec<u8> = b"eur".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_3: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_3.clone(),
-			12_141_252_300_000,
-			108000000000000000000, // 1.08
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), Some(true));
-
-		let currency_symbol_4: Vec<u8> = b"jpyjpyjpyjpyjpy".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_4.clone(),
 			1_381_664_000_000_000,
 			1000000000000000000, // 0.1
 		);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [4, 0, 0, 0], // SymbolOutOfBound,
-				message: None,
-			})
-		);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_4.clone()), Some(false));
-	});
-}
-
-#[test]
-fn add_currency_should_fail_when_currency_symbol_already_exists() {
-	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
-		assert_ok!(res);
-
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_1.clone(),
-			203_080_000_000_000,
-			14000000000000002000, // 0.14
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
-
-		let currency_symbol_2: Vec<u8> = b"usd".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_2.clone(),
-			15_646_926_171_000,
-			100000000000000000000, // 1.00
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
-
-		let currency_symbol_3: Vec<u8> = b"eur".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_3.clone(),
-			12_141_252_300_000,
-			108000000000000000000, // 1.08
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), Some(true));
-
-		let currency_symbol_4: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_4.clone(),
-			1_381_664_000_000_000,
-			1000000000000000000, // 0.1
-		);
-		assert_err!(
-			res,
-			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [5, 0, 0, 0], // CurrencySymbolAlreadyExists,
-				message: None,
+				index: 3,
+				error: [6, 0, 0, 0],
+				message: Some("SymbolAlreadyExists"),
 			})
 		);
 	});
 }
 
+
 #[test]
-fn add_currency_should_fail_with_invalid_issuance_value() {
+fn add_asset_should_fail_with_invalid_issuance_value() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_1.clone(),
 			0,
@@ -349,116 +279,117 @@ fn add_currency_should_fail_with_invalid_issuance_value() {
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [7, 0, 0, 0], // InvalidIssuanceValue,
-				message: None,
+				index: 3,
+				error: [9, 0, 0, 0],
+				message: Some("InvalidIssuanceValue"),
 			})
 		);
 	});
 }
 
+
 #[test]
-fn add_currency_should_fail_with_invalid_price_value() {
+fn add_asset_should_fail_with_invalid_price_value() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_1.clone(),
 			203_080_000_000_000,
 			0,
 		);
+
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [8, 0, 0, 0], // InvalidIssuanceValue,
-				message: None,
+				index: 3,
+				error: [10, 0, 0, 0],
+				message: Some("InvalidIssuanceValue"),
 			})
 		);
 	});
 }
 
+
 #[test]
-fn should_remove_currency_successfully() {
+fn should_remove_asset_successfully() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_1.clone(),
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
 
-		let currency_symbol_2: Vec<u8> = b"usd".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_2: BoundedVec<u8, ConstU32<7>> = b"usd".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_2.clone(),
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2), Some(true));
 
-		let currency_symbol_3: Vec<u8> = b"eur".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
+		let currency_symbol_3: BoundedVec<u8, ConstU32<7>> = b"eur".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(account.clone()),
 			currency_symbol_3.clone(),
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3.clone()), Some(true));
 
-		let unit_of_account = PalletUnitOfAccount::unit_of_account();
-		dbg!(unit_of_account);
+		let asset_symbol = PalletUnitOfAccount::asset_symbol();
+		assert_eq!(asset_symbol.len(), 3);
 
-		let res = PalletUnitOfAccount::remove_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_3.clone(),
+		let res = PalletUnitOfAccount::remove_asset(
+			RuntimeOrigin::root(),
+			currency_symbol_2.clone(),
 		);
 		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_3), Some(false));
 
-		let unit_of_account_after_removal = PalletUnitOfAccount::unit_of_account();
-		assert_ne!(unit_of_account, unit_of_account_after_removal);
-		dbg!(unit_of_account_after_removal);
+		let asset_symbol = PalletUnitOfAccount::asset_symbol();
+		assert_eq!(asset_symbol.len(), 2);
+
 	});
 }
 
+
 #[test]
-fn should_remove_currency_should_fail_when_currency_is_not_in_basket() {
+fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 
-		let currency_symbol: Vec<u8> = b"cny".to_vec().into();
+		let currency_symbol: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
 
-		let res = PalletUnitOfAccount::remove_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol,
+		let res = PalletUnitOfAccount::remove_asset(
+			RuntimeOrigin::root(),
+			currency_symbol.clone(),
 		);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
-				index: 1,
-				error: [6, 0, 0, 0], // CurrencyNotFoundFromBasket,
-				message: None,
+				index: 3,
+				error: [8, 0, 0, 0],
+				message: Some("AssetNotFound"),
 			})
 		);
 	});
 }
 
+/*
 #[test]
 fn should_update_currency_successfully() {
 	new_test_ext().execute_with(|| {
