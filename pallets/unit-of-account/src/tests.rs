@@ -164,6 +164,29 @@ fn should_add_new_asset_successfully() {
 	});
 }
 
+#[test]
+fn add_currency_should_fail_when_account_is_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		let account = account::<AccountId>("", 0, 0);
+
+		let currency_symbol_1: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_1.clone(),
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
+		);
+
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [3, 0, 0, 0],
+				message: Some("NotWhitelistedAccount"),
+			})
+		);
+	});
+}
 
 #[test]
 fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
@@ -308,7 +331,7 @@ fn add_asset_should_fail_with_invalid_price_value() {
 			DispatchError::Module(ModuleError {
 				index: 3,
 				error: [10, 0, 0, 0],
-				message: Some("InvalidIssuanceValue"),
+				message: Some("InvalidPriceValue"),
 			})
 		);
 	});
