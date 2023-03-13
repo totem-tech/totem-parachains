@@ -1,8 +1,7 @@
 use super::*;
 use crate::{mock::*, *};
 use frame_benchmarking::account;
-use frame_support::{assert_err, assert_ok};
-use frame_support::traits::ConstU32;
+use frame_support::{assert_err, assert_ok, traits::ConstU32};
 use sp_runtime::ModuleError;
 
 const balance_to_use: u64 = 1_000_000_000_000u64;
@@ -53,12 +52,11 @@ fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 			DispatchError::Module(ModuleError {
 				index: 3,
 				error: [0, 0, 0, 0],
-				message:  Some("MaxWhitelistedAccountOutOfBounds"),
+				message: Some("MaxWhitelistedAccountOutOfBounds"),
 			})
 		);
 	});
 }
-
 
 #[test]
 fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
@@ -85,7 +83,6 @@ fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 	});
 }
 
-
 #[test]
 fn should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
@@ -99,19 +96,41 @@ fn should_remove_a_whitelisted_account_successfully() {
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
 		assert_ok!(res);
 
-		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
+		let res =
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
 		assert_ok!(res);
 
 		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(account_0), None);
 	});
 }
 
+#[test]
+fn sudo_should_remove_a_whitelisted_account_successfully() {
+	new_test_ext().execute_with(|| {
+		let account_0 = account::<AccountId>("", 0, 0);
+		Balances::set_balance(
+			RuntimeOrigin::root(),
+			account_0.clone(),
+			balance_to_use,
+			balance_to_use,
+		);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		assert_ok!(res);
+
+		let res =
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(account_0.clone()));
+		assert_ok!(res);
+
+		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(account_0), None);
+	});
+}
 
 #[test]
 fn remove_account_should_fail_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
 		let account_0 = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
+		let res =
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
 
 		assert_err!(
 			res,
@@ -124,6 +143,38 @@ fn remove_account_should_fail_when_account_is_not_whitelisted() {
 	});
 }
 
+#[test]
+fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		let account_0 = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(account_0));
+
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [2, 0, 0, 0],
+				message: Some("UnknownWhitelistedAccount"),
+			})
+		);
+	});
+}
+
+#[test]
+fn remove_account_should_fail_using_sudo_when_account_is_invalid() {
+	new_test_ext().execute_with(|| {
+		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), None);
+
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [12, 0, 0, 0],
+				message: Some("InvalidAccountToWhitelist"),
+			})
+		);
+	});
+}
 
 #[test]
 fn should_add_new_asset_successfully() {
@@ -240,7 +291,6 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 	});
 }
 
-
 #[test]
 fn add_asset_should_fail_when_asset_symbol_already_exists() {
 	new_test_ext().execute_with(|| {
@@ -284,7 +334,6 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 	});
 }
 
-
 #[test]
 fn add_asset_should_fail_with_invalid_issuance_value() {
 	new_test_ext().execute_with(|| {
@@ -309,7 +358,6 @@ fn add_asset_should_fail_with_invalid_issuance_value() {
 		);
 	});
 }
-
 
 #[test]
 fn add_asset_should_fail_with_invalid_price_value() {
@@ -336,7 +384,6 @@ fn add_asset_should_fail_with_invalid_price_value() {
 		);
 	});
 }
-
 
 #[test]
 fn should_remove_asset_successfully() {
@@ -375,18 +422,14 @@ fn should_remove_asset_successfully() {
 		let asset_symbol = PalletUnitOfAccount::asset_symbol();
 		assert_eq!(asset_symbol.len(), 3);
 
-		let res = PalletUnitOfAccount::remove_asset(
-			RuntimeOrigin::root(),
-			currency_symbol_2.clone(),
-		);
+		let res =
+			PalletUnitOfAccount::remove_asset(RuntimeOrigin::root(), currency_symbol_2.clone());
 		assert_ok!(res);
 
 		let asset_symbol = PalletUnitOfAccount::asset_symbol();
 		assert_eq!(asset_symbol.len(), 2);
-
 	});
 }
-
 
 #[test]
 fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
@@ -397,10 +440,7 @@ fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 
 		let currency_symbol: BoundedVec<u8, ConstU32<7>> = b"cny".to_vec().try_into().unwrap();
 
-		let res = PalletUnitOfAccount::remove_asset(
-			RuntimeOrigin::root(),
-			currency_symbol.clone(),
-		);
+		let res = PalletUnitOfAccount::remove_asset(RuntimeOrigin::root(), currency_symbol.clone());
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {

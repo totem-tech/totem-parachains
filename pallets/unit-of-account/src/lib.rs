@@ -74,6 +74,7 @@ pub mod weights;
 use frame_support::{
 	dispatch::DispatchResultWithPostInfo,
 	traits::{
+		Get,
 		Currency,
 		// ConstU32,
 		ExistenceRequirement::{
@@ -225,6 +226,16 @@ pub mod pallet {
 	ValueQuery
 	>;
 
+	/// Deposit account which is a cached value to allow for faster read
+	/// of the deposit account to hold funds for whitelisting an account
+	#[pallet::storage]
+	#[pallet::getter(fn deposit_account)]
+	pub type DepositAccount<T: Config> = StorageValue<
+		_,
+		T::AccountId,
+		OptionQuery
+	>;
+
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Whitelist an account.
@@ -253,8 +264,7 @@ pub mod pallet {
 				match Self::whitelisted_accounts(who.clone()) {
 					Some(()) => return Err(Error::<T>::AlreadyWhitelistedAccount.into()),
 					None => {
-						// TODO This performs computation. We should cache this address to storage and read.
-						let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
+						let deposit_account = Self::get_deposit_account();
 
 						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
@@ -286,42 +296,63 @@ pub mod pallet {
 		#[pallet::call_index(1)]
 		pub fn remove_account(
 			origin: OriginFor<T>,
-			_account: Option<T::AccountId>,
+			account: Option<T::AccountId>,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			// TODO perform a check for the sudo account
+			let account_to_whitelist;
 			// If sudo then remove the account from the whitelist
-			// else use the origin account to remove from the whitelist
-			let who = ensure_signed(origin)?;
+			let is_sudo = ensure_root(origin.clone());
+			if is_sudo.is_ok() {
+				// checks if account to whitelist is valid
+				if account.is_none() {
+					return Err(Error::<T>::InvalidAccountToWhitelist.into())
+				}
+				account_to_whitelist = account.clone().unwrap();
+				match Self::whitelisted_accounts(account.clone().unwrap()) {
+					Some(()) => {
+						let deposit_account =  Self::get_deposit_account();
 
-			// Check that the account exists in the whitelist
-			match Self::whitelisted_accounts(who.clone()) {
-				Some(()) => {
-					// TODO This performs computation. We should cache this address to storage and read.
-					let deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
+						// Transfer 1000 KPX to the account. If this process fails, then return error.
+						T::Currency::transfer(
+							&deposit_account,
+							&account.unwrap(),
+							T::WhitelistDeposit::get().unique_saturated_into(),
+							AllowDeath,
+						)?;
+					},
+					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
+				}
+			}  else {
+				// else use the origin account to remove from the whitelist
+				let who = ensure_signed(origin.clone())?;
+				account_to_whitelist = who.clone();
+				// Check that the account exists in the whitelist
+				match Self::whitelisted_accounts(who.clone()) {
+					Some(()) => {
+						let deposit_account =  Self::get_deposit_account();
 
-					// Transfer 1000 KPX to the account. If this process fails, then return error.
-					T::Currency::transfer(
-						&deposit_account,
-						&who,
-						T::WhitelistDeposit::get().unique_saturated_into(),
-						AllowDeath,
-					)?;
-				},
-				None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
+						// Transfer 1000 KPX to the account. If this process fails, then return error.
+						T::Currency::transfer(
+							&deposit_account,
+							&who,
+							T::WhitelistDeposit::get().unique_saturated_into(),
+							AllowDeath,
+						)?;
+					},
+					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
+				}
 			}
-
 			let mut counter = Self::whitelisted_accounts_count();
 			// decrease the whitelist counter
 			counter -= 1;
 
 			WhitelistedAccountsCount::<T>::set(counter);
 			// Then remove the account from the whitelist
-			WhitelistedAccounts::<T>::remove(who.clone());
+			WhitelistedAccounts::<T>::remove(account_to_whitelist.clone());
 
-			Self::deposit_event(Event::AccountRemoved(who));
+			Self::deposit_event(Event::AccountRemoved(account_to_whitelist));
 
 			Ok(().into())
 		}
@@ -521,6 +552,8 @@ pub mod pallet {
 		InvalidPriceValue,
 		/// Conversion from basket failed!
 		TryConvertFailed,
+		/// Invalid Account To Whitelist
+		InvalidAccountToWhitelist
 	}
 }
 
@@ -685,5 +718,17 @@ impl<T: Config> Pallet<T> {
 			intermediate_basket.push(existing_entry);
 		}
 		intermediate_basket
+	}
+
+	fn get_deposit_account() -> T::AccountId {
+		let deposit_account;
+		if DepositAccount::<T>::get().is_some() {
+			deposit_account = DepositAccount::<T>::get().unwrap();
+		} else {
+			deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
+			DepositAccount::<T>::put(deposit_account.clone());
+		}
+
+		deposit_account
 	}
 }
