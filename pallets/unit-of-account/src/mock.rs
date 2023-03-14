@@ -117,8 +117,8 @@ impl pallet_unit_of_account::Config for Test {
 	type MaxAssetsInput = ConstU32<100>;
 	type SymbolMaxChars = ConstU32<7>;
 	type AccountBytes = AccountBytes;
-	type BytesToAccountId = Converter;
 	type WhitelistDeposit = WhitelistDeposit;
+	type UnitOfAccountConverter = Converter;
 	type WeightInfo = ();
 }
 

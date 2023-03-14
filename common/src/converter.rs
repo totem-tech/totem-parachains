@@ -2,6 +2,7 @@ use crate::TryConvert;
 use core::convert::TryFrom;
 use sp_runtime::{traits::Convert, AccountId32};
 use sp_std::vec::Vec;
+use totem_primitives::{LedgerBalance, unit_of_account::STORAGE_MULTIPLIER};
 
 pub struct Converter;
 
@@ -35,8 +36,16 @@ impl Convert<[u8; 32], AccountId32> for Converter {
     }
 }
 
-impl Convert<u64, i128> for Converter {
-	fn convert(x: u64) -> i128 { x.into()  }
+impl Convert<LedgerBalance, f64> for Converter {
+	fn convert(x: LedgerBalance) -> f64 {
+		x as f64 / STORAGE_MULTIPLIER as f64
+	}
+}
+
+impl Convert<f64, LedgerBalance> for Converter {
+	fn convert(x: f64) -> LedgerBalance {
+		(x * STORAGE_MULTIPLIER as f64) as LedgerBalance
+	}
 }
 
 impl Convert<Vec<u8>, [u8; 8]> for Converter {

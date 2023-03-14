@@ -98,7 +98,6 @@ use sp_std::{
 use totem_primitives::{
 	LedgerBalance,
 	unit_of_account::{
-		convert_float_to_storage,
 		AssetDetails,
 		AssetData,
 	}
@@ -149,8 +148,8 @@ pub mod pallet {
 		#[pallet::constant]
 		type AccountBytes: Get<[u8; 32]>;
 
-		/// For converting [u8; 32] bytes to AccountId
-		type BytesToAccountId: Convert<[u8; 32], Self::AccountId>;
+		/// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
+		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId> + Convert<f64, LedgerBalance>;
 	}
 
 	/// The current storage version.
@@ -431,10 +430,10 @@ pub mod pallet {
 			AssetSymbol::<T>::set(assets);
 
 			// Update the Unit of Account Value in Storage
-			UnitOfAccount::<T>::set(convert_float_to_storage(unit_of_account));
+			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
 
 			// Update Total Inverse Issuance in Storage
-			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
+			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
 
 			// Update the basket of assets in Storage
 			AssetBasket::<T>::set(new_basket);
@@ -477,8 +476,8 @@ pub mod pallet {
 			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
 
 			AssetSymbol::<T>::set(assets);
-			UnitOfAccount::<T>::set(convert_float_to_storage(unit_of_account));
-			TotalInverseIssuance::<T>::set(convert_float_to_storage(tiv));
+			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
+			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
 			AssetBasket::<T>::set(new_basket);
 
 			Self::deposit_event(Event::AssetRemoved(symbol));
@@ -553,7 +552,9 @@ pub mod pallet {
 		/// Conversion from basket failed!
 		TryConvertFailed,
 		/// Invalid Account To Whitelist
-		InvalidAccountToWhitelist
+		InvalidAccountToWhitelist,
+		/// Overflow error when converting float to storage value
+		OverflowErrorConversionToStorage
 	}
 }
 
@@ -642,15 +643,15 @@ impl<T: Config> Pallet<T> {
 					issuance: asset.issuance as LedgerBalance,
 					price: asset.price as LedgerBalance,
 					weighting_per_asset: match asset.weighting_per_asset {
-						Some(wpa) => convert_float_to_storage(wpa),
+						Some(wpa) => Self::convert_float_to_storage(wpa)?,
 						None => 0 as LedgerBalance,
 					},
 					weight_adjusted_price: match asset.weight_adjusted_price {
-						Some(wap) => convert_float_to_storage(wap),
+						Some(wap) => Self::convert_float_to_storage(wap)?,
 						None => 0 as LedgerBalance,
 					},
 					uoa_per_asset: match asset.uoa_per_asset {
-						Some(uoa) => convert_float_to_storage(uoa),
+						Some(uoa) => Self::convert_float_to_storage(uoa)?,
 						None => 0 as LedgerBalance,
 					}
 				};
@@ -725,10 +726,21 @@ impl<T: Config> Pallet<T> {
 		if DepositAccount::<T>::get().is_some() {
 			deposit_account = DepositAccount::<T>::get().unwrap();
 		} else {
-			deposit_account = T::BytesToAccountId::convert(T::AccountBytes::get());
+			deposit_account = T::UnitOfAccountConverter::convert(T::AccountBytes::get());
 			DepositAccount::<T>::put(deposit_account.clone());
 		}
 
 		deposit_account
+	}
+
+	fn convert_float_to_storage(amount: f64) -> Result<LedgerBalance, DispatchError> {
+		let converted_amount = T::UnitOfAccountConverter::convert(amount);
+
+		let max_ledger_balance= LedgerBalance::MAX;
+		if converted_amount > max_ledger_balance {
+			return Err(Error::<T>::OverflowErrorConversionToStorage.into());
+		}
+
+		Ok(converted_amount)
 	}
 }

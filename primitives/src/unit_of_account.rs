@@ -3,11 +3,11 @@ use sp_std::vec::Vec;
 use crate::LedgerBalance;
 use frame_support::{
 	pallet_prelude::*,
-	dispatch::{ 
-		// DispatchResult, 
-		// EncodeLike, 
-		TypeInfo 
-	}, 
+	dispatch::{
+		// DispatchResult,
+		// EncodeLike,
+		TypeInfo
+	},
 };
 
 pub const DIVISOR_UNIT: LedgerBalance = 100_000;
@@ -15,22 +15,22 @@ pub const STORAGE_MULTIPLIER: LedgerBalance = 100_000_000_000_000_000_000;
 
 /// UnitOfAccount trait definition to be used in other pallets
 // pub trait UnitOfAccountInterface {
-// 	/// Registers a new asset symbol 
+// 	/// Registers a new asset symbol
 // 	fn add(
-// 		symbol: Vec<u8>, 
-// 		issuance: u128, 
+// 		symbol: Vec<u8>,
+// 		issuance: u128,
 // 		price: u128
 // 	) -> Result<(), dispatch::DispatchError>;
-	
+
 // 	/// Removes an asset using a symbol.
 // 	fn remove(
 // 		symbol: Vec<u8>
 // 	) -> Result<(), dispatch::DispatchError>;
-	
+
 // 	/// Updates a asset
 // 	fn update(
-// 		symbol: Vec<u8>, 
-// 		issuance: Option<u128>, 
+// 		symbol: Vec<u8>,
+// 		issuance: Option<u128>,
 // 		price: Option<u128>
 // 	) -> Result<(), dispatch::DispatchError>;
 // }
@@ -69,15 +69,4 @@ pub struct AssetData<T, SymbolMaxChars: Get<u32>> {
 	pub weight_adjusted_price: Option<T>,
 	/// uoa_per_asset = price_in_base_asset / (100_000 * unit_of_account)
 	pub uoa_per_asset: Option<T>,
-}
-
-// TODO Thes two functions should be moved to the file that contains all the unit conversion functions under the common directory.
-pub fn convert_float_to_storage(amount: f64) -> LedgerBalance {
-	// TODO This needs to be checked for overflow
-	(amount * STORAGE_MULTIPLIER as f64) as LedgerBalance
-}
-
-pub fn convert_storage_to_float(amount: LedgerBalance) -> f64 {
-	// TODO This needs to be checked for overflow
-	amount as f64 / STORAGE_MULTIPLIER as f64
 }
