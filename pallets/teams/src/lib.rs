@@ -68,7 +68,7 @@ mod pallet {
     /// Status of the team.
     #[pallet::storage]
     #[pallet::getter(fn team_hash_status)]
-    pub type teamHashStatus<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, TeamStatus>;
+    pub type TeamHashStatus<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, TeamStatus>;
 
     /// List of deleted teams.
     #[pallet::storage]
@@ -79,7 +79,7 @@ mod pallet {
     /// Owner of the team.
     #[pallet::storage]
     #[pallet::getter(fn team_hash_owner)]
-    pub type teamHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
+    pub type TeamHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
     
     /// List of owned teams.
     #[pallet::storage]
@@ -134,19 +134,19 @@ mod pallet {
             // Check that the team does not exist
             ensure!(
                 !TeamHashStatus::<T>::contains_key(team_hash),
-                Error::<T>::TeamAlreadyExists.into());
+                Error::<T>::TeamAlreadyExists);
 
             // Check that the team was not deleted already
             ensure!(
                 !DeletedTeams::<T>::contains_key(team_hash),
-                Error::<T>: AlreadyDeleted.into());
+                Error::<T>::AlreadyDeleted);
 
             // proceed to store team
             let team_status: TeamStatus = 0;
 
             // TODO limit nr of teams per Account.
-            teamHashStatus::<T>::insert(team_hash, &team_status);
-            teamHashOwner::<T>::insert(team_hash, &who);
+            TeamHashStatus::<T>::insert(team_hash, &team_status);
+            TeamHashOwner::<T>::insert(team_hash, &who);
             OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
                 owner_teams_list.push(team_hash)
             })?;
@@ -165,12 +165,12 @@ mod pallet {
             let changer: T::AccountId = ensure_signed(origin)?;
             
             ensure!(
-                teamHashStatus::<T>::contains_key(team_hash),
-                Error::<T>::TeamDoesNotExist.into()
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
             );
             // get team by hash
             let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
-                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
+                .ok_or(Error::<T>::CannotFetchTeamOwner)?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
@@ -193,10 +193,10 @@ mod pallet {
             })?;
 
             // remove team from owner
-            teamHashOwner::<T>::remove(team_hash);
+            TeamHashOwner::<T>::remove(team_hash);
 
             // remove status record
-            teamHashStatus::<T>::remove(team_hash);
+            TeamHashStatus::<T>::remove(team_hash);
 
             // record the fact of deletion by whom
             DeletedTeams::<T>::mutate_or_err(team_hash, |deleted_team| {
@@ -221,19 +221,19 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             let changer: T::AccountId = ensure_signed(origin)?;
             ensure!(
-                teamHashStatus::<T>::contains_key(team_hash),
-                Error::<T>::TeamDoesNotExist.into()
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
             );
 
             // get team owner from hash
             let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
-                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
+                .ok_or(Error::<T>::CannotFetchTeamOwner)?;
 
             let changed_by: T::AccountId = changer.clone();
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
-            ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned.into());
+            ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned);
 
             // retain all other teams except the one we want to reassign
             OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
@@ -241,7 +241,7 @@ mod pallet {
             })?;
 
             // Set new owner for hash
-            teamHashOwner::<T>::insert(team_hash, &new_owner);
+            TeamHashOwner::<T>::insert(team_hash, &new_owner);
             OwnerTeamsList::<T>::mutate_or_err(&new_owner, |owner_teams_list| {
                 owner_teams_list.push(team_hash)
             })?;
@@ -262,22 +262,22 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             let changer = ensure_signed(origin)?;
             ensure!(
-                teamHashStatus::<T>::contains_key(team_hash),
-                Error::<T>::TeamDoesNotExist.into()
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
             );
 
             // get team owner by hash
             let team_owner = Self::team_hash_owner(team_hash)
-                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
+                .ok_or(Error::<T>::CannotFetchTeamOwner)?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise onlu the owner can change the data
             ensure!(
                 team_owner == changer,
-                Error::<T>::CannotCloseNotOwned.into()
+                Error::<T>::CannotCloseNotOwned
             );
             let team_status: TeamStatus = 500;
-            teamHashStatus::<T>::insert(team_hash, &team_status);
+            TeamHashStatus::<T>::insert(team_hash, &team_status);
 
             Self::deposit_event(Event::TeamChanged(team_hash, changer, team_status));
 
@@ -300,16 +300,16 @@ mod pallet {
 
             // get team owner by hash
             let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
-                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
+                .ok_or(Error::<T>::CannotFetchTeamOwner)?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
             ensure!(
                 team_owner == changer,
-                Error::<T>::TeamCannotChangeNotOwned.into()
+                Error::<T>::TeamCannotChangeNotOwned
             );
 
-            teamHashStatus::<T>::insert(team_hash, &team_status);
+            TeamHashStatus::<T>::insert(team_hash, &team_status);
 
             Self::deposit_event(Event::TeamChanged(team_hash, changer, team_status));
 
@@ -323,25 +323,25 @@ mod pallet {
             team_status: TeamStatus,
         ) -> DispatchResultWithPostInfo {
             ensure!(
-                teamHashStatus::<T>::contains_key(team_hash),
-                Error::<T>::TeamDoesNotExist.into()
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
             );
 
             let changer = ensure_signed(origin)?;
 
             // get team owner by hash
             let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
-                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
+                .ok_or(Error::<T>::CannotFetchTeamOwner)?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
             ensure!(
                 team_owner == changer,
-                Error::<T>::TeamCannotChangeNotOwned.into()
+                Error::<T>::TeamCannotChangeNotOwned
             );
 
             let current_team_status = Self::team_hash_status(team_hash)
-                .ok_or(Error::<T>::CannotFetchStatus.into())?;
+                .ok_or(Error::<T>::CannotFetchStatus)?;
             // let proposed_team_status: TeamStatus = team_status.clone();
             let proposed_team_status = team_status.clone();
 
@@ -384,7 +384,7 @@ mod pallet {
 
             let allowed_team_status: TeamStatus = proposed_team_status.into();
 
-            teamHashStatus::<T>::insert(team_hash, &allowed_team_status);
+            TeamHashStatus::<T>::insert(team_hash, &allowed_team_status);
 
             Self::deposit_event(Event::TeamChanged(
                 team_hash,
