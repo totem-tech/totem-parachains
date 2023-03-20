@@ -11113,6 +11113,7 @@ dependencies = [
  "hex-literal",
  "log",
  "pallet-accounting",
+ "pallet-archive",
  "pallet-aura",
  "pallet-authorship",
  "pallet-balances-totem",

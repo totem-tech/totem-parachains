@@ -26,7 +26,7 @@ smallvec = "1.10.0"
 totem-common = { default-features = false, path = '../common' }
 pallet-accounting = { default-features = false, path = '../pallets/accounting' }
 pallet-balances-totem = { default-features = false, path = '../pallets/balances' }
-# pallet-archive = { default-features = false, path = '../pallets/archive' }
+pallet-archive = { default-features = false, path = '../pallets/archive' }
 # pallet-bonsai = { default-features = false, path = '../pallets/bonsai' }
 # pallet-escrow = { default-features = false, path = '../pallets/escrow' }
 # pallet-funding = { default-features = false, path = '../pallets/funding' }
