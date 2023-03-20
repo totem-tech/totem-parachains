@@ -11122,6 +11122,7 @@ dependencies = [
  "pallet-session",
  "pallet-sudo",
  "pallet-teams",
+ "pallet-timekeeping",
  "pallet-timestamp",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-payment-totem",

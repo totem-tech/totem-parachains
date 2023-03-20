@@ -48,6 +48,7 @@ mod pallet {
         dispatch::DispatchResultWithPostInfo,
         pallet_prelude::*,
         traits::StorageVersion,
+        sp_runtime::traits::BadOrigin,
     };
     use frame_system::pallet_prelude::*;
 
@@ -130,6 +131,9 @@ mod pallet {
             origin: OriginFor<T>,
             team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let who = ensure_signed(origin)?;
             // Check that the team does not exist
             ensure!(
@@ -161,6 +165,9 @@ mod pallet {
             origin: OriginFor<T>,
             team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             // check transaction is signed.
             let changer: T::AccountId = ensure_signed(origin)?;
             
@@ -219,6 +226,9 @@ mod pallet {
             new_owner: T::AccountId,
             team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let changer: T::AccountId = ensure_signed(origin)?;
             ensure!(
                 TeamHashStatus::<T>::contains_key(team_hash),
@@ -260,6 +270,9 @@ mod pallet {
             origin: OriginFor<T>,
             team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let changer = ensure_signed(origin)?;
             ensure!(
                 TeamHashStatus::<T>::contains_key(team_hash),
@@ -289,6 +302,9 @@ mod pallet {
             origin: OriginFor<T>,
             team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             // Can only reopen a team that is in status "closed"
             let changer = ensure_signed(origin)?;
             let team_status: TeamStatus = match Self::team_hash_status(team_hash) {
@@ -322,6 +338,9 @@ mod pallet {
             team_hash: T::Hash,
             team_status: TeamStatus,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             ensure!(
                 TeamHashStatus::<T>::contains_key(team_hash),
                 Error::<T>::TeamDoesNotExist

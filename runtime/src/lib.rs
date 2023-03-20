@@ -549,7 +549,7 @@ construct_runtime!(
 		// Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
 		// Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
 		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
-		// Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
+		Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,

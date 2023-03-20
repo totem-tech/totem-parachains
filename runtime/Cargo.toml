@@ -33,7 +33,7 @@ pallet-balances-totem = { default-features = false, path = '../pallets/balances'
 # pallet-orders = { default-features = false, path = '../pallets/orders' }
 # pallet-prefunding = { default-features = false, path = '../pallets/prefunding' }
 pallet-teams = { default-features = false, path = '../pallets/teams' }
-# pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
+pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
 pallet-transaction-payment = { default-features = false, path = '../pallets/transaction-payment', package = 'pallet-transaction-payment-totem' }
 # pallet-transfer = { default-features = false, path = '../pallets/transfer' }
 

@@ -52,10 +52,10 @@ impl pallet_teams::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
 }
 
-// impl pallet_timekeeping::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Projects = Teams;
-// }
+impl pallet_timekeeping::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Teams = Teams;
+}
 
 // impl pallet_transfer::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
