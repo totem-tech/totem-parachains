@@ -8,10 +8,10 @@ impl pallet_accounting::Config for Runtime {
     type RandomThing = RandomnessCollectiveFlip;
 }
 
-// impl pallet_archive::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Timekeeping = pallet_timekeeping::Pallet<Self>;
-// }
+impl pallet_archive::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Timekeeping = pallet_timekeeping::Pallet<Self>;
+}
 
 // impl pallet_bonsai::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
