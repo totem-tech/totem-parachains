@@ -4,7 +4,7 @@ use totem_common::converter::Converter;
 impl pallet_accounting::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type AccountingConverter = Converter;
-    type Currency = Balances;
+    type Currency = pallet_balances_totem::Pallet<Self>;
     type RandomThing = RandomnessCollectiveFlip;
 }
 
@@ -21,11 +21,11 @@ impl pallet_archive::Config for Runtime {
 //     type BonsaiConverter = Converter;
 // }
 
-// impl pallet_escrow::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Currency = Balances;
-//     type EscrowConverter = Converter;
-// }
+impl pallet_escrow::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = pallet_balances_totem::Pallet<Self>;
+    type EscrowConverter = Converter;
+}
 
 // impl pallet_funding::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
@@ -35,14 +35,14 @@ impl pallet_archive::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
 //     type Accounting = pallet_accounting::Pallet<Self>;
 //     type Prefunding = pallet_prefunding::Pallet<Self>;
-//     type Currency = Balances;
+//     type Currency = pallet_balances_totem::Pallet<Self>;
 //     type Bonsai = pallet_bonsai::Pallet<Self>;
 //     type OrdersConverter = Converter;
 // }
 
 // impl pallet_prefunding::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
-//     type Currency = pallet_balances::Pallet<Self>;
+//     type Currency = pallet_balances_totem::Pallet<Self>;
 //     type PrefundingConverter = Converter;
 //     type Accounting = pallet_accounting::Pallet<Self>;
 //     type Escrowable = pallet_escrow::Pallet<Self>;
@@ -54,12 +54,11 @@ impl pallet_teams::Config for Runtime {
 
 impl pallet_timekeeping::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
-    // type Teams = Teams;
     type Teams = pallet_teams::Pallet<Self>;
 }
 
 // impl pallet_transfer::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
-//     type Currency = pallet_balances::Pallet<Self>;
+//     type Currency = pallet_balances_totem::Pallet<Self>;
 //     type Bonsai = pallet_bonsai::Pallet<Self>;
 // }
