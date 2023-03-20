@@ -1,3 +1,6 @@
+mod permitted_assets;
+pub use permitted_assets::{Assets, *};
+
 use frame_support::dispatch;
 use sp_std::vec::Vec;
 use crate::LedgerBalance;

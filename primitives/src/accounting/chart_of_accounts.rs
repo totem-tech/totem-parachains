@@ -37,7 +37,6 @@
 
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{dispatch::TypeInfo};
-// use scale_info::TypeInfo;
 /// Blockchain Specific Functionality - Expenses
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
