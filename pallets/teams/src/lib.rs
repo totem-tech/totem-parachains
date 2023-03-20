@@ -45,6 +45,7 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
+        dispatch::DispatchResultWithPostInfo,
         pallet_prelude::*,
         traits::StorageVersion,
     };
@@ -53,7 +54,7 @@ mod pallet {
     use sp_std::prelude::*;
 
     use totem_common::StorageMapExt;
-    use totem_primitives::teams::{DeletedProject, ProjectStatus, Validating};
+    use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
 
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -64,26 +65,26 @@ mod pallet {
     #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
 
-    /// Status of the project.
+    /// Status of the team.
     #[pallet::storage]
-    #[pallet::getter(fn project_hash_status)]
-    pub type ProjectHashStatus<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, ProjectStatus>;
+    #[pallet::getter(fn team_hash_status)]
+    pub type teamHashStatus<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, TeamStatus>;
 
-    /// List of deleted projects.
+    /// List of deleted teams.
     #[pallet::storage]
-    #[pallet::getter(fn deleted_project)]
-    pub type DeletedProjects<T: Config> =
-        StorageMap<_, Blake2_128Concat, T::Hash, Vec<DeletedProject<T::AccountId, ProjectStatus>>>;
+    #[pallet::getter(fn deleted_team)]
+    pub type DeletedTeams<T: Config> =
+        StorageMap<_, Blake2_128Concat, T::Hash, Vec<DeletedTeam<T::AccountId, TeamStatus>>>;
 
-    /// Owner of the project.
+    /// Owner of the team.
     #[pallet::storage]
-    #[pallet::getter(fn project_hash_owner)]
-    pub type ProjectHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
+    #[pallet::getter(fn team_hash_owner)]
+    pub type teamHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
     
-    /// List of owned projects.
+    /// List of owned teams.
     #[pallet::storage]
-    #[pallet::getter(fn owner_projects_list)]
-    pub type OwnerProjectsList<T: Config> =
+    #[pallet::getter(fn owner_teams_list)]
+    pub type OwnerTeamsList<T: Config> =
     StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::Hash>>;
     
     #[pallet::config]
@@ -93,30 +94,30 @@ mod pallet {
 
     #[pallet::error]
     pub enum Error<T> {
-        /// Project has the wrong status to be changed.
+        /// team has the wrong status to be changed.
         StatusWrong,
-        /// The proposed project status is the same as the existing one.
+        /// The proposed team status is the same as the existing one.
         StatusSameProposed,
-        /// The proposed project status cannot be applied to the current project status.
+        /// The proposed team status cannot be applied to the current team status.
         StatusCannotApply,
-        /// This proposed project status may not yet be implemented or is incorrect.
+        /// This proposed team status may not yet be implemented or is incorrect.
         StatusIncorrect,
-        /// Error fetching project status.
-        ProjectCannotFetchStatus,
-        /// The project already exists.
-        ProjectAlreadyExists,
-        /// The project does not exist.
-        ProjectDoesNotExist,
-        /// The project was already deleted.
-        ProjectAlreadyDeleted,
-        /// Error fetching project owner.
-        ProjectCannotFetchOwner,
-        /// You cannot reassign a project you do not own.
-        ProjectCannotReassignNotOwned,
-        /// You cannot close a project you do not own.
-        ProjectCannotCloseNotOwned,
-        /// You cannot change a project you do not own.
-        ProjectCannotChangeNotOwned,
+        /// Error fetching team status.
+        CannotFetchStatus,
+        /// The team already exists.
+        TeamAlreadyExists,
+        /// The team does not exist.
+        TeamDoesNotExist,
+        /// The team was already deleted.
+        AlreadyDeleted,
+        /// Error fetching team owner.
+        CannotFetchTeamOwner,
+        /// You cannot reassign a team you do not own.
+        CannotReassignNotOwned,
+        /// You cannot close a team you do not own.
+        CannotCloseNotOwned,
+        /// You cannot change a team you do not own.
+        TeamCannotChangeNotOwned,
     }
 
     #[pallet::hooks]
@@ -125,88 +126,86 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         #[pallet::weight(0/*TODO*/)]
-        pub fn add_new_project(
+        pub fn add_new_team(
             origin: OriginFor<T>,
-            project_hash: T::Hash,
+            team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
             let who = ensure_signed(origin)?;
-            // Check that the project does not exist
+            // Check that the team does not exist
             ensure!(
-                !ProjectHashStatus::<T>::contains_key(project_hash),
-                Error::<T>::ProjectAlreadyExists
-            );
+                !TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamAlreadyExists.into());
 
-            // Check that the project was not deleted already
+            // Check that the team was not deleted already
             ensure!(
-                !DeletedProjects::<T>::contains_key(project_hash),
-                Error::<T>::ProjectAlreadyDeleted
-            );
+                !DeletedTeams::<T>::contains_key(team_hash),
+                Error::<T>: AlreadyDeleted.into());
 
-            // proceed to store project
-            let project_status: ProjectStatus = 0;
+            // proceed to store team
+            let team_status: TeamStatus = 0;
 
-            // TODO limit nr of Projects per Account.
-            ProjectHashStatus::<T>::insert(project_hash, &project_status);
-            ProjectHashOwner::<T>::insert(project_hash, &who);
-            OwnerProjectsList::<T>::mutate_or_err(&who, |owner_projects_list| {
-                owner_projects_list.push(project_hash)
+            // TODO limit nr of teams per Account.
+            teamHashStatus::<T>::insert(team_hash, &team_status);
+            teamHashOwner::<T>::insert(team_hash, &who);
+            OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
+                owner_teams_list.push(team_hash)
             })?;
 
-            Self::deposit_event(Event::ProjectRegistered(project_hash, who));
+            Self::deposit_event(Event::TeamRegistered(team_hash, who));
 
             Ok(().into())
         }
 
         #[pallet::weight(0/*TODO*/)]
-        pub fn remove_project(
+        pub fn remove_team(
             origin: OriginFor<T>,
-            project_hash: T::Hash,
+            team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
             // check transaction is signed.
             let changer: T::AccountId = ensure_signed(origin)?;
             
             ensure!(
-                ProjectHashStatus::<T>::contains_key(project_hash),
-                Error::<T>::ProjectDoesNotExist
+                teamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist.into()
             );
-            // get project by hash
-            let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
+            // get team by hash
+            let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
+                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
             ensure!(
-                project_owner == changer,
-                "You cannot delete a project you do not own"
+                team_owner == changer,
+                "You cannot delete a team you do not own"
             );
 
             let changed_by: T::AccountId = changer.clone();
 
-            let deleted_project_struct = DeletedProject {
-                owned_by: project_owner.clone(),
+            let deleted_team_struct = DeletedTeam {
+                owned_by: team_owner.clone(),
                 deleted_by: changed_by,
                 status: 999,
             };
 
-            // retain all other projects except the one we want to delete
-            OwnerProjectsList::<T>::mutate_or_err(&project_owner, |owner_projects_list| {
-                owner_projects_list.retain(|h| h != &project_hash)
+            // retain all other teams except the one we want to delete
+            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
+                owner_teams_list.retain(|h| h != &team_hash)
             })?;
 
-            // remove project from owner
-            ProjectHashOwner::<T>::remove(project_hash);
+            // remove team from owner
+            teamHashOwner::<T>::remove(team_hash);
 
             // remove status record
-            ProjectHashStatus::<T>::remove(project_hash);
+            teamHashStatus::<T>::remove(team_hash);
 
             // record the fact of deletion by whom
-            DeletedProjects::<T>::mutate_or_err(project_hash, |deleted_project| {
-                deleted_project.push(deleted_project_struct)
+            DeletedTeams::<T>::mutate_or_err(team_hash, |deleted_team| {
+                deleted_team.push(deleted_team_struct)
             })?;
 
-            Self::deposit_event(Event::ProjectDeleted(
-                project_hash,
-                project_owner,
+            Self::deposit_event(Event::TeamDeleted(
+                team_hash,
+                team_owner,
                 changer,
                 999,
             ));
@@ -215,40 +214,40 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
-        pub fn reassign_project(
+        pub fn reassign_team(
             origin: OriginFor<T>,
             new_owner: T::AccountId,
-            project_hash: T::Hash,
+            team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
             let changer: T::AccountId = ensure_signed(origin)?;
             ensure!(
-                ProjectHashStatus::<T>::contains_key(project_hash),
-                Error::<T>::ProjectDoesNotExist
+                teamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist.into()
             );
 
-            // get project owner from hash
-            let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
+            // get team owner from hash
+            let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
+                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
 
             let changed_by: T::AccountId = changer.clone();
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
-            ensure!(project_owner == changer, Error::<T>::ProjectCannotReassignNotOwned);
+            ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned.into());
 
-            // retain all other projects except the one we want to reassign
-            OwnerProjectsList::<T>::mutate_or_err(&project_owner, |owner_projects_list| {
-                owner_projects_list.retain(|h| h != &project_hash)
+            // retain all other teams except the one we want to reassign
+            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
+                owner_teams_list.retain(|h| h != &team_hash)
             })?;
 
             // Set new owner for hash
-            ProjectHashOwner::<T>::insert(project_hash, &new_owner);
-            OwnerProjectsList::<T>::mutate_or_err(&new_owner, |owner_projects_list| {
-                owner_projects_list.push(project_hash)
+            teamHashOwner::<T>::insert(team_hash, &new_owner);
+            OwnerTeamsList::<T>::mutate_or_err(&new_owner, |owner_teams_list| {
+                owner_teams_list.push(team_hash)
             })?;
 
-            Self::deposit_event(Event::ProjectReassigned(
-                project_hash,
+            Self::deposit_event(Event::TeamReassigned(
+                team_hash,
                 new_owner,
                 changed_by,
             ));
@@ -257,95 +256,94 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
-        pub fn close_project(
+        pub fn close_team(
             origin: OriginFor<T>,
-            project_hash: T::Hash,
+            team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            let changer = ensure_signed(origin)?;
             ensure!(
-                ProjectHashStatus::<T>::contains_key(project_hash),
-                Error::<T>::ProjectDoesNotExist
+                teamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist.into()
             );
 
-            let changer = ensure_signed(origin)?;
-
-            // get project owner by hash
-            let project_owner = Self::project_hash_owner(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
+            // get team owner by hash
+            let team_owner = Self::team_hash_owner(team_hash)
+                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise onlu the owner can change the data
             ensure!(
-                project_owner == changer,
-                Error::<T>::ProjectCannotCloseNotOwned
+                team_owner == changer,
+                Error::<T>::CannotCloseNotOwned.into()
             );
-            let project_status: ProjectStatus = 500;
-            ProjectHashStatus::<T>::insert(project_hash, &project_status);
+            let team_status: TeamStatus = 500;
+            teamHashStatus::<T>::insert(team_hash, &team_status);
 
-            Self::deposit_event(Event::ProjectChanged(project_hash, changer, project_status));
+            Self::deposit_event(Event::TeamChanged(team_hash, changer, team_status));
 
             Ok(().into())
         }
 
         #[pallet::weight(0/*TODO*/)]
-        pub fn reopen_project(
+        pub fn reopen_team(
             origin: OriginFor<T>,
-            project_hash: T::Hash,
+            team_hash: T::Hash,
         ) -> DispatchResultWithPostInfo {
-            // Can only reopen a project that is in status "closed"
-            let project_status: ProjectStatus = match Self::project_hash_status(project_hash) {
+            // Can only reopen a team that is in status "closed"
+            let changer = ensure_signed(origin)?;
+            let team_status: TeamStatus = match Self::team_hash_status(team_hash) {
                 Some(500) => 100,
-                _ => return Err(Error::<T>::StatusWrong),
-                // None => return Err("Project has no status"),
+                _ => return Err(Error::<T>::StatusWrong.into()),
+                // None => return Err("Team has no status"),
             };
 
-            let changer = ensure_signed(origin)?;
 
-            // get project owner by hash
-            let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
+            // get team owner by hash
+            let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
+                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
             ensure!(
-                project_owner == changer,
-                Error::<T>::ProjectCannotChangeNotOwned
+                team_owner == changer,
+                Error::<T>::TeamCannotChangeNotOwned.into()
             );
 
-            ProjectHashStatus::<T>::insert(project_hash, &project_status);
+            teamHashStatus::<T>::insert(team_hash, &team_status);
 
-            Self::deposit_event(Event::ProjectChanged(project_hash, changer, project_status));
+            Self::deposit_event(Event::TeamChanged(team_hash, changer, team_status));
 
             Ok(().into())
         }
 
         #[pallet::weight(0/*TODO*/)]
-        pub fn set_status_project(
+        pub fn set_status_team(
             origin: OriginFor<T>,
-            project_hash: T::Hash,
-            project_status: ProjectStatus,
+            team_hash: T::Hash,
+            team_status: TeamStatus,
         ) -> DispatchResultWithPostInfo {
             ensure!(
-                ProjectHashStatus::<T>::contains_key(project_hash),
-                Error::<T>::ProjectDoesNotExist
+                teamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist.into()
             );
 
             let changer = ensure_signed(origin)?;
 
-            // get project owner by hash
-            let project_owner: T::AccountId = Self::project_hash_owner(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchOwner)?;
+            // get team owner by hash
+            let team_owner: T::AccountId = Self::team_hash_owner(team_hash)
+                .ok_or(Error::<T>::CannotFetchTeamOwner.into())?;
 
             // TODO Implement a sudo for cleaning data in cases where owner is lost
             // Otherwise only the owner can change the data
             ensure!(
-                project_owner == changer,
-                Error::<T>::ProjectCannotChangeNotOwned
+                team_owner == changer,
+                Error::<T>::TeamCannotChangeNotOwned.into()
             );
 
-            let current_project_status = Self::project_hash_status(project_hash)
-                .ok_or(Error::<T>::ProjectCannotFetchStatus)?;
-            // let proposed_project_status: ProjectStatus = project_status.clone();
-            let proposed_project_status = project_status.clone();
+            let current_team_status = Self::team_hash_status(team_hash)
+                .ok_or(Error::<T>::CannotFetchStatus.into())?;
+            // let proposed_team_status: TeamStatus = team_status.clone();
+            let proposed_team_status = team_status.clone();
 
             //TODO this should be an enum
             // Open	0
@@ -356,42 +354,42 @@ mod pallet {
             // Close	500
             // Delete	999
 
-            // Project owner creates project, set status to 0
-            // Project owner puts on hold, setting the state to 200... 200 can only be set if the current status is  <= 101
-            // Project owner abandons, setting the state to 300... 300 can only be set if the current status is  <= 101
-            // Project owner cancels, setting the state to 400... 400 can only be set if the current status is  <= 101
-            // Project owner close, setting the state to 500... 500 can only be set if the current status is  <= 101
-            // Project owner reopen, setting the state to 100... 100 can only be set if the current status is  200 || 300 || 500
-            // Project owner deletes, setting the state to 999... 999 cannot be set here.
-            // Project owner other, setting the state to other value... cannot be set here.
+            // team owner creates team, set status to 0
+            // team owner puts on hold, setting the state to 200... 200 can only be set if the current status is  <= 101
+            // team owner abandons, setting the state to 300... 300 can only be set if the current status is  <= 101
+            // team owner cancels, setting the state to 400... 400 can only be set if the current status is  <= 101
+            // team owner close, setting the state to 500... 500 can only be set if the current status is  <= 101
+            // team owner reopen, setting the state to 100... 100 can only be set if the current status is  200 || 300 || 500
+            // team owner deletes, setting the state to 999... 999 cannot be set here.
+            // team owner other, setting the state to other value... cannot be set here.
 
-            match current_project_status {
+            match current_team_status {
                 0 | 100 => {
                     // can set 200, 300, 400, 500
-                    match proposed_project_status {
-                        0 | 100 => return Err(Error::<T>::StatusWrong),
+                    match proposed_team_status {
+                        0 | 100 => return Err(Error::<T>::StatusWrong.into()),
                         200 | 300 | 400 | 500 => (),
-                        _ => return Err(Error::<T>::StatusCannotApply),
+                        _ => return Err(Error::<T>::StatusCannotApply.into()),
                     };
                 }
                 200 | 300 | 500 => {
                     // only set 100
-                    match proposed_project_status {
+                    match proposed_team_status {
                         100 => (),
-                        _ => return Err(Error::<T>::StatusCannotApply),
+                        _ => return Err(Error::<T>::StatusCannotApply.into()),
                     };
                 }
-                _ => return Err(Error::<T>::StatusCannotApply),
+                _ => return Err(Error::<T>::StatusCannotApply.into()),
             };
 
-            let allowed_project_status: ProjectStatus = proposed_project_status.into();
+            let allowed_team_status: TeamStatus = proposed_team_status.into();
 
-            ProjectHashStatus::<T>::insert(project_hash, &allowed_project_status);
+            teamHashStatus::<T>::insert(team_hash, &allowed_team_status);
 
-            Self::deposit_event(Event::ProjectChanged(
-                project_hash,
+            Self::deposit_event(Event::TeamChanged(
+                team_hash,
                 changer,
-                allowed_project_status,
+                allowed_team_status,
             ));
 
             Ok(().into())
@@ -401,31 +399,31 @@ mod pallet {
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
-        ProjectRegistered(T::Hash, T::AccountId),
-        ProjectDeleted(T::Hash, T::AccountId, T::AccountId, ProjectStatus),
-        ProjectReassigned(T::Hash, T::AccountId, T::AccountId),
-        ProjectChanged(T::Hash, T::AccountId, ProjectStatus),
+        TeamRegistered(T::Hash, T::AccountId),
+        TeamDeleted(T::Hash, T::AccountId, T::AccountId, TeamStatus),
+        TeamReassigned(T::Hash, T::AccountId, T::AccountId),
+        TeamChanged(T::Hash, T::AccountId, TeamStatus),
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {
-        fn is_project_owner(o: T::AccountId, h: T::Hash) -> bool {
-            Self::project_hash_owner(h)
+        fn is_team_owner(o: T::AccountId, h: T::Hash) -> bool {
+            Self::team_hash_owner(h)
                 .map(|owner| o == owner)
                 .unwrap_or(false)
         }
 
-        fn is_project_valid(h: T::Hash) -> bool {
-            // check that the status of the project exists and is open or reopened.
-            match Self::project_hash_status(h) {
+        fn is_team_valid(h: T::Hash) -> bool {
+            // check that the status of the team exists and is open or reopened.
+            match Self::team_hash_status(h) {
                 Some(0) | Some(100) => true,
                 _ => false,
             }
         }
 
-        fn is_owner_and_project_valid(o: T::AccountId, h: T::Hash) -> bool {
+        fn is_owner_and_team_valid(o: T::AccountId, h: T::Hash) -> bool {
             //TODO
-            // check validity of project
-            Self::is_project_valid(h) && Self::is_project_owner(o, h)
+            // check validity of team
+            Self::is_team_valid(h) && Self::is_team_owner(o, h)
         }
     }
 }

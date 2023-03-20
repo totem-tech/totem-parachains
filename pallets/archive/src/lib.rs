@@ -47,6 +47,7 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
+        dispatch::DispatchResultWithPostInfo,
         pallet_prelude::*,
         traits::StorageVersion,
     };
@@ -74,7 +75,10 @@ mod pallet {
     }
 
     #[pallet::error]
-    pub enum Error<T> {}
+    pub enum Error<T> {
+        /// Unknown or unimplemented record type. Cannot archive record
+        UnknownRecordType,
+    }
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
@@ -114,7 +118,7 @@ mod pallet {
                         ));
                     }
                 }
-                _ => return Err("Unknown or unimplemented record type. Cannot archive record"),
+                _ => return Err(Error::<T>::UnknownRecordType.into()),
             }
 
             Ok(().into())
