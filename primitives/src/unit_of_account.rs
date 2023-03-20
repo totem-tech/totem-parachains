@@ -41,9 +41,9 @@ pub const STORAGE_MULTIPLIER: LedgerBalance = 100_000_000_000_000_000_000;
 /// Holds the details for each asset for storage
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug, PartialEq)]
 #[scale_info(skip_type_params(SymbolMaxChars))]
-pub struct AssetDetails<SymbolMaxChars: Get<u32>> {
+pub struct AssetDetails {
 	/// The symbol of the asset
-	pub symbol: BoundedVec<u8, SymbolMaxChars>,
+	pub symbol: Assets,
 	/// The total issuance of the asset converted
 	pub issuance: LedgerBalance,
 	/// The price of the asset in base currency (e.g. USD, but later TODO can be any asset)
@@ -58,9 +58,9 @@ pub struct AssetDetails<SymbolMaxChars: Get<u32>> {
 
 /// Holds the details for each asset for processing
 #[derive(Clone, Decode, Encode, Debug, PartialEq)]
-pub struct AssetData<T, SymbolMaxChars: Get<u32>> {
+pub struct AssetData<T> {
 	/// The symbol of the asset
-	pub symbol: BoundedVec<u8, SymbolMaxChars>,
+	pub symbol: Assets,
 	/// The total issuance of the asset
 	pub issuance: u128,
 	pub inverse_issuance: Option<T>,

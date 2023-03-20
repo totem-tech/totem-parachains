@@ -100,7 +100,8 @@ use totem_primitives::{
 	unit_of_account::{
 		AssetDetails,
 		AssetData,
-	}
+		Assets
+	},
 };
 
 pub use pallet::*;
@@ -111,6 +112,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+	use totem_primitives::unit_of_account::Assets;
 
 	#[pallet::config]
 	/// The module configuration trait.
@@ -133,10 +135,6 @@ pub mod pallet {
 		/// The max number of assets allowed to be updated in one extrinsic
 		#[pallet::constant]
 		type MaxAssetsInput: Get<u32>;
-
-		/// The max number of characters in the symbol for the asset
-		#[pallet::constant]
-		type SymbolMaxChars: Get<u32>;
 
 		/// The whitelisting deposit ammount
 		#[pallet::constant]
@@ -189,7 +187,7 @@ pub mod pallet {
 	#[pallet::getter(fn asset_basket)]
 	pub type AssetBasket<T: Config> = StorageValue<
 	_,
-	BoundedVec<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>,
+	BoundedVec<AssetDetails, T::MaxAssetsInBasket>,
 	ValueQuery,
 	>;
 
@@ -200,7 +198,7 @@ pub mod pallet {
 	#[pallet::getter(fn asset_symbol)]
 	pub type AssetSymbol<T: Config> = StorageValue<
 	_,
-	BoundedVec<BoundedVec<u8, T::SymbolMaxChars>, T::MaxAssetsInBasket>,
+	BoundedVec<Assets, T::MaxAssetsInBasket>,
 	ValueQuery,
 	>;
 
@@ -368,7 +366,7 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		pub fn add_new_asset(
 			origin: OriginFor<T>,
-			symbol: BoundedVec<u8, T::SymbolMaxChars>,
+			symbol: Assets,
 			issuance: u128,
 			price: u128,
 		) -> DispatchResultWithPostInfo {
@@ -381,10 +379,6 @@ pub mod pallet {
 
 			// check that the caller is whitelisted
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
-
-			// Ensure that the length of the symbol is not greater than the nr bytes in parameters
-			// This line may be needed if the extrinsic does not reject a vec that is longer than SymbolMaxChars i.e. we need to test this
-			// let symbol_ok = BoundedVec::<u8, T::SymbolMaxChars>::try_from(symbol.clone()).map_err(|_e| Error::<T>::SymbolLengthOutOfBounds)?;
 
 			// Ensure that the total number of assets is not greater than the maximum allowed
 			let mut assets = AssetSymbol::<T>::get();
@@ -456,7 +450,7 @@ pub mod pallet {
 		#[pallet::call_index(3)]
 		pub fn remove_asset(
 			origin: OriginFor<T>,
-			symbol: BoundedVec::<u8, T::SymbolMaxChars>,
+			symbol: Assets,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
@@ -491,7 +485,7 @@ pub mod pallet {
 		/// An event can be used to communicate to the Front-end which asset caused the issue
 		///
 		/// Parameters:
-		/// - `origin`: A whitelisted callet origin
+		/// - `origin`: A whitelisted call	er origin
 		/// - `symbol:` The currency symbol to remove
 		/// - `issuance:` The new currency issuance which can be None if not set
 		/// - `price:` The new currency price which can be None if not set
@@ -518,11 +512,11 @@ pub mod pallet {
 		/// Account removed from whitelisted accounts
 		AccountRemoved(T::AccountId),
 		/// Asset added to the basket
-		AssetAddedToBasket(BoundedVec<u8, T::SymbolMaxChars>),
+		AssetAddedToBasket(Assets),
 		/// Asset removed from the basket
-		AssetRemoved(BoundedVec<u8, T::SymbolMaxChars>),
+		AssetRemoved(Assets),
 		/// Asset updated in the basket
-		AssetUpdated(BoundedVec<u8, T::SymbolMaxChars>),
+		AssetUpdated(Assets),
 	}
 
 	#[pallet::error]
@@ -537,8 +531,6 @@ pub mod pallet {
 		NotWhitelistedAccount,
 		/// Max assets exceeded
 		MaxAssetsOutOfBounds,
-		/// Symbol too long
-		SymbolLengthOutOfBounds,
 		/// Asset Symbol already exists
 		SymbolAlreadyExists,
 		/// Asset cannot be added to the basket
@@ -560,7 +552,7 @@ pub mod pallet {
 
 
 impl<T: Config> Pallet<T> {
-	fn asset_in_array(symbol: &BoundedVec<u8, T::SymbolMaxChars>) -> bool {
+	fn asset_in_array(symbol: &Assets) -> bool {
 		let asset_symbol = <AssetSymbol<T>>::get();
 		match asset_symbol.iter().any(|s| s == symbol) {
 			true => true,
@@ -569,8 +561,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn find_and_remove_asset(
-		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
-	) -> Result<BoundedVec<BoundedVec<u8, T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
+		symbol: &Assets,
+	) -> Result<BoundedVec<Assets, T::MaxAssetsInBasket>, DispatchError> {
 		let mut assets = AssetSymbol::<T>::get();
 		match assets.iter().position(|s| s == symbol) {
 			Some(idx) => {
@@ -586,7 +578,7 @@ impl<T: Config> Pallet<T> {
 		return Some(inverted_issuance)
 	}
 
-	fn get_total_inverse_issuance(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
+	fn get_total_inverse_issuance(basket: &Vec<AssetData<f64>>) -> f64 {
 		let total_inverse_in_asset_basket = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.inverse_issuance {
@@ -596,7 +588,7 @@ impl<T: Config> Pallet<T> {
 		return total_inverse_in_asset_basket
 	}
 
-	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, tiv: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
+	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<f64>>, tiv: f64) -> &mut Vec<AssetData<f64>> {
 		for asset in &mut *basket {
 			asset.weighting_per_asset = match asset.inverse_issuance.clone() {
 				Some(i) => Some(i / tiv.clone()),
@@ -611,7 +603,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 
-	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<f64, T::SymbolMaxChars>>, uoa: f64) -> &mut Vec<AssetData<f64, T::SymbolMaxChars>> {
+	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<f64>>, uoa: f64) -> &mut Vec<AssetData<f64>> {
 		for asset in &mut *basket {
 			asset.uoa_per_asset = match asset.weight_adjusted_price.clone() {
 				Some(u) => Some(u / uoa.clone()),
@@ -622,7 +614,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 
-	fn calculate_unit_of_account(basket: &Vec<AssetData<f64, T::SymbolMaxChars>>) -> f64 {
+	fn calculate_unit_of_account(basket: &Vec<AssetData<f64>>) -> f64 {
 		let unit_of_account = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.weight_adjusted_price {
@@ -634,9 +626,9 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn conversion_of_basket_to_storage(
-		basket: Vec<AssetData<f64, T::SymbolMaxChars>>,
-	) -> Result<BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket>, DispatchError> {
-		let mut new_basket: BoundedVec::<AssetDetails<T::SymbolMaxChars>, T::MaxAssetsInBasket> = Default::default();
+		basket: Vec<AssetData<f64>>,
+	) -> Result<BoundedVec::<AssetDetails, T::MaxAssetsInBasket>, DispatchError> {
+		let mut new_basket: BoundedVec::<AssetDetails, T::MaxAssetsInBasket> = Default::default();
 			for asset in basket {
 				let converted_entry = AssetDetails {
 					symbol: asset.symbol.clone(),
@@ -662,10 +654,10 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn combined_intermediate_basket(
-		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
+		symbol: &Assets,
 		issuance: &u128,
 		price: &u128,
-	) -> Vec<AssetData<f64, T::SymbolMaxChars>> {
+	) -> Vec<AssetData<f64>> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
@@ -698,8 +690,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn reduced_intermediate_basket(
-		symbol: &BoundedVec<u8, T::SymbolMaxChars>,
-	) -> Vec<AssetData<f64, T::SymbolMaxChars>> {
+		symbol: &Assets,
+	) -> Vec<AssetData<f64>> {
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		// Move data to new array erasing values that are to be recalculated

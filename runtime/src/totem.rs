@@ -25,7 +25,6 @@ impl pallet_unit_of_account::Config for Runtime {
     type MaxWhitelistedAccounts = MaxWhitelistedAccounts;
     type MaxAssetsInBasket = MaxAssetsInBasket;
     type MaxAssetsInput = MaxAssetsInput;
-    type SymbolMaxChars = SymbolMaxChars;
     type AccountBytes = AccountBytes;
     type UnitOfAccountConverter = Converter;
     type WhitelistDeposit = WhitelistDeposit;
@@ -35,7 +34,7 @@ impl pallet_unit_of_account::Config for Runtime {
     //     type RuntimeEvent = RuntimeEvent;
         //     type Timekeeping = pallet_timekeeping::Pallet<Self>;
         // }
-        
+
 // impl pallet_bonsai::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
 //     type Orders = pallet_orders::Pallet<Self>;
