@@ -142,6 +142,56 @@ mod pallet {
         ValueQuery,
     >;
 
+    /// Accounting Reference [Date]
+    /// This is the point in time from which the accounting periods are calculated.
+    /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set. 
+    /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year
+    /// However it can also be used for monthly period close activities as well as quarterly closes and so on.
+    /// The calculations for FE engineers should be :
+    /// 1 Month = 30 days = 216000 blocks
+    /// 1 Quarter = 3 months = 648000 blocks
+    /// 1 Half Year = 6 months = 1296000 blocks
+    /// 1 Year = 12 months = 2592000 blocks
+    #[pallet::storage]
+    #[pallet::getter(fn accounting_ref_date)]
+    pub type AccountingRefDate<T: Config> = StorageMap<
+        _, 
+        Blake2_128Concat, T::AccountId, 
+        T::BlockNumber, 
+        ValueQuery,
+    >;
+    
+    /// Opening Balance
+    /// When taking over a legacy accounting system opening balances need to be added.
+    /// This is not a mandatory requirement for new accounting, but conditions must be met.
+    /// 1) Opening Balance is dependent on the accounting reference date being completed.
+    /// 2) If a balance already exists for any ledger associated with the account, 
+    ///    we must use the earliest block number of all ledgers as the opening balance date.
+    /// 3) Opening balance cannot be in the future by definition
+    /// 4) If no balances exists in any ledger then the earliest it can be is the current block.
+    /// 5) Some ledgers may have a zero opening balance. For this reason this storage simply indicates if 
+    ///    an opening balance has been specifically set. It also prevents it being set twice.
+    #[pallet::storage]
+    #[pallet::getter(fn opening_balance)]
+    pub type OpeningBalance<T: Config> = StorageDoubleMap<
+    _, 
+    Blake2_128Concat, T::AccountId, 
+    Blake2_128Concat, Ledger,
+    bool,
+    >;
+    
+    /// Opening Balance Date
+    /// This is the block number at which the opening balance was set.
+    /// It is global and not dependent on the Ledger account.
+    #[pallet::storage]
+    #[pallet::getter(fn opening_balance_date)]
+    pub type OpeningBalanceDate<T: Config> = StorageMap<
+        _, 
+        Blake2_128Concat, T::AccountId, 
+        T::BlockNumber, 
+        ValueQuery,
+    >;
+
     // The genesis config type.
     // The Balances here should be exactly the same as configured in the Balances Pallet to set the opening balances correctly
 	#[pallet::genesis_config]
