@@ -1700,9 +1700,9 @@ pub enum FinanceCosts {
 #[scale_info(capture_docs = "always")]
 pub enum ControlAccounts {
     /// C60_0001_000D,
-    PurchaseControl,
+    PurchaseControl(Parties),
     /// C60_0002_000D,
-    SalesControl,
+    SalesControl(Parties),
     /// C60_0003_000D,
     TaxControl,
     /// C60_0004_000D,

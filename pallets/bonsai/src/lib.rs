@@ -130,7 +130,7 @@ mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type Timekeeping: TimeValidating<Self::AccountId, Self::Hash>;
-        type Projects: TeamsValidating<Self::AccountId, Self::Hash>;
+        type Teams: TeamsValidating<Self::AccountId, Self::Hash>;
         type Orders: OrderValidating<Self::AccountId, Self::Hash>;
         type BonsaiConverter: Convert<Self::BlockNumber, u32> + Convert<u32, Self::BlockNumber>;
     }
@@ -153,7 +153,7 @@ mod pallet {
         /// This function stores a record hash for BONSAI 2FA for couchDB
         ///
         /// Record types are the same as the Archive Record Types
-        /// * 3000 Activities (previously Projects)
+        /// * 3000 Activities (previously Teams)
         /// * 4000 Timekeeping
         /// * 5000 Orders
         ///
@@ -230,8 +230,8 @@ mod pallet {
             // then check that the supplied hash is owned by the signer of the transaction
             match e {
                 RecordType::Teams => {
-                    ensure!(T::Projects::is_project_owner(o, k), Error::<T>::NotTransactionOwner);
-                    // if false == T::Projects::is_project_owner(o, k) {
+                    ensure!(T::Teams::is_team_owner(o, k), Error::<T>::NotTransactionOwner);
+                    // if false == T::Teams::is_team_owner(o, k) {
                         // Self::deposit_event(Event::ErrorRecordOwner(t));
                         // return Err("You cannot add a record you do not own");
                         // }

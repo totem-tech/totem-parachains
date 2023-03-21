@@ -13,13 +13,13 @@ impl pallet_archive::Config for Runtime {
     type Timekeeping = pallet_timekeeping::Pallet<Self>;
 }
 
-// impl pallet_bonsai::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Orders = pallet_orders::Pallet<Self>;
-//     type Projects = pallet_teams::Pallet<Self>;
-//     type Timekeeping = pallet_timekeeping::Pallet<Self>;
-//     type BonsaiConverter = Converter;
-// }
+impl pallet_bonsai::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Orders = pallet_orders::Pallet<Self>;
+    type Teams = pallet_teams::Pallet<Self>;
+    type Timekeeping = pallet_timekeeping::Pallet<Self>;
+    type BonsaiConverter = Converter;
+}
 
 impl pallet_escrow::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
@@ -31,22 +31,23 @@ impl pallet_escrow::Config for Runtime {
 //     type RuntimeEvent = RuntimeEvent;
 // }
 
-// impl pallet_orders::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Accounting = pallet_accounting::Pallet<Self>;
-//     type Prefunding = pallet_prefunding::Pallet<Self>;
-//     type Currency = pallet_balances_totem::Pallet<Self>;
-//     type Bonsai = pallet_bonsai::Pallet<Self>;
-//     type OrdersConverter = Converter;
-// }
+impl pallet_orders::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Accounting = pallet_accounting::Pallet<Self>;
+    type Prefunding = pallet_prefunding::Pallet<Self>;
+    type Currency = pallet_balances_totem::Pallet<Self>;
+    type Bonsai = pallet_bonsai::Pallet<Self>;
+    type OrdersConverter = Converter;
+}
 
-// impl pallet_prefunding::Config for Runtime {
-//     type RuntimeEvent = RuntimeEvent;
-//     type Currency = pallet_balances_totem::Pallet<Self>;
-//     type PrefundingConverter = Converter;
-//     type Accounting = pallet_accounting::Pallet<Self>;
-//     type Escrowable = pallet_escrow::Pallet<Self>;
-// }
+impl pallet_prefunding::Config for Runtime {
+    type RuntimeEvent = RuntimeEvent;
+    type Currency = pallet_balances_totem::Pallet<Self>;
+    type PrefundingConverter = Converter;
+    type Accounting = pallet_accounting::Pallet<Self>;
+    type Escrowable = pallet_escrow::Pallet<Self>;
+    type RandomThing = RandomnessCollectiveFlip;
+}
 
 impl pallet_teams::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;

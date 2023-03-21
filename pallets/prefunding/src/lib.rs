@@ -57,13 +57,19 @@ pub use pallet::*;
 mod pallet {
 
     use frame_support::{
+        dispatch::DispatchResultWithPostInfo,
         ensure,
         pallet_prelude::*,
         traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion, Randomness},
+        sp_runtime::traits::{
+            Convert,
+            Hash, 
+            BadOrigin,
+        },
     };
     use frame_system::pallet_prelude::*;
 
-    use sp_runtime::traits::{Convert, Hash};
+    // use sp_runtime::traits::{Convert, Hash};
     use sp_std::prelude::*;
 
     use totem_common::{StorageMapExt, TryConvert};
@@ -232,6 +238,16 @@ mod pallet {
         Overflow,
         /// Error while locking the funds.
         LockFailed,
+        /// Error fetching details
+		FetchDetailsFromHash,
+        /// Error fetching prefunding details
+        FetchPrefundError,
+        /// Error during Transfer
+        TransferError,
+        /// Only for Invoiced Status
+        OnlyForInvoicedStatus,
+        /// Beneficiary must be another account
+        BeneficiaryError,
     }
 
     #[pallet::hooks]
@@ -251,9 +267,13 @@ mod pallet {
             deadline: T::BlockNumber,
             tx_uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let who = ensure_signed(origin)?;
             // check that the beneficiary is not the sender
-            ensure!(who != beneficiary, "Beneficiary must be another account");
+            // ensure!(who != beneficiary, "Beneficiary must be another account");
+            ensure!(who != beneficiary, Error::<T>::BeneficiaryError);
             let prefunding_hash: T::Hash =
                 Self::get_pseudo_random_hash(who.clone(), beneficiary.clone());
 
@@ -271,6 +291,9 @@ mod pallet {
             reference: T::Hash,
             uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let who = ensure_signed(origin)?;
 
             Self::send_simple_invoice(who, payer, amount, reference, uid)
@@ -284,6 +307,9 @@ mod pallet {
             reference: T::Hash,
             uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let who = ensure_signed(origin)?;
 
             Self::settle_prefunded_invoice(who, reference, uid)
@@ -296,6 +322,9 @@ mod pallet {
             reference: T::Hash,
             uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let who = ensure_signed(origin)?;
 
             Self::unlock_funds_for_owner(who, reference, uid)
@@ -324,7 +353,7 @@ mod pallet {
             // Prepare make sure we are not taking the deposit again
             ensure!(!ReferenceStatus::<T>::contains_key(&h), Error::<T>::HashExists);
             // if ReferenceStatus::<T>::contains_key(&h) {
-            //     return Err(Error::<T>::HashExists);
+            //     return Err(Error::<T>::HashExists.into());
             // }
 
             // You cannot prefund any amount unless you have at least at balance of 1618 units + the amount you want to prefund
@@ -348,7 +377,7 @@ mod pallet {
                 )
                 .or(Err(Error::<T>::LockFailed))?;
             } else {
-                return Err(Error::<T>::InsufficientPreFunds);
+                return Err(Error::<T>::InsufficientPreFunds.into());
             }
 
             Ok(().into())
@@ -434,19 +463,19 @@ mod pallet {
             use LockStatus::*;
             ensure!(Self::reference_valid(h), Error::<T>::HashDoesNotExist);
             // if Self::reference_valid(h) == false {
-                //     return Err(Error::<T>::HashDoesNotExist);
+                //     return Err(Error::<T>::HashDoesNotExist.into());
                 // }
                 
             ensure!(Self::check_ref_beneficiary(o.clone(), h), Error::<T>::NotOwner);
             // if Self::check_ref_beneficiary(o.clone(), h) == false {
-            //     return Err(Error::<T>::NotOwner);
+            //     return Err(Error::<T>::NotOwner.into());
             // }
 
             // TODO this should return the details otherwise there is second read later in the process
             match Self::get_release_state(h) {
                 // submitted, but not yet accepted
-                (Locked, Unlocked) => return Err(Error::<T>::NotApproved),
-                (Locked, Locked) => return Err(Error::<T>::FundsInPlay),
+                (Locked, Unlocked) => return Err(Error::<T>::NotApproved.into()),
+                (Locked, Locked) => return Err(Error::<T>::FundsInPlay.into()),
                 // Owner has approved now get status of hash. Only allow if invoiced.
                 // Note handling the account posting is done outside of this function
                 (Unlocked, Locked) => {
@@ -454,10 +483,12 @@ mod pallet {
                         Some(400) => {
                             // get details of lock
                             let details =
-                                Self::prefunding_hash_owner(&h).ok_or("Error fetching details")?;
+                                // Self::prefunding_hash_owner(&h).ok_or("Error fetching details")?;
+                                Self::prefunding_hash_owner(&h).ok_or(Error::<T>::FetchDetailsFromHash)?;
                             // get details of prefunding
                             let prefunding =
-                                Self::prefunding(&h).ok_or("Error getting prefunding details")?;
+                                // Self::prefunding(&h).ok_or("Error getting prefunding details")?;
+                                Self::prefunding(&h).ok_or(Error::<T>::FetchPrefundError)?;
                             // Cancel prefunding lock
                             let status: Status = 500; // Settled
                             Self::cancel_prefunding_lock(details.0.clone(), h, status)?;
@@ -469,14 +500,15 @@ mod pallet {
                                 prefunding.0,
                                 ExistenceRequirement::KeepAlive,
                             ) {
-                                return Err("Error during transfer")
+                                // return Err("Error during transfer")
+                                return Err(Error::<T>::TransferError.into())
                             }
                         }
-                        _ => return Err("Only allowed when status is Invoiced"),
+                        _ => return Err(Error::<T>::OnlyForInvoicedStatus.into()),
                     }
                 }
                 // Owner has been given permission by beneficiary to release funds
-                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed1),
+                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed1.into()),
             }
 
             Ok(().into())
@@ -493,7 +525,8 @@ mod pallet {
         /// Settles invoice by updates to various relevant accounts and transfer of funds.
         #[allow(dead_code)/*TODO use it */]
         fn settle_unfunded_invoice() -> DispatchResultWithPostInfo {
-            return Err("TODO")
+            // return Err("TODO")
+            Ok(().into())
         }
 
         /// Return a pair of:
@@ -534,7 +567,7 @@ mod pallet {
             
             ensure!(deadline >= minimum_deadline, Error::<T>::ShortDeadline);
             // if deadline < minimum_deadline {
-            //     return Err(Error::<T>::ShortDeadline);
+            //     return Err(Error::<T>::ShortDeadline.into());
             // }
 
             let prefunded = (amount, deadline.clone());
@@ -543,7 +576,7 @@ mod pallet {
             if let Err(_) =
                 Self::set_prefunding(who.clone(), increase_amount, deadline, prefunding_hash, uid)
             {
-                return Err(Error::<T>::PrefundNotSet);
+                return Err(Error::<T>::PrefundNotSet.into());
             }
 
             // Deposit taken at this point. Note that if an error occurs beyond here we need to remove the locked funds.
@@ -581,7 +614,7 @@ mod pallet {
             ];
 
             if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                return Err(Error::<T>::InAccounting1);
+                return Err(Error::<T>::InAccounting1.into());
             }
 
             // Record Prefunding ownership and status
@@ -595,7 +628,7 @@ mod pallet {
 
             // Submitted, Locked by sender.
             if let Err(_) = Self::set_ref_status(prefunding_hash, 1) {
-                return Err(Error::<T>::SettingStatus1);
+                return Err(Error::<T>::SettingStatus1.into());
             }
 
             Self::deposit_event(Event::PrefundingCompleted(uid));
@@ -617,7 +650,7 @@ mod pallet {
             // Validate that the hash is indeed assigned to the seller
             ensure!(Self::check_ref_beneficiary(who.clone(), ref_hash), Error::<T>::NotAllowed2);
             // if Self::check_ref_beneficiary(who.clone(), ref_hash) == false {
-            //     return Err(Error::<T>::NotAllowed2);
+            //     return Err(Error::<T>::NotAllowed2.into());
             // }
 
             // Amount CAN be negative - this is therefore not an Invoice but a Credit Note!
@@ -634,17 +667,7 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: recipient.clone(),
-                    ledger: Ledger::ProfitLoss(P::Income(I::OtherIncome(OtherIncome::InterestIncome(InterestIncome::TradeReceivables)))), // Debit increase Trade Receivables
-                    amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: ref_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: who.clone(),
-                    counterparty: recipient.clone(),
-                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Credit increase Accounts receivable non-related parties
+                    ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))), // Debit increase Trade Receivables
                     amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: ref_hash,
@@ -654,7 +677,17 @@ mod pallet {
                 PostingRecord {
                     primary_party: who.clone(),
                     counterparty: recipient.clone(),
-                    ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl), // Debit increase Accounts receivable (Sales Control Account or Trade Debtor's Account)
+                    ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::TradeReceivables(Parties::NonRelatedParties)))), // Debit increase Trade Receivables
+                    amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                PostingRecord {
+                    primary_party: who.clone(),
+                    counterparty: recipient.clone(),
+                    ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl(Parties::NonRelatedParties)), // Debit increase Accounts receivable (Sales Control Account or Trade Debtor's Account)
                     amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
@@ -665,7 +698,17 @@ mod pallet {
                 PostingRecord {
                     primary_party: recipient.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayable(Parties::NonRelatedParties)))), // Credit increase Accounts payable non-related parties
+                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Services(_0012_::Labour)))), // Debit increase Trade payable non-related parties
+                    amount,
+                    debit_credit: Indicator::Debit,
+                    reference_hash: ref_hash,
+                    changed_on_blocknumber: current_block,
+                    applicable_period_blocknumber: current_block_dupe,
+                },
+                PostingRecord {
+                    primary_party: recipient.clone(),
+                    counterparty: who.clone(),
+                    ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayableTradeCreditors(Parties::NonRelatedParties)))), // Debit increase Trade Receivables
                     amount,
                     debit_credit: Indicator::Credit,
                     reference_hash: ref_hash,
@@ -675,17 +718,7 @@ mod pallet {
                 PostingRecord {
                     primary_party: recipient.clone(),
                     counterparty: who.clone(),
-                    ledger: Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Services(Services::Labour)))), // Debit increase Trade payable non-related parties
-                    amount,
-                    debit_credit: Indicator::Debit,
-                    reference_hash: ref_hash,
-                    changed_on_blocknumber: current_block,
-                    applicable_period_blocknumber: current_block_dupe,
-                },
-                PostingRecord {
-                    primary_party: recipient.clone(),
-                    counterparty: who.clone(),
-                    ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Debit increase purchase control
+                    ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl(Parties::NonRelatedParties)), // Debit increase purchase control
                     amount,
                     debit_credit: Indicator::Debit,
                     reference_hash: ref_hash,
@@ -695,13 +728,13 @@ mod pallet {
             ];
 
             if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                return Err(Error::<T>::InAccounting2);
+                return Err(Error::<T>::InAccounting2.into());
             }
 
             // Add status processing
             let new_status: Status = 400; // invoiced(400), can no longer be accepted,
             if let Err(_) = Self::set_ref_status(ref_hash, new_status) {
-                return Err(Error::<T>::SettingStatus2);
+                return Err(Error::<T>::SettingStatus2.into());
             }
 
             Self::deposit_event(Event::InvoiceIssued(uid));
@@ -722,12 +755,12 @@ mod pallet {
             // accounts updated before payment, because if there is an error then the accounting can be rolled back
             let (payer, beneficiary) = match Self::get_release_state(ref_hash) {
                 // submitted, but not yet accepted
-                (Locked, Unlocked) => return Err(Error::<T>::NotApproved2),
+                (Locked, Unlocked) => return Err(Error::<T>::NotApproved2.into()),
                 (Locked, Locked) => {
                     // Validate that the hash is indeed owned by the buyer
                     ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotAllowed3);
                     // if Self::check_ref_owner(who.clone(), ref_hash) == false {
-                    //     return Err(Error::<T>::NotAllowed3);
+                    //     return Err(Error::<T>::NotAllowed3.into());
                     // }
 
                     // get beneficiary from hash
@@ -748,7 +781,7 @@ mod pallet {
                         PostingRecord {
                             primary_party: who.clone(),
                             counterparty: who.clone(),
-                            ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayable(Parties::NonRelatedParties)))), // Debit decrease Accounts payable non-related parties
+                            ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::AccountsPayableTradeCreditors(Parties::NonRelatedParties)))),
                             amount: decrease_amount,
                             debit_credit: Indicator::Debit,
                             reference_hash: ref_hash,
@@ -758,7 +791,7 @@ mod pallet {
                         PostingRecord {
                             primary_party: who.clone(),
                             counterparty: who.clone(),
-                            ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl), // Credit decrease purchase control
+                            ledger: Ledger::ControlAccounts(ControlAccounts::PurchaseControl(Parties::NonRelatedParties)), // Credit decrease purchase control
                             amount: decrease_amount,
                             debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
@@ -809,7 +842,7 @@ mod pallet {
                         PostingRecord {
                             primary_party: details.clone(),
                             counterparty: details.clone(),
-                            ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl), // Credit decrease Accounts receivable (Sales Control Account or Trade Debtor's Account)
+                            ledger: Ledger::ControlAccounts(ControlAccounts::SalesControl(Parties::NonRelatedParties)), // Credit decrease Accounts receivable (Sales Control Account or Trade Debtor's Account)
                             amount: decrease_amount,
                             debit_credit: Indicator::Credit,
                             reference_hash: ref_hash,
@@ -819,27 +852,27 @@ mod pallet {
                     ];
 
                     if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
-                        return Err(Error::<T>::InAccounting3);
+                        return Err(Error::<T>::InAccounting3.into());
                     }
 
                     // export details for final payment steps
                     (who, details)
                 }
                 // This state is not allowed for this functions
-                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed4),
+                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed4.into()),
                 // Owner has been given permission by beneficiary to release funds
-                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed5),
+                (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed5.into()),
             };
 
             // Set release lock "buyer who has approved invoice"
             // this may have been set independently, but is required for next step
             if let Err(_) = Self::set_release_state(payer, Unlocked, ref_hash, uid) {
-                return Err(Error::<T>::ReleaseState);
+                return Err(Error::<T>::ReleaseState.into());
             }
 
             // Unlock, tansfer funds and mark hash as settled in full
             if let Err(_) = Self::unlock_funds_for_beneficiary(beneficiary, ref_hash, uid) {
-                return Err(Error::<T>::Unlocking);
+                return Err(Error::<T>::Unlocking.into());
             }
 
             Self::deposit_event(Event::InvoiceSettled(uid));
@@ -879,12 +912,12 @@ mod pallet {
                             match o_lock {
                                 Locked => {
                                     if who == commander {
-                                        return Err(Error::<T>::WrongState1);
+                                        return Err(Error::<T>::WrongState1.into());
                                     } else if who == fulfiller {
                                         change.1 = state_lock.1;
                                         change.3 = o_lock;
                                     } else {
-                                        return Err(Error::<T>::LockNotAllowed1);
+                                        return Err(Error::<T>::LockNotAllowed1.into());
                                     };
                                 }
                                 Unlocked => {
@@ -894,9 +927,9 @@ mod pallet {
                                         change.1 = o_lock;
                                         change.3 = state_lock.3;
                                     } else if who == fulfiller {
-                                        return Err(Error::<T>::WrongState2);
+                                        return Err(Error::<T>::WrongState2.into());
                                     } else {
-                                        return Err(Error::<T>::LockNotAllowed2);
+                                        return Err(Error::<T>::LockNotAllowed2.into());
                                     };
                                 }
                             }
@@ -904,7 +937,7 @@ mod pallet {
                         // In this state the commander can change the lock, and they can only change it to false
                         // In this state the fulfiller can change the lock, and they can only change it to false
                         (Locked, Locked) => match o_lock {
-                            Locked => return Err(Error::<T>::WrongState3),
+                            Locked => return Err(Error::<T>::WrongState3.into()),
                             Unlocked => {
                                 if who == commander {
                                     change.1 = o_lock;
@@ -913,31 +946,31 @@ mod pallet {
                                     change.1 = state_lock.1;
                                     change.3 = o_lock;
                                 } else {
-                                    return Err(Error::<T>::LockNotAllowed3);
+                                    return Err(Error::<T>::LockNotAllowed3.into());
                                 }
                             }
                         },
                         // In this state the commander cannot change the lock
                         // In this state the fulfiller can change the lock, and they can only change it to false
                         (Unlocked, Locked) => match o_lock {
-                            Locked => return Err(Error::<T>::LockNotAllowed4),
+                            Locked => return Err(Error::<T>::LockNotAllowed4.into()),
                             Unlocked => {
                                 if who == commander {
-                                    return Err(Error::<T>::WrongState5);
+                                    return Err(Error::<T>::WrongState5.into());
                                 } else if who == fulfiller {
                                     change.1 = state_lock.1;
                                     change.3 = o_lock;
                                 } else {
-                                    return Err(Error::<T>::LockNotAllowed5);
+                                    return Err(Error::<T>::LockNotAllowed5.into());
                                 };
                             }
                         },
                         // This state should technically make the funds refundable to the buyer.
                         // Even if the buy wanted to set this state they cannot. Meaning they must create a new order.
-                        (Unlocked, Unlocked) => return Err(Error::<T>::LockNotAllowed5),
+                        (Unlocked, Unlocked) => return Err(Error::<T>::LockNotAllowed5.into()),
                     }
                 }
-                None => return Err(Error::<T>::HashDoesNotExist2),
+                None => return Err(Error::<T>::HashDoesNotExist2.into()),
             };
             PrefundingHashOwner::<T>::insert(&ref_hash, change);
             // Issue event
@@ -955,11 +988,11 @@ mod pallet {
             use LockStatus::*;
             ensure!(Self::reference_valid(ref_hash), Error::<T>::HashDoesNotExist3);
             // if Self::reference_valid(ref_hash) == false {
-            //     return Err(Error::<T>::HashDoesNotExist3);
+            //     return Err(Error::<T>::HashDoesNotExist3.into());
             // }
             ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);    
             // if Self::check_ref_owner(who.clone(), ref_hash) == false {
-            //     return Err(Error::<T>::NotOwner2);
+            //     return Err(Error::<T>::NotOwner2.into());
             // }
 
             match Self::get_release_state(ref_hash) {
@@ -969,19 +1002,19 @@ mod pallet {
                     if Self::prefund_deadline_passed(ref_hash) {
                         let status: Status = 50; // Abandoned or Cancelled
                         if let Err(_) = Self::cancel_prefunding_lock(who, ref_hash, status) {
-                            return Err(Error::<T>::CancelFailed2);
+                            return Err(Error::<T>::CancelFailed2.into());
                         }
                     } else {
-                        return Err(Error::<T>::DeadlineInPlay);
+                        return Err(Error::<T>::DeadlineInPlay.into());
                     }
                 }
-                (Locked, Locked) => return Err(Error::<T>::FundsInPlay2),
-                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed6),
+                (Locked, Locked) => return Err(Error::<T>::FundsInPlay2.into()),
+                (Unlocked, Locked) => return Err(Error::<T>::NotAllowed6.into()),
                 (Unlocked, Unlocked) => {
                     // Owner has been  given permission by beneficiary to release funds
                     let status: Status = 50; // Abandoned or cancelled
                     if let Err(_) = Self::cancel_prefunding_lock(who, ref_hash, status) {
-                        return Err(Error::<T>::CancellingPrefund);
+                        return Err(Error::<T>::CancellingPrefund.into());
                     }
                 }
             }
