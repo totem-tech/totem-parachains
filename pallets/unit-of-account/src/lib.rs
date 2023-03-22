@@ -515,6 +515,7 @@ pub mod pallet {
 
 			ensure!(Self::asset_in_array(&symbol), Error::<T>::AssetNotFound);
 
+			Self::update_symbol_price_in_intermediate_basket(&symbol, price);
 			// Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
 
 			Ok(().into())
@@ -743,7 +744,7 @@ impl<T: Config> Pallet<T> {
 		intermediate_basket
 	}
 
-	fn update_price_intermediate_basket(
+	fn update_symbol_price_in_intermediate_basket(
 		symbol: &Assets,
 		price: u128
 	) -> Vec<AssetData<f64>> {
