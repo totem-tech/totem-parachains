@@ -362,6 +362,7 @@ pub mod pallet {
 		/// - `symbol:` The asset symbol
 		/// - `issuance`: The total asset issuance
 		/// - `price`: The price in the base currency for the asset
+		/// - `threshold_price`: The minimum and maximum price that can be attained for an asset
 		#[pallet::weight(T::WeightInfo::add_new_asset())]
 		#[pallet::call_index(2)]
 		pub fn add_new_asset(
@@ -369,6 +370,7 @@ pub mod pallet {
 			symbol: Assets,
 			issuance: u128,
 			price: u128,
+			price_threshold: (u128, u128)
 		) -> DispatchResultWithPostInfo {
 			// ------------- Checks ------------- //
 			if ensure_none(origin.clone()).is_ok() {
@@ -396,12 +398,22 @@ pub mod pallet {
 			// check that the price is not zero
 			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
 
+			// check that the price is not zero
+			ensure!(price_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
+
+			ensure!(price_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
+
+			ensure!(price >= price_threshold.0, Error::<T>::PriceBelowMinimumThresholdRange);
+
+			ensure!(price <= price_threshold.1, Error::<T>::PriceAboveMinimumThresholdRange);
+
 			// --------------- Processing ---------------- //
 			// Create an intermediate basket including new asset
 			let mut intermediate_basket = Self::combined_intermediate_basket(
 				&symbol,
 				&issuance,
 				&price,
+				&price_threshold
 			);
 
 			// get the total inverse issuance (f64)
@@ -491,13 +503,18 @@ pub mod pallet {
 		/// - `price:` The new currency price which can be None if not set
 		#[pallet::weight(T::WeightInfo::update_currency())]
 		#[pallet::call_index(4)]
-		pub fn update_currency(
-			_origin: OriginFor<T>,
-			// assets: Vec<AssetDetails<T::SymbolMaxChars>>,
+		pub fn update_asset_price(
+			origin: OriginFor<T>,
+			symbol: Assets,
+			price: u128,
 		) -> DispatchResultWithPostInfo {
-			if ensure_none(_origin.clone()).is_ok() {
+			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
+			ensure_root(origin)?;
+
+			ensure!(Self::asset_in_array(&symbol), Error::<T>::AssetNotFound);
+
 			// Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
 
 			Ok(().into())
@@ -546,7 +563,15 @@ pub mod pallet {
 		/// Invalid Account To Whitelist
 		InvalidAccountToWhitelist,
 		/// Overflow error when converting float to storage value
-		OverflowErrorConversionToStorage
+		OverflowErrorConversionToStorage,
+		/// Invalid Minimum Bound threshold Price Value
+		InvalidMinimumThresholdPriceValue,
+		/// Invalid Maximum Bound threshold Price Value
+		InvalidMaximumThresholdPriceValue,
+		/// Price is below minimum threshold range
+		PriceBelowMinimumThresholdRange,
+		/// Price is above minimum threshold range
+		PriceAboveMinimumThresholdRange,
 	}
 }
 
@@ -645,7 +670,8 @@ impl<T: Config> Pallet<T> {
 					uoa_per_asset: match asset.uoa_per_asset {
 						Some(uoa) => Self::convert_float_to_storage(uoa)?,
 						None => 0 as LedgerBalance,
-					}
+					},
+					price_threshold: (asset.price_threshold.0 as LedgerBalance, asset.price_threshold.1 as LedgerBalance)
 				};
 				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxAssetsOutOfBounds)?;
 			}
@@ -657,6 +683,7 @@ impl<T: Config> Pallet<T> {
 		symbol: &Assets,
 		issuance: &u128,
 		price: &u128,
+		price_threshold: &(u128, u128)
 	) -> Vec<AssetData<f64>> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
@@ -670,6 +697,7 @@ impl<T: Config> Pallet<T> {
 			weighting_per_asset: None,
 			weight_adjusted_price: None,
 			uoa_per_asset: None,
+			price_threshold: price_threshold.clone()
 		};
 		intermediate_basket.push(new_entry);
 
@@ -683,6 +711,7 @@ impl<T: Config> Pallet<T> {
 				weighting_per_asset: None,
 				weight_adjusted_price: None,
 				uoa_per_asset: None,
+				price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128)
 			};
 			intermediate_basket.push(existing_entry);
 		}
@@ -707,8 +736,48 @@ impl<T: Config> Pallet<T> {
 				weighting_per_asset: None,
 				weight_adjusted_price: None,
 				uoa_per_asset: None,
+				price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128)
 			};
 			intermediate_basket.push(existing_entry);
+		}
+		intermediate_basket
+	}
+
+	fn update_price_intermediate_basket(
+		symbol: &Assets,
+		price: u128
+	) -> Vec<AssetData<f64>> {
+		let current_asset_basket = AssetBasket::<T>::get();
+		let mut intermediate_basket = Vec::new();
+		// Move data to new array erasing values that are to be recalculated
+		for asset in current_asset_basket {
+			if asset.symbol == *symbol {
+
+				let updated_entry = AssetData {
+					symbol: asset.symbol.clone(),
+					issuance: asset.issuance.clone() as u128,
+					inverse_issuance: Self::invert_issuance(asset.issuance as u128),
+					price: price as u128,
+					weighting_per_asset: None,
+					weight_adjusted_price: None,
+					uoa_per_asset: None,
+					price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128)
+				};
+
+				intermediate_basket.push(updated_entry);
+			} else {
+				let existing_entry = AssetData {
+					symbol: asset.symbol.clone(),
+					issuance: asset.issuance.clone() as u128,
+					inverse_issuance: Self::invert_issuance(asset.issuance as u128),
+					price: asset.price as u128,
+					weighting_per_asset: None,
+					weight_adjusted_price: None,
+					uoa_per_asset: None,
+					price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128)
+				};
+				intermediate_basket.push(existing_entry);
+			}
 		}
 		intermediate_basket
 	}

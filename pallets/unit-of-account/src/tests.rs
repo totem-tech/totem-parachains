@@ -190,6 +190,7 @@ fn should_add_new_asset_successfully() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 		assert_ok!(res);
 
@@ -199,6 +200,7 @@ fn should_add_new_asset_successfully() {
 			currency_symbol_2,
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -208,6 +210,7 @@ fn should_add_new_asset_successfully() {
 			currency_symbol_3,
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -227,6 +230,7 @@ fn add_currency_should_fail_when_account_is_not_whitelisted() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 
 		assert_err!(
@@ -254,6 +258,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 		assert_ok!(res);
 
@@ -263,6 +268,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			currency_symbol_2,
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -272,6 +278,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			currency_symbol_3,
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -281,6 +288,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			currency_symbol_4,
 			1_381_664_000_000_000,
 			1000000000000000000, // 0.1
+			(1000000000000000000, 2000000000000000000),
 		);
 		assert_err!(
 			res,
@@ -307,6 +315,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 		assert_ok!(res);
 
@@ -316,6 +325,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			currency_symbol_2,
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -325,6 +335,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			currency_symbol_3,
 			1_381_664_000_000_000,
 			1000000000000000000, // 0.1
+			(1000000000000000000,21000000000000000000),
 		);
 		assert_err!(
 			res,
@@ -351,6 +362,7 @@ fn add_asset_should_fail_with_invalid_issuance_value() {
 			currency_symbol_1,
 			0,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 		assert_err!(
 			res,
@@ -377,6 +389,7 @@ fn add_asset_should_fail_with_invalid_price_value() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			0,
+			(14000000000000002000, 24000000000000002000),
 		);
 
 		assert_err!(
@@ -404,6 +417,7 @@ fn should_remove_asset_successfully() {
 			currency_symbol_1,
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
 		);
 		assert_ok!(res);
 
@@ -413,6 +427,7 @@ fn should_remove_asset_successfully() {
 			currency_symbol_2.clone(),
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
 		);
 		assert_ok!(res);
 
@@ -422,6 +437,7 @@ fn should_remove_asset_successfully() {
 			currency_symbol_3,
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
 		);
 		assert_ok!(res);
 
