@@ -386,9 +386,6 @@ pub mod pallet {
 			let mut assets = AssetSymbol::<T>::get();
 			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
 
-			// TODO Convert to uppercase to ensure that the symbol is unique and not case sensitive
-			// Note this should not be a rudimentary check. It needs to consider the UTF-8 encoding of the symbol characters and the fact that each character is a u8
-
 			// Check that the symbol is not already in use.
 			ensure!(!Self::asset_in_array(&symbol), Error::<T>::SymbolAlreadyExists);
 
@@ -513,11 +510,30 @@ pub mod pallet {
 			}
 			ensure_root(origin)?;
 
-			ensure!(Self::asset_in_array(&symbol), Error::<T>::AssetNotFound);
+			let asset_details = Self::find_and_return_asset(&symbol)?;
 
-			Self::update_symbol_price_in_intermediate_basket(&symbol, price);
-			// Self::deposit_event(Event::CurrencyUpdatedInTheBasket(symbol));
+			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
 
+			ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
+
+			ensure!(asset_details.price_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
+
+			ensure!(price >= asset_details.price_threshold.0 as u128, Error::<T>::PriceBelowMinimumThresholdRange);
+
+			ensure!(price <= asset_details.price_threshold.1 as u128, Error::<T>::PriceAboveMinimumThresholdRange);
+
+			let mut intermediate_basket = Self::update_symbol_price_in_intermediate_basket(&symbol, price);
+			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
+			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
+			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
+			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
+			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
+
+			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
+			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
+			AssetBasket::<T>::set(new_basket);
+
+			Self::deposit_event(Event::AssetUpdated(symbol));
 			Ok(().into())
 		}
 	}
@@ -595,6 +611,20 @@ impl<T: Config> Pallet<T> {
 				assets.remove(idx);
 				Ok(assets)
 			},
+			None => Err(Error::<T>::AssetNotFound.into())
+		}
+	}
+
+	fn find_and_return_asset(
+		symbol: &Assets,
+	) -> Result<AssetDetails, DispatchError> {
+		let assets = AssetBasket::<T>::get();
+		let asset = assets.iter().find(|a| a.symbol == *symbol);
+
+		match asset {
+			Some(found_asset) => {
+				Ok(found_asset.clone())
+			}
 			None => Err(Error::<T>::AssetNotFound.into())
 		}
 	}
