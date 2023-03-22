@@ -71,16 +71,28 @@ mod pallet {
         fail,
         pallet_prelude::*,
         traits::{ Currency, StorageVersion, Randomness },
-        dispatch::DispatchResult,
+        dispatch::{ 
+            DispatchResult,
+            DispatchResultWithPostInfo,
+        },
+        sp_runtime::traits::{
+            Convert,
+            Hash,
+            Zero,
+            BadOrigin,
+        },
     };
     use frame_system::pallet_prelude::*;
-    use sp_runtime::traits::{Convert, Hash, Zero};
+    // use sp_runtime::traits::{Convert, Hash, Zero};
     use sp_std::prelude::*;
 
     use totem_common::TryConvert;
-    use totem_primitives::accounting::*;
-    
-    use totem_primitives::{LedgerBalance, PostingIndex};
+    // use totem_primitives::accounting::*;
+    use totem_primitives::{ 
+        accounting::*,
+        LedgerBalance, 
+        PostingIndex,
+    };
 
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -145,13 +157,13 @@ mod pallet {
     /// Accounting Reference [Date]
     /// This is the point in time from which the accounting periods are calculated.
     /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set. 
-    /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year
+    /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year.
     /// However it can also be used for monthly period close activities as well as quarterly closes and so on.
     /// The calculations for FE engineers should be :
-    /// 1 Month = 30 days = 216000 blocks
-    /// 1 Quarter = 3 months = 648000 blocks
-    /// 1 Half Year = 6 months = 1296000 blocks
-    /// 1 Year = 12 months = 2592000 blocks
+    /// 1 Month = 30 days = 216_000 blocks
+    /// 1 Quarter = 3 months = 657_000 blocks
+    /// 1 Half Year = 6 months = 1_314_000 blocks
+    /// 1 Year = 12 months = 2_628_000 blocks
     #[pallet::storage]
     #[pallet::getter(fn accounting_ref_date)]
     pub type AccountingRefDate<T: Config> = StorageMap<
@@ -174,7 +186,7 @@ mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn opening_balance)]
     pub type OpeningBalance<T: Config> = StorageDoubleMap<
-    _, 
+    _,
     Blake2_128Concat, T::AccountId, 
     Blake2_128Concat, Ledger,
     bool,
@@ -276,23 +288,104 @@ mod pallet {
         SystemFailure,
         /// Overflow error, amount too big.
         AmountOverflow,
+        /// The accounting reference has not yet been set
+        AccountingRefDateNotSet,
+        /// The accounting reference date has already been set
+        AccountingRefDateAlreadySet,
+        /// Minimum of 62 days until first possible accounting reference date
+        AccountingRefDateTooSoon,
+        /// Maximum of 2 years until first accounting reference date
+        AccountingRefDateTooLate,
     }
 
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
 
-    // #[pallet::call]
-    // impl<T: Config> Pallet<T> {
-    //     #[pallet::weight(0/*TODO*/)]
-    //     pub fn opening_balance(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-    //         todo!()
-    //     }
+    #[pallet::call]
+    impl<T: Config> Pallet<T> {
+        /// This is the point in time from which the accounting periods are calculated.
+        /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set. 
+        /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year.
+        #[pallet::weight(0/*TODO*/)]
+        pub fn set_accounting_ref_date(
+            origin: OriginFor<T>,
+            block_number: T::BlockNumber,
+        ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
+            let who = ensure_signed(origin)?;
 
-    //     #[pallet::weight(0/*TODO*/)]
-    //     pub fn adjustment(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-    //         todo!()
-    //     }
-    // }
+            // check that the block number is not already set
+            ensure!(<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateAlreadySet);
+
+            // if entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
+            // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
+            let mut earliest_block_number = block_number.clone();
+            let posting_index = <PostingNumber<T>>::get();
+            for posting_index in 0..posting_index {
+                let posting_detail = <PostingDetail<T>>::get(&who, posting_index);
+                if posting_detail.is_some() {
+                    let posting_detail = posting_detail.unwrap();
+                    if posting_detail.applicable_period_blocknumber < earliest_block_number {
+                        earliest_block_number = posting_detail.applicable_period_blocknumber;
+                    }
+                }
+            }
+            
+            // check that the block number is in the future. This also confirms that it is not zero 
+            // There should be a minimum of 62 Days in the future from the current block (446,400). 
+            // This allows for the current month or anoy month in progress
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let minimum_reference_date = current_block.clone() + 446_400u32.into();
+            ensure!(block_number > minimum_reference_date, Error::<T>::AccountingRefDateTooSoon);
+            
+            // check that the block number is not too far in the future.
+            // Maximum period is two years from now (5,256,000)
+            let maximum_block_number = current_block + 5_256_000u32.into();
+            ensure!(block_number < maximum_block_number, Error::<T>::AccountingRefDateTooLate);
+
+            // set the block number
+            <AccountingRefDate<T>>::put(who.clone(), block_number);
+
+            // emit event
+            // Self::deposit_event(Event::AccountingRefDateSet(who, block_number));
+            
+            Ok(().into())
+        }
+
+        /// The opening balances need to be set for each ledger in the Balance Sheet.
+        /// The profit and loss is disregarded save for the earliest possible entry. This will be taken as 
+        /// This extrinsic does not perform check against the validity of the debit and credit status for the entire ledger
+        /// It is assumed that the opening balances are correct and that the ledger is balanced.
+        /// You can run the `check_ledger` extrinsic to check the validity of the 
+        #[pallet::weight(0/*TODO*/)]
+        pub fn set_opening_balance(
+            origin: OriginFor<T>,
+            ledger: Ledger,
+            balance: LedgerBalance,
+        ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
+            let who = ensure_signed(origin)?;
+
+            // check that the block number is already set
+            // you should not be allowed to set an opening balance until the accounting reference date has been set
+            ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
+
+            // check that the ledger has not already set an opening balance
+            ensure!(<OpeningBalance<T>>::get(&who, &ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
+
+            todo!()
+        }
+
+
+        // #[pallet::weight(0/*TODO*/)]
+        // pub fn adjustment(_origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+        //     todo!()
+        // }
+    }
 
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
