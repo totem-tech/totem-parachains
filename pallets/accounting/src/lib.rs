@@ -318,31 +318,18 @@ mod pallet {
 
             // check that the block number is not already set
             ensure!(<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateAlreadySet);
-
-            // if entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
-            // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
-            let mut earliest_block_number = block_number.clone();
-            let posting_index = <PostingNumber<T>>::get();
-            for posting_index in 0..posting_index {
-                let posting_detail = <PostingDetail<T>>::get(&who, posting_index);
-                if posting_detail.is_some() {
-                    let posting_detail = posting_detail.unwrap();
-                    if posting_detail.applicable_period_blocknumber < earliest_block_number {
-                        earliest_block_number = posting_detail.applicable_period_blocknumber;
-                    }
-                }
-            }
             
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let minimum_reference_date = current_block.clone() + 446_400u32.into();
+            let maximum_block_number = current_block + 5_256_000u32.into();
+
             // check that the block number is in the future. This also confirms that it is not zero 
             // There should be a minimum of 62 Days in the future from the current block (446,400). 
             // This allows for the current month or anoy month in progress
-            let current_block = frame_system::Pallet::<T>::block_number();
-            let minimum_reference_date = current_block.clone() + 446_400u32.into();
             ensure!(block_number > minimum_reference_date, Error::<T>::AccountingRefDateTooSoon);
             
             // check that the block number is not too far in the future.
             // Maximum period is two years from now (5,256,000)
-            let maximum_block_number = current_block + 5_256_000u32.into();
             ensure!(block_number < maximum_block_number, Error::<T>::AccountingRefDateTooLate);
 
             // set the block number
@@ -354,8 +341,13 @@ mod pallet {
             Ok(().into())
         }
 
-        /// The opening balances need to be set for each ledger in the Balance Sheet.
-        /// The profit and loss is disregarded save for the earliest possible entry. This will be taken as 
+        /// The opening balances can be set for each ledger in the Balance Sheet. 
+        /// A date for the opening balance needs to be set however and all accounting will conform to this date.
+        /// As opening balances can be added after accounting entries have been made, we should take the earliest possible entry in all the ledgers as the opening balance date.
+        /// If no previous entries have been made then we assume that the opening balance date is that supplied by the extrinsic. 
+        
+        
+        The profit and loss is disregarded save for the earliest possible entry. This will be taken as 
         /// This extrinsic does not perform check against the validity of the debit and credit status for the entire ledger
         /// It is assumed that the opening balances are correct and that the ledger is balanced.
         /// You can run the `check_ledger` extrinsic to check the validity of the 
@@ -377,7 +369,38 @@ mod pallet {
             // check that the ledger has not already set an opening balance
             ensure!(<OpeningBalance<T>>::get(&who, &ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
 
-            todo!()
+            // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
+            // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
+            // the default value however is the block number in the arguments to this extrinsic.
+            let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
+                .flat_map(|(ledger, _)| {
+                    <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
+                        .map(|d| d.applicable_period_blocknumber.min(block_number))
+                        .min()
+                        .unwrap()
+                })
+                .min()
+                .unwrap();
+
+            // set the opening balance status
+            <OpeningBalance<T>>::put(who.clone(), true); 
+            <OpeningBalanceDate<T>>::put(who.clone(), earliest_block_number); 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            Ok(().into())
         }
 
 
