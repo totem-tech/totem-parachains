@@ -4,9 +4,9 @@ use totem_common::converter::Converter;
 impl pallet_accounting::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type AccountingConverter = Converter;
-    type Currency = pallet_balances_totem::Pallet<Self>;
+    type Currency = Balances;
     type RandomThing = RandomnessCollectiveFlip;
-    type Accounting = pallet_accounting::Pallet<Self>;
+    // type Accounting = pallet_accounting::Pallet<Self>;
     // type Accounting = Accounting;
     // type WeightInfo = ();
 }

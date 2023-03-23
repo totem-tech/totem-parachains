@@ -268,7 +268,8 @@ mod pallet {
     }
     
     #[pallet::config]
-    pub trait Config: frame_system::Config  + pallet_timestamp::Config {
+    // pub trait Config: frame_system::Config + pallet_timestamp::Config {
+    pub trait Config: frame_system::Config {
         // type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         
@@ -276,12 +277,12 @@ mod pallet {
         + Convert<[u8; 32], Self::AccountId>;
         type Currency: Currency<Self::AccountId>;
         type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
-        type Accounting: Posting<
-            Self::AccountId,
-            Self::Hash,
-            Self::BlockNumber,
-            CurrencyBalanceOf<Self>,
-        >;
+        // type Accounting: Posting<
+        //     Self::AccountId,
+        //     Self::Hash,
+        //     Self::BlockNumber,
+        //     CurrencyBalanceOf<Self>,
+        // >;
     }
     
     #[pallet::error]
@@ -342,19 +343,19 @@ mod pallet {
             let minimum_reference_date = current_block.clone() + 446_400u32.into();
             let maximum_block_number = current_block + 5_256_000u32.into();
             
-            // check that the block number is in the future. This also confirms that it is not zero 
-            // There should be a minimum of 62 Days in the future from the current block (446,400). 
-            // This allows for the current month or anoy month in progress
+            // // check that the block number is in the future. This also confirms that it is not zero 
+            // // There should be a minimum of 62 Days in the future from the current block (446,400). 
+            // // This allows for the current month or anoy month in progress
             ensure!(block_number > minimum_reference_date, Error::<T>::AccountingRefDateTooSoon);
             
-            // check that the block number is not too far in the future.
-            // Maximum period is two years from now (5,256,000)
+            // // check that the block number is not too far in the future.
+            // // Maximum period is two years from now (5,256,000)
             ensure!(block_number < maximum_block_number, Error::<T>::AccountingRefDateTooLate);
             
-            // set the block number
+            // // set the block number
             <AccountingRefDate<T>>::insert(who.clone(), block_number.clone());
             
-            // emit event
+            // // emit event
             Self::deposit_event(Event::<T>::AccountingRefDateSet { who, at_blocknumber: block_number });
             
             Ok(().into())
@@ -385,41 +386,41 @@ mod pallet {
             }
             
             // you should not be allowed to set an opening balance until the accounting reference date has been set
-            ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
+            // ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
             
-            // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance.
-            T::Accounting::combined_sanity_checks(&who, &entries)?;
+            // // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance.
+            // T::Accounting::combined_sanity_checks(&who, &entries)?;
             
-            // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
-            // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
-            // the default value however is the block number in the arguments to this extrinsic.
-            let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
-            .flat_map(|(ledger, _)| {
-                <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
-                .map(|d| d.applicable_period_blocknumber.min(block_number))
-                .min()
-                .into_iter()
-            })
-            .min()
-            .unwrap();
+            // // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
+            // // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
+            // // the default value however is the block number in the arguments to this extrinsic.
+            // let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
+            // .flat_map(|(ledger, _)| {
+            //     <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
+            //     .map(|d| d.applicable_period_blocknumber.min(block_number))
+            //     .min()
+            //     .into_iter()
+            // })
+            // .min()
+            // .unwrap();
             
-            // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting.
-            let reference_hash = T::Accounting::get_pseudo_random_hash(who.clone(), who.clone());
-            let current_block = frame_system::Pallet::<T>::block_number();
-            let keys: Vec<Record<T::AccountId, T::Hash, T::BlockNumber>> = entries
-                .iter()
-                .map(|e| Record {
-                    primary_party: who.clone(),
-                    counterparty: who.clone(),
-                    ledger: e.ledger,
-                    amount: e.amount,
-                    debit_credit: e.debit_credit,
-                    reference_hash,
-                    changed_on_blocknumber: current_block.clone(),
-                    applicable_period_blocknumber: earliest_block_number.clone(),
-                })
-                .collect();
-            T::Accounting::handle_multiposting_amounts(&keys)?;
+            // // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting.
+            // let reference_hash = T::Accounting::get_pseudo_random_hash(who.clone(), who.clone());
+            // let current_block = frame_system::Pallet::<T>::block_number();
+            // let keys: Vec<Record<T::AccountId, T::Hash, T::BlockNumber>> = entries
+            //     .iter()
+            //     .map(|e| Record {
+            //         primary_party: who.clone(),
+            //         counterparty: who.clone(),
+            //         ledger: e.ledger,
+            //         amount: e.amount,
+            //         debit_credit: e.debit_credit,
+            //         reference_hash,
+            //         changed_on_blocknumber: current_block.clone(),
+            //         applicable_period_blocknumber: earliest_block_number.clone(),
+            //     })
+            //     .collect();
+            // T::Accounting::handle_multiposting_amounts(&keys)?;
             
             // set the opening balance status
             // <OpeningBalance<T>>::insert(who.clone(), true); 
