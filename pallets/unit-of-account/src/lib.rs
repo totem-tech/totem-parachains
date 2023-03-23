@@ -508,18 +508,16 @@ pub mod pallet {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			ensure_root(origin)?;
-
-			let asset_details = Self::find_and_return_asset(&symbol)?;
+			ensure_signed(origin)?;
 
 			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
 
-			ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
+			let asset_details = Self::find_and_return_asset(&symbol)?;
 
+			ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
 			ensure!(asset_details.price_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
 
 			ensure!(price >= asset_details.price_threshold.0 as u128, Error::<T>::PriceBelowMinimumThresholdRange);
-
 			ensure!(price <= asset_details.price_threshold.1 as u128, Error::<T>::PriceAboveMinimumThresholdRange);
 
 			let mut intermediate_basket = Self::update_symbol_price_in_intermediate_basket(&symbol, price);

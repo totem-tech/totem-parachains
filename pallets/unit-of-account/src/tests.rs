@@ -453,7 +453,6 @@ fn should_remove_asset_successfully() {
 	});
 }
 
-
 #[test]
 fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
@@ -472,6 +471,209 @@ fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 				message: Some("AssetNotFound"),
 			})
 		);
+	});
+}
+
+#[test]
+fn should_update_asset__price_successfully() {
+	new_test_ext().execute_with(|| {
+		let account = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
+		assert_ok!(res);
+
+		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_1,
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_2.clone(),
+			15_646_926_171_000,
+			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_3,
+			12_141_252_300_000,
+			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
+		);
+		assert_ok!(res);
+
+		// update price for currency_symbol_2
+		let res =
+			PalletUnitOfAccount::update_asset_price(RuntimeOrigin::signed(account.clone()), currency_symbol_2, 180000000000000000000);
+		assert_ok!(res);
+
+		let unit_of_account = PalletUnitOfAccount::unit_of_account();
+		assert_ne!(unit_of_account, 0);
+	});
+}
+
+#[test]
+fn update_asset__price_should_fail_when_asset_is_not_in_basket() {
+	new_test_ext().execute_with(|| {
+		let account = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
+		assert_ok!(res);
+
+		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_1,
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_2.clone(),
+			15_646_926_171_000,
+			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let res =
+			PalletUnitOfAccount::update_asset_price(RuntimeOrigin::signed(account.clone()), currency_symbol_3, 180000000000000000000);
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [7, 0, 0, 0],
+				message: Some("AssetNotFound"),
+			})
+		);
+
+
+		let unit_of_account = PalletUnitOfAccount::unit_of_account();
+		dbg!(&unit_of_account);
+		assert_ne!(unit_of_account, 0);
+	});
+}
+
+#[test]
+fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
+	new_test_ext().execute_with(|| {
+		let account = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
+		assert_ok!(res);
+
+		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_1,
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_2.clone(),
+			15_646_926_171_000,
+			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_3,
+			12_141_252_300_000,
+			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
+		);
+		assert_ok!(res);
+
+		let res =
+			PalletUnitOfAccount::update_asset_price(RuntimeOrigin::signed(account.clone()), currency_symbol_3, 90000000000000000000);
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [15, 0, 0, 0],
+				message: Some("InvalidMinimumThresholdPriceValue"),
+			})
+		);
+
+
+		let unit_of_account = PalletUnitOfAccount::unit_of_account();
+		dbg!(&unit_of_account);
+		assert_ne!(unit_of_account, 0);
+	});
+}
+
+#[test]
+fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
+	new_test_ext().execute_with(|| {
+		let account = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
+		assert_ok!(res);
+
+		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_1,
+			203_080_000_000_000,
+			14000000000000002000, // 0.14
+			(14000000000000002000, 24000000000000002000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_2.clone(),
+			15_646_926_171_000,
+			100000000000000000000, // 1.00
+			(100000000000000000000, 200000000000000000000),
+		);
+		assert_ok!(res);
+
+		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let res = PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(account.clone()),
+			currency_symbol_3,
+			12_141_252_300_000,
+			108000000000000000000, // 1.08
+			(108000000000000000000, 208000000000000000000),
+		);
+		assert_ok!(res);
+
+		let res =
+			PalletUnitOfAccount::update_asset_price(RuntimeOrigin::signed(account.clone()), currency_symbol_3, 300000000000000000000);
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [16, 0, 0, 0],
+				message: Some("InvalidMaximumThresholdPriceValue"),
+			})
+		);
+
+
+		let unit_of_account = PalletUnitOfAccount::unit_of_account();
+		dbg!(&unit_of_account);
+		assert_ne!(unit_of_account, 0);
 	});
 }
 
