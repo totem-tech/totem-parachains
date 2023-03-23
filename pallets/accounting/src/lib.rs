@@ -277,12 +277,12 @@ mod pallet {
         + Convert<[u8; 32], Self::AccountId>;
         type Currency: Currency<Self::AccountId>;
         type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
-        // type Accounting: Posting<
-        //     Self::AccountId,
-        //     Self::Hash,
-        //     Self::BlockNumber,
-        //     CurrencyBalanceOf<Self>,
-        // >;
+        type Acc: Posting<
+            Self::AccountId,
+            Self::Hash,
+            Self::BlockNumber,
+            CurrencyBalanceOf<Self>,
+        >;
     }
     
     #[pallet::error]
@@ -386,46 +386,53 @@ mod pallet {
             }
             
             // you should not be allowed to set an opening balance until the accounting reference date has been set
-            // ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
+            ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
             
-            // // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance.
-            // T::Accounting::combined_sanity_checks(&who, &entries)?;
+            // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance. 
+            Self::combined_sanity_checks(&who, &entries)?;
             
             // // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
             // // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
             // // the default value however is the block number in the arguments to this extrinsic.
-            // let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
-            // .flat_map(|(ledger, _)| {
-            //     <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
-            //     .map(|d| d.applicable_period_blocknumber.min(block_number))
-            //     .min()
-            //     .into_iter()
-            // })
-            // .min()
-            // .unwrap();
+            let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
+            .flat_map(|(ledger, _)| {
+                <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
+                .map(|d| d.applicable_period_blocknumber.min(block_number))
+                .min()
+                .into_iter()
+            })
+            .min()
+            .unwrap();
             
-            // // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting.
-            // let reference_hash = T::Accounting::get_pseudo_random_hash(who.clone(), who.clone());
-            // let current_block = frame_system::Pallet::<T>::block_number();
-            // let keys: Vec<Record<T::AccountId, T::Hash, T::BlockNumber>> = entries
-            //     .iter()
-            //     .map(|e| Record {
-            //         primary_party: who.clone(),
-            //         counterparty: who.clone(),
-            //         ledger: e.ledger,
-            //         amount: e.amount,
-            //         debit_credit: e.debit_credit,
-            //         reference_hash,
-            //         changed_on_blocknumber: current_block.clone(),
-            //         applicable_period_blocknumber: earliest_block_number.clone(),
-            //     })
-            //     .collect();
-            // T::Accounting::handle_multiposting_amounts(&keys)?;
+            // // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is updated here.
+            let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
+            let current_block = frame_system::Pallet::<T>::block_number();
+            let mut keys = Vec::new();
+            entries
+                .iter()
+                .for_each(|e| {
+                    let record = Record {
+                        primary_party: who.clone(),
+                        counterparty: who.clone(),
+                        ledger: e.ledger,
+                        amount: e.amount,
+                        debit_credit: e.debit_credit,
+                        reference_hash,
+                        changed_on_blocknumber: current_block.clone(),
+                        applicable_period_blocknumber: earliest_block_number.clone(),
+                };
+                // set the opening balance status
+                <OpeningBalance<T>>::insert(who.clone(), e.ledger, true);
+                keys.push(record);
+            });
+
+            T::Acc::handle_multiposting_amounts(&keys)?;
             
-            // set the opening balance status
-            // <OpeningBalance<T>>::insert(who.clone(), true); 
-            // <OpeningBalanceDate<T>>::insert(who.clone(), earliest_block_number); 
+            <OpeningBalanceDate<T>>::insert(who.clone(), earliest_block_number); 
             
+            // emit event
+            Self::deposit_event(Event::<T>::OpeningBalanceSet);
+
             Ok(().into())
         }
         
@@ -449,6 +456,7 @@ mod pallet {
             who: T::AccountId,
             at_blocknumber: T::BlockNumber,
         },
+        OpeningBalanceSet,
     }
         
     impl<T: Config> Pallet<T> {
@@ -525,6 +533,121 @@ mod pallet {
                 
                 Ok((increase_amount, decrease_amount))
             }
+             // fn debit_credit_matches(
+        //     entries: &OpeningDetail,
+        // ) -> DispatchResult {
+        //     let mut debit_total: LedgerBalance = 0;
+        //     let mut credit_total: LedgerBalance = 0;
+
+        //     for entry in entries {
+        //         match entry.debit_credit {
+        //             Indicator::Debit => {
+        //                 debit_total.checked_add(entry.amount)
+        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
+        //             },
+        //             Indicator::Credit => {
+        //                 credit_total.checked_add(entry.amount)
+        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
+        //             },
+        //         }
+        //     }
+
+        //     if debit_total != credit_total {
+        //         return Err(Error::<T>::DebitCreditMismatch.into());
+        //     }
+
+        //     Ok(())
+        // }
+
+        // fn accounting_equation_check(
+        //     entries: &OpeningDetail,
+        // ) -> DispatchResult {
+        //     let mut assets_total: LedgerBalance = 0;
+        //     let mut liabilities_total: LedgerBalance = 0;
+        //     let mut equity_total: LedgerBalance = 0;
+
+        //     for entry in entries {
+        //         match entry.ledger {
+        //             Ledger::BalanceSheet(B::Assets(_)) => {
+        //                 assets_total.checked_add(entry.amount)
+        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
+        //             },
+        //             Ledger::BalanceSheet(B::Liabilities(_)) => {
+        //                 liabilities_total.checked_add(entry.amount)
+        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
+        //             },
+        //             Ledger::BalanceSheet(B::Equity(_)) => {
+        //                 equity_total.checked_add(entry.amount)
+        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
+        //             },
+        //         }
+        //     }
+
+        //     if assets_total != liabilities_total + equity_total {
+        //         return Err(Error::<T>::AccountingEquationError.into());
+        //     }
+
+        //     Ok(())
+        // }
+                                                                                                            
+        fn combined_sanity_checks(
+            who : &T::AccountId,
+            entries: &Vec<OpeningDetail>,
+        ) -> DispatchResult {
+            let assets_total: LedgerBalance = Zero::zero();
+            let liabilities_total: LedgerBalance = Zero::zero();
+            let equity_total: LedgerBalance = Zero::zero();
+            let debit_total: LedgerBalance = Zero::zero();
+            let credit_total: LedgerBalance = Zero::zero();
+            
+            for entry in entries {
+                // This should fail if _any_ ledger has an opening balance already set
+                // this should not happen as the check is performed before this is called
+                ensure!(<OpeningBalance<T>>::get(&who, &entry.ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
+                match entry.ledger {
+                    Ledger::BalanceSheet(B::Assets(_)) => {
+                        assets_total.checked_add(entry.amount)
+                        .ok_or(Error::<T>::BalanceValueOverflow)?;
+                    },
+                    Ledger::BalanceSheet(B::Liabilities(_)) => {
+                        liabilities_total.checked_add(entry.amount)
+                        .ok_or(Error::<T>::BalanceValueOverflow)?;
+                    },
+                    Ledger::BalanceSheet(B::Equity(_)) => {
+                        equity_total.checked_add(entry.amount)
+                        .ok_or(Error::<T>::BalanceValueOverflow)?;
+                    },
+                    Ledger::ProfitLoss(_) => {
+                        // Profit and Loss accounts are not valid for opening balances
+                        return Err(Error::<T>::InvalidOpeningLedgerPL.into());
+                    },
+                    Ledger::ControlAccounts(_) => {
+                        // Control accounts are not valid for opening balances
+                        return Err(Error::<T>::InvalidOpeningLedgerCtrl.into());
+                    },
+                }
+                match entry.debit_credit {
+                    Indicator::Debit => {
+                        debit_total.checked_add(entry.amount)
+                        .ok_or(Error::<T>::BalanceValueOverflow)?;
+                    },
+                    Indicator::Credit => {
+                        credit_total.checked_add(entry.amount)
+                        .ok_or(Error::<T>::BalanceValueOverflow)?;
+                    },
+                }
+            }
+            
+            if assets_total != liabilities_total + equity_total {
+                return Err(Error::<T>::AccountingEquationError.into());
+            }
+            
+            if debit_total != credit_total {
+                return Err(Error::<T>::DebitCreditMismatch.into());
+            }
+            
+            Ok(())
+        }
     }  
         
     impl<T: Config> Posting<T::AccountId, T::Hash, T::BlockNumber, CurrencyBalanceOf<T>> for Pallet<T>
@@ -1036,122 +1159,6 @@ mod pallet {
             );
             
             T::Hashing::hash(input.encode().as_slice()) // default hash BlakeTwo256
-        }
-                                                
-        // fn debit_credit_matches(
-        //     entries: &OpeningDetail,
-        // ) -> DispatchResult {
-        //     let mut debit_total: LedgerBalance = 0;
-        //     let mut credit_total: LedgerBalance = 0;
-
-        //     for entry in entries {
-        //         match entry.debit_credit {
-        //             Indicator::Debit => {
-        //                 debit_total.checked_add(entry.amount)
-        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
-        //             },
-        //             Indicator::Credit => {
-        //                 credit_total.checked_add(entry.amount)
-        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
-        //             },
-        //         }
-        //     }
-
-        //     if debit_total != credit_total {
-        //         return Err(Error::<T>::DebitCreditMismatch.into());
-        //     }
-
-        //     Ok(())
-        // }
-
-        // fn accounting_equation_check(
-        //     entries: &OpeningDetail,
-        // ) -> DispatchResult {
-        //     let mut assets_total: LedgerBalance = 0;
-        //     let mut liabilities_total: LedgerBalance = 0;
-        //     let mut equity_total: LedgerBalance = 0;
-
-        //     for entry in entries {
-        //         match entry.ledger {
-        //             Ledger::BalanceSheet(B::Assets(_)) => {
-        //                 assets_total.checked_add(entry.amount)
-        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
-        //             },
-        //             Ledger::BalanceSheet(B::Liabilities(_)) => {
-        //                 liabilities_total.checked_add(entry.amount)
-        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
-        //             },
-        //             Ledger::BalanceSheet(B::Equity(_)) => {
-        //                 equity_total.checked_add(entry.amount)
-        //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
-        //             },
-        //         }
-        //     }
-
-        //     if assets_total != liabilities_total + equity_total {
-        //         return Err(Error::<T>::AccountingEquationError.into());
-        //     }
-
-        //     Ok(())
-        // }
-                                                                                                            
-        fn combined_sanity_checks(
-            who : &T::AccountId,
-            entries: &Vec<OpeningDetail>,
-        ) -> DispatchResult {
-            let assets_total: LedgerBalance = Zero::zero();
-            let liabilities_total: LedgerBalance = Zero::zero();
-            let equity_total: LedgerBalance = Zero::zero();
-            let debit_total: LedgerBalance = Zero::zero();
-            let credit_total: LedgerBalance = Zero::zero();
-            
-            for entry in entries {
-                // This should fail if _any_ ledger has an opening balance already set
-                // this should not happen as the check is performed before this is called
-                ensure!(<OpeningBalance<T>>::get(&who, &entry.ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
-                match entry.ledger {
-                    Ledger::BalanceSheet(B::Assets(_)) => {
-                        assets_total.checked_add(entry.amount)
-                        .ok_or(Error::<T>::BalanceValueOverflow)?;
-                    },
-                    Ledger::BalanceSheet(B::Liabilities(_)) => {
-                        liabilities_total.checked_add(entry.amount)
-                        .ok_or(Error::<T>::BalanceValueOverflow)?;
-                    },
-                    Ledger::BalanceSheet(B::Equity(_)) => {
-                        equity_total.checked_add(entry.amount)
-                        .ok_or(Error::<T>::BalanceValueOverflow)?;
-                    },
-                    Ledger::ProfitLoss(_) => {
-                        // Profit and Loss accounts are not valid for opening balances
-                        return Err(Error::<T>::InvalidOpeningLedgerPL.into());
-                    },
-                    Ledger::ControlAccounts(_) => {
-                        // Control accounts are not valid for opening balances
-                        return Err(Error::<T>::InvalidOpeningLedgerCtrl.into());
-                    },
-                }
-                match entry.debit_credit {
-                    Indicator::Debit => {
-                        debit_total.checked_add(entry.amount)
-                        .ok_or(Error::<T>::BalanceValueOverflow)?;
-                    },
-                    Indicator::Credit => {
-                        credit_total.checked_add(entry.amount)
-                        .ok_or(Error::<T>::BalanceValueOverflow)?;
-                    },
-                }
-            }
-            
-            if assets_total != liabilities_total + equity_total {
-                return Err(Error::<T>::AccountingEquationError.into());
-            }
-            
-            if debit_total != credit_total {
-                return Err(Error::<T>::DebitCreditMismatch.into());
-            }
-            
-            Ok(())
         }
     }
 }

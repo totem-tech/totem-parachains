@@ -6,8 +6,7 @@ impl pallet_accounting::Config for Runtime {
     type AccountingConverter = Converter;
     type Currency = Balances;
     type RandomThing = RandomnessCollectiveFlip;
-    // type Accounting = pallet_accounting::Pallet<Self>;
-    // type Accounting = Accounting;
+    type Acc = pallet_accounting::Pallet<Self>;
     // type WeightInfo = ();
 }
 

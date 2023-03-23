@@ -90,12 +90,6 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 	fn get_netfees_account() -> AccountId;
 
 	fn get_pseudo_random_hash(s: AccountId, r: AccountId) -> Hash;
-
-	// fn debit_credit_balances(e: &OpeningDetail) -> DispatchResult;
-	
-	// fn accounting_equation_check(e: &OpeningDetail) -> DispatchResult;
-	
-	fn combined_sanity_checks(o: &AccountId, e: &Vec<OpeningDetail>) -> DispatchResult;
 }
 
 /// Debit or Credit Indicator
