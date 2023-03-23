@@ -90,11 +90,17 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 	fn get_netfees_account() -> AccountId;
 
 	fn get_pseudo_random_hash(s: AccountId, r: AccountId) -> Hash;
+
+	// fn debit_credit_balances(e: &OpeningDetail) -> DispatchResult;
+	
+	// fn accounting_equation_check(e: &OpeningDetail) -> DispatchResult;
+	
+	fn combined_sanity_checks(o: &AccountId, e: &Vec<OpeningDetail>) -> DispatchResult;
 }
 
 /// Debit or Credit Indicator
 /// Debit and Credit balances are account specific - see chart of accounts.
-#[derive(MaxEncodedLen, Clone, Decode, Encode, Copy, TypeInfo)]
+#[derive(MaxEncodedLen, Clone, Decode, PartialEq, Encode, Copy, Debug, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Indicator {
 	/// Debit
@@ -123,6 +129,16 @@ pub struct Detail<AccountId, Hash, BlockNumber> {
 	pub reference_hash: Hash,
 	pub changed_on_blocknumber: BlockNumber,
 	pub applicable_period_blocknumber: BlockNumber,
+}
+
+// applicable_period_blocknumber is not included per record, but is included as an argument to the extrinisic setting these
+#[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
+pub struct OpeningDetail {
+	pub ledger: Ledger,
+	pub debit_credit: Indicator,
+	pub amount: LedgerBalance,
+	// to be added after UoA is completed, as this determines the exchange rate to be used.
+	// pub asset: Assets,
 }
 
 // Implementations
@@ -211,4 +227,17 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
+	
+	// fn debit_credit_balances(_e: &OpeningDetail) -> DispatchResult {
+	// 	unimplemented!("Used as a mock, shouldn't be called")
+	// }
+
+	// fn accounting_equation_check(_e: &OpeningDetail) -> DispatchResult {
+	// 	unimplemented!("Used as a mock, shouldn't be called")
+	// }
+
+	fn combined_sanity_checks(_o: &AccountId, _e: &OpeningDetail) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+
 }
