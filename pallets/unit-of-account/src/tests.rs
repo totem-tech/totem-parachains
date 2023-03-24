@@ -191,6 +191,7 @@ fn should_add_new_asset_successfully() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -201,6 +202,7 @@ fn should_add_new_asset_successfully() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -211,6 +213,7 @@ fn should_add_new_asset_successfully() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
 		);
 		assert_ok!(res);
 
@@ -231,6 +234,7 @@ fn add_currency_should_fail_when_account_is_not_whitelisted() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 
 		assert_err!(
@@ -259,6 +263,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -269,6 +274,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -279,6 +285,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
 		);
 		assert_ok!(res);
 
@@ -289,6 +296,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 			1_381_664_000_000_000,
 			1000000000000000000, // 0.1
 			(1000000000000000000, 2000000000000000000),
+			(1_381_664_000_000_000, 10_381_664_000_000_000)
 		);
 		assert_err!(
 			res,
@@ -316,6 +324,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -326,6 +335,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000)
 		);
 		assert_ok!(res);
 
@@ -336,6 +346,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 			1_381_664_000_000_000,
 			1000000000000000000, // 0.1
 			(1000000000000000000,21000000000000000000),
+			(1_381_664_000_000_000, 10_381_664_000_000_000)
 		);
 		assert_err!(
 			res,
@@ -363,6 +374,7 @@ fn add_asset_should_fail_with_invalid_issuance_value() {
 			0,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_err!(
 			res,
@@ -390,6 +402,7 @@ fn add_asset_should_fail_with_invalid_price_value() {
 			203_080_000_000_000,
 			0,
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 
 		assert_err!(
@@ -418,6 +431,7 @@ fn should_remove_asset_successfully() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -428,6 +442,7 @@ fn should_remove_asset_successfully() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -438,6 +453,8 @@ fn should_remove_asset_successfully() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
+
 		);
 		assert_ok!(res);
 
@@ -488,6 +505,7 @@ fn should_update_asset__price_successfully() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -498,6 +516,7 @@ fn should_update_asset__price_successfully() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -508,6 +527,8 @@ fn should_update_asset__price_successfully() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
+
 		);
 		assert_ok!(res);
 
@@ -535,6 +556,7 @@ fn update_asset__price_should_fail_when_asset_is_not_in_basket() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -545,6 +567,7 @@ fn update_asset__price_should_fail_when_asset_is_not_in_basket() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -581,6 +604,7 @@ fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -591,6 +615,7 @@ fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -601,6 +626,7 @@ fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
 		);
 		assert_ok!(res);
 
@@ -636,6 +662,7 @@ fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
 			203_080_000_000_000,
 			14000000000000002000, // 0.14
 			(14000000000000002000, 24000000000000002000),
+			(203_080_000_000_000, 503_080_000_000_000),
 		);
 		assert_ok!(res);
 
@@ -646,6 +673,7 @@ fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
 			15_646_926_171_000,
 			100000000000000000000, // 1.00
 			(100000000000000000000, 200000000000000000000),
+			(15_646_926_171_000, 20_646_926_171_000),
 		);
 		assert_ok!(res);
 
@@ -656,6 +684,7 @@ fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
 			12_141_252_300_000,
 			108000000000000000000, // 1.08
 			(108000000000000000000, 208000000000000000000),
+			(12_141_252_300_000, 20_141_252_300_000)
 		);
 		assert_ok!(res);
 
@@ -676,49 +705,3 @@ fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
 		assert_ne!(unit_of_account, 0);
 	});
 }
-
-
-/*
-#[test]
-fn should_update_currency_successfully() {
-	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::root(), account.clone());
-		assert_ok!(res);
-
-		let currency_symbol_1: Vec<u8> = b"cny".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_1.clone(),
-			203_080_000_000_000,
-			14000000000000002000, // 0.14
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_1), Some(true));
-
-		let currency_symbol_2: Vec<u8> = b"usd".to_vec().into();
-		let res = PalletUnitOfAccount::add_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_2.clone(),
-			15_646_926_171_000,
-			100000000000000000000, // 1.00
-		);
-		assert_ok!(res);
-		assert_eq!(PalletUnitOfAccount::symbol_exists(currency_symbol_2.clone()), Some(true));
-		let unit_of_account = PalletUnitOfAccount::unit_of_account();
-		dbg!(unit_of_account);
-
-		let res = PalletUnitOfAccount::update_currency(
-			RuntimeOrigin::signed(account.clone()),
-			currency_symbol_2.clone(),
-			Some(13_141_252_300_000),
-			Some(158000000000000000000),
-		);
-		assert_ok!(res);
-
-		let new_unit_of_account = PalletUnitOfAccount::unit_of_account();
-		assert_ne!(unit_of_account, new_unit_of_account);
-		dbg!(new_unit_of_account);
-	});
-}
-*/

@@ -2,130 +2,126 @@
 use super::*;
 use crate::Pallet as UnitOfAccount;
 use frame_benchmarking::{
-	benchmarks_instance_pallet, impl_benchmark_test_suite, whitelisted_caller,
+	benchmarks, whitelisted_caller,
 };
 use frame_system::RawOrigin;
-use sp_std::vec;
-fn assert_last_event<T: Config<I>, I: 'static>(generic_event: <T as Config<I>>::RuntimeEvent) {
+use totem_primitives::unit_of_account::{COIN, CoinType};
+
+fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
 }
 
-const MAX_PARAMETER_LENGTH: u32 = 20000;
-
-benchmarks_instance_pallet! {
+benchmarks! {
 	whitelist_account {
 		let account: T::AccountId = whitelisted_caller();
-	}: _(RawOrigin::Root, account.clone())
+	}: _(RawOrigin::Signed(account.clone()))
+
 	verify {
-		assert_last_event::<T, I>(Event::AccountWhitelisted(account).into());
+		assert_last_event::<T>(Event::AccountWhitelisted(account).into());
 	}
+
 
 	remove_account {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
+		WhitelistedAccounts::<T>::set(account.clone(), Some(()));
 
-		whitelisted_accounts
-				.try_push(account.clone())
-				.unwrap();
-
-		WhitelistedAccounts::<T>::set(whitelisted_accounts);
-
-	}: _(RawOrigin::Root, account.clone())
+	}: _(RawOrigin::Root, Some(account.clone()))
 	verify {
-		assert_last_event::<T, I>(Event::AccountRemoved(account).into());
+		assert_last_event::<T>(Event::AccountRemoved(account).into());
 	}
 
 	add_new_asset {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
+		WhitelistedAccounts::<T>::set(account.clone(), Some(()));
 
-		whitelisted_accounts
-				.try_push(account.clone())
-				.unwrap();
+		let aca_symbol = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let aca_issuance = 203_080_000_000_000;
+		let aca_price = 14000000000000002000;
+		let aca_price_threshold = (14000000000000002000, 24000000000000002000);
+		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		WhitelistedAccounts::<T>::set(whitelisted_accounts);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold, aca_issuance_threshold);
 
-		let cny_symbol = b"cny".to_vec().into();
-		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
-		let cny_price = 14000000000000002000u128 as LedgerBalance;
+		let ada_symbol =  Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let ada_issuance = 15_646_926_171_000;
+		let ada_price =  100000000000000000000;
+		let ada_price_threshold =  (100000000000000000000, 200000000000000000000);
+		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol, cny_issuance, cny_price);
-
-		let usd_symbol =  b"usd".to_vec();
-		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
-		let usd_price =  100000000000000000000u128 as LedgerBalance;
-
-	}: _(RawOrigin::Signed(account.clone()), usd_symbol.clone(), usd_issuance, usd_price)
+	}: _(RawOrigin::Signed(account), ada_symbol.clone(), ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold)
 	verify {
-		assert_last_event::<T, I>(Event::AssetAddedToBasket(usd_symbol).into());
+		assert_last_event::<T>(Event::AssetAddedToBasket(aca_symbol).into());
 	}
 
-	remove_currency {
+
+	remove_asset {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
+		WhitelistedAccounts::<T>::set(account.clone(), Some(()));
 
-		whitelisted_accounts
-				.try_push(account.clone())
-				.unwrap();
+		let aca_symbol = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let aca_issuance = 203_080_000_000_000;
+		let aca_price = 14000000000000002000;
+		let aca_price_threshold = (14000000000000002000, 24000000000000002000);
+		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		WhitelistedAccounts::<T>::set(whitelisted_accounts);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold, aca_issuance_threshold);
 
-		let cny_symbol:Vec<u8> = b"cny".to_vec().into();
-		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
-		let cny_price = 14000000000000002000u128 as LedgerBalance;
+		let ada_symbol =  Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let ada_issuance = 15_646_926_171_000;
+		let ada_price =  100000000000000000000;
+		let ada_price_threshold =  (100000000000000000000, 200000000000000000000);
+		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol.clone(), cny_issuance, cny_price);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold);
 
-		let usd_symbol =  b"usd".to_vec();
-		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
-		let usd_price =  100000000000000000000u128 as LedgerBalance;
+		let a_str_symbol =  Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let a_str_issuance = 12_141_252_300_000;
+		let a_str_price =  108000000000000000000;
+		let a_str_price_threshold = (108000000000000000000, 208000000000000000000);
+		let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(usd_symbol, usd_issuance, usd_price);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
 
-		let eur_symbol =  b"eur".to_vec();
-		let eur_issuance = 12_141_252_300_000u128 as LedgerBalance;
-		let eur_price =  108000000000000000000u128 as LedgerBalance;
-
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(eur_symbol, eur_issuance, eur_price);
-
-	}: _(RawOrigin::Signed(account.clone()), cny_symbol.clone())
+	}: _(RawOrigin::Signed(account), a_str_symbol.clone())
 	verify {
-		assert_last_event::<T, I>(Event::CurrencyRemovedFromTheBasket(cny_symbol).into());
+		assert_last_event::<T>(Event::AssetRemoved(a_str_symbol).into());
 	}
 
-	update_currency {
+	update_asset_price {
 		let account: T::AccountId = whitelisted_caller();
 
-		let mut whitelisted_accounts = WhitelistedAccounts::<T>::get();
+		WhitelistedAccounts::<T>::set(account.clone(), Some(()));
 
-		whitelisted_accounts
-				.try_push(account.clone())
-				.unwrap();
+		let aca_symbol = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let aca_issuance = 203_080_000_000_000;
+		let aca_price = 14000000000000002000;
+		let aca_price_threshold = (14000000000000002000, 24000000000000002000);
+		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		WhitelistedAccounts::<T>::set(whitelisted_accounts);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold,  aca_issuance_threshold);
 
-		let cny_symbol = b"cny".to_vec().into();
-		let cny_issuance = 203_080_000_000_000u128 as LedgerBalance;
-		let cny_price = 14000000000000002000u128 as LedgerBalance;
+		let ada_symbol =  Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let ada_issuance = 15_646_926_171_000;
+		let ada_price =  100000000000000000000;
+		let ada_price_threshold =  (100000000000000000000, 200000000000000000000);
+		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(cny_symbol, cny_issuance, cny_price);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold);
 
-		let usd_symbol =  b"usd".to_vec();
-		let usd_issuance = 15_646_926_171_000u128 as LedgerBalance;
-		let usd_price =  100000000000000000000u128 as LedgerBalance;
+		let a_str_symbol =  Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let a_str_issuance = 12_141_252_300_000;
+		let a_str_price =  108000000000000000000;
+		let a_str_price_threshold = (108000000000000000000, 208000000000000000000);
+		let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
 
-		<UnitOfAccount<T, I> as UnitOfAccountInterface>::add(usd_symbol.clone(), usd_issuance, usd_price);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
 
-		let new_usd_issuance = 25_646_926_171_000u128 as LedgerBalance;
-		let new_usd_price =  200000000000000000000u128 as LedgerBalance;
-
-	}: _(RawOrigin::Signed(account.clone()), usd_symbol.clone(), Some(new_usd_issuance), Some(new_usd_price))
+		let new_ada_price = 180000000000000000000;
+	}: _(RawOrigin::Signed(account.clone()), ada_symbol.clone(), new_ada_price)
 	verify {
-		assert_last_event::<T, I>(Event::CurrencyUpdatedInTheBasket(usd_symbol).into());
+		assert_last_event::<T>(Event::AssetPriceUpdated(ada_symbol).into());
 	}
 }
-
-impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test);

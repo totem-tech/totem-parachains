@@ -28,7 +28,9 @@ pub struct AssetDetails {
 	/// uoa_per_asset converted
 	pub uoa_per_asset: LedgerBalance,
 	/// The threshold of the asset's price which represents the minimum bound and maximum bound
-	pub price_threshold: (LedgerBalance, LedgerBalance)
+	pub price_threshold: (LedgerBalance, LedgerBalance),
+	/// The threshold of the asset's issuance which represents the minimum bound and maximum bound
+	pub issuance_threshold: (LedgerBalance, LedgerBalance)
 }
 
 /// Holds the details for each asset for processing
@@ -48,5 +50,7 @@ pub struct AssetData<T> {
 	/// uoa_per_asset = price_in_base_asset / (100_000 * unit_of_account)
 	pub uoa_per_asset: Option<T>,
 	/// The threshold price of the asset which represents the minimum bound and maximum bound
-	pub price_threshold: (u128, u128)
+	pub price_threshold: (u128, u128),
+	/// The threshold issuance of the asset which represents the minimum bound and maximum bound
+	pub issuance_threshold: (u128, u128)
 }
