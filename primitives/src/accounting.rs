@@ -127,7 +127,7 @@ pub struct Detail<AccountId, Hash, BlockNumber> {
 
 // applicable_period_blocknumber is not included per record, but is included as an argument to the extrinisic setting these
 #[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
-pub struct OpeningDetail {
+pub struct AdjustmentDetail {
 	pub ledger: Ledger,
 	pub debit_credit: Indicator,
 	pub amount: LedgerBalance,
@@ -222,15 +222,15 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 	
-	// fn debit_credit_balances(_e: &OpeningDetail) -> DispatchResult {
+	// fn debit_credit_balances(_e: &AdjustmentDetail) -> DispatchResult {
 	// 	unimplemented!("Used as a mock, shouldn't be called")
 	// }
 
-	// fn accounting_equation_check(_e: &OpeningDetail) -> DispatchResult {
+	// fn accounting_equation_check(_e: &AdjustmentDetail) -> DispatchResult {
 	// 	unimplemented!("Used as a mock, shouldn't be called")
 	// }
 
-	fn combined_sanity_checks(_o: &AccountId, _e: &OpeningDetail) -> DispatchResult {
+	fn combined_sanity_checks(_o: &AccountId, _e: &AdjustmentDetail) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 

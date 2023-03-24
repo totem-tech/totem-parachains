@@ -164,6 +164,48 @@ pub enum PPE {
     /// B12_1002_C008,
     AssetsUnderConstruction,
 }
+
+/// PropertyPlantEquipment not including Land
+#[allow(non_camel_case_types)]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[scale_info(capture_docs = "always")]
+pub enum PPEALT {
+    /// P50_0003_D002,
+    /// B12_1001_D001,
+    /// B12_1002_C001,
+    Buildings,
+    /// P50_0003_D003,
+    /// B12_1001_D002,
+    /// B12_1002_C002,
+    FurnitureFixturesFittings,
+    /// P50_0003_D004,
+    /// B12_1001_D003,
+    /// B12_1002_C003,
+    PlantAndEquipment,
+    /// P50_0003_D005,
+    /// B12_1001_D004,
+    /// B12_1002_C004,
+    MotorVehicles,
+    /// P50_0003_D006,
+    /// B12_1001_D005,
+    /// B12_1002_C005,
+    Supplies,
+    /// P50_0003_D007,
+    /// B12_1001_D006,
+    /// B12_1002_C006,
+    ComputerAndITEquipment,
+    /// P50_0003_D008,
+    /// B12_1001_D007,
+    /// B12_1002_C007,
+    RightOfUseAssets,
+    /// P50_0003_D009,
+    /// B12_1001_D009,
+    /// B12_1002_C009,
+    LeaseholdImprovements,
+    /// B12_1001_D008,
+    /// B12_1002_C008,
+    AssetsUnderConstruction,
+}
 /// Primary Intangibles
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -193,7 +235,7 @@ pub enum _0003_ {
     GovernmentGrants,
     /// P50_0003_D015,
     NonCapitalProjectExpense,
-    Depreciation(PPE),
+    Depreciation(PPEALT),
     Amortization(IntangibleAssetList),
     /// P50_0003_D014,
     GainLossMiscellaneousSales,
@@ -1215,7 +1257,7 @@ pub enum CurrentAssetsCrypto {
 #[scale_info(capture_docs = "always")]
 pub enum FixedAssets {
     PropPlantEquip(PPE),
-    AccumulatedDepreciation(PPE),
+    AccumulatedDepreciation(PPEALT),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1664,7 +1706,7 @@ pub enum OPEX {
     /// _0038_(_0038_),
     Provisions(_0038_),
     /// _0039_(_0039_),
-    WriteOff(PPE),
+    WriteOff(PPEALT),
 }
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
@@ -1791,4 +1833,31 @@ pub enum Ledger {
     BalanceSheet(B),
     ProfitLoss(P),
     ControlAccounts(ControlAccounts),
+}
+/// Implements a check on the balance type for the account. In general a debit balance is increased for Assets and Expenses
+/// and a credit balance is increased for Liabilities, Equity and Income. However there are specific exceptions.
+/// This allows a programmatic check on the balance type for the account.
+impl Ledger {
+    pub fn is_credit_balance(&self) -> bool {
+        match self {
+            Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::ImpairmentLoss(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::CurrentAssetsCrypto(CurrentAssetsCrypto::CoinImpairment(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::CurrentAssetsCrypto(CurrentAssetsCrypto::TokenImpairment(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::FixedAssets(FixedAssets::AccumulatedDepreciation(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::IntagibleAssets(IntagibleAssets::ImpairmentLoss))) => true,
+            Ledger::BalanceSheet(B::Assets(A::IntagibleAssets(IntagibleAssets::AccumulatedDepreciationIntangibles(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::NonCurrentAssets(NonCurrentAssets::ImpairmentLossOn(_)))) => true,
+            Ledger::BalanceSheet(B::Assets(A::NonCurrentAssets(NonCurrentAssets::ImpairmentOfFixedAssets))) => true,
+            Ledger::BalanceSheet(B::Equity(E::ShareholdersEquity(_))) => true,
+            Ledger::BalanceSheet(B::Equity(E::OtherEquity(_))) => true,
+            Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::TreasuryShares))) => false,
+            Ledger::BalanceSheet(B::Equity(E::OtherReserves(_))) => true,
+            Ledger::BalanceSheet(B::Equity(E::RetainedEarnings(RetainedEarnings::DividendPaid))) => false,
+            Ledger::BalanceSheet(B::Liabilities(_)) => true,
+            Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesReturnsAndAllowances))) => false,
+            Ledger::ProfitLoss(P::Expenses(_)) => false,
+            Ledger::ControlAccounts(_) => false,
+            _ => false,
+        }
+    }
 }
