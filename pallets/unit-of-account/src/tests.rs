@@ -493,7 +493,7 @@ fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 }
 
 #[test]
-fn should_update_asset__price_successfully() {
+fn should_update_asset_price_successfully() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
@@ -544,7 +544,7 @@ fn should_update_asset__price_successfully() {
 }
 
 #[test]
-fn update_asset__price_should_fail_when_asset_is_not_in_basket() {
+fn update_asset_price_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
@@ -592,7 +592,7 @@ fn update_asset__price_should_fail_when_asset_is_not_in_basket() {
 }
 
 #[test]
-fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
+fn update_asset_price_should_fail_when_asset_price_is_below_price_threshold() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
@@ -650,7 +650,7 @@ fn update_asset__price_should_fail_when_asset_price_is_below_price_threshold() {
 }
 
 #[test]
-fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
+fn update_asset_price_should_fail_when_asset_price_is_above_price_threshold() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
@@ -706,7 +706,7 @@ fn update_asset__price_should_fail_when_asset_price_is_above_price_threshold() {
 }
 
 #[test]
-fn should_update_asset__issuance_successfully() {
+fn should_update_asset_issuance_successfully() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));

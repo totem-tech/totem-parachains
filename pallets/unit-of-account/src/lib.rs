@@ -466,7 +466,7 @@ pub mod pallet {
 		/// Parameters:
 		/// - `origin`: A sudo origin
 		/// - `symbol:` The currency symbol to remove
-		#[pallet::weight(T::WeightInfo::remove_currency())]
+		#[pallet::weight(T::WeightInfo::remove_asset())]
 		#[pallet::call_index(3)]
 		pub fn remove_asset(
 			origin: OriginFor<T>,
@@ -506,7 +506,7 @@ pub mod pallet {
 		/// - `origin`: A whitelisted call	er origin
 		/// - `symbol:` The asset symbol to remove
 		/// - `price:` The asset price
-		#[pallet::weight(T::WeightInfo::update_currency())]
+		#[pallet::weight(T::WeightInfo::update_asset_price())]
 		#[pallet::call_index(4)]
 		pub fn update_asset_price(
 			origin: OriginFor<T>,
@@ -551,7 +551,7 @@ pub mod pallet {
 		/// - `origin`: A whitelisted call	er origin
 		/// - `symbol:` The asset symbol to remove
 		/// - `price:` The asset price
-		#[pallet::weight(T::WeightInfo::update_currency())]
+		#[pallet::weight(T::WeightInfo::update_asset_issuance())]
 		#[pallet::call_index(5)]
 		pub fn update_asset_issuance(
 			origin: OriginFor<T>,
