@@ -1841,6 +1841,21 @@ impl Ledger {
     pub fn is_credit_balance(&self) -> bool {
         if let Ledger::BalanceSheet(B::Liabilities(_)) = self {
             true
+        } else if let Ledger::ProfitLoss(P::Expenses(_)) = self {
+            false
+        } else if let Ledger::ControlAccounts(_) = self {
+            false
+        } else if let Ledger::ProfitLoss(P::Income(income)) = self { 
+            match income {
+                I::Sales(Sales::SalesReturnsAndAllowances) => false,
+                _ => true,
+            }
+        } else if let Ledger::BalanceSheet(B::Equity(equity)) = self { 
+            match equity {
+                E::CapitalStock(CapitalStock::TreasuryShares)
+                | E::RetainedEarnings(RetainedEarnings::DividendPaid) => false,
+                _ => true,
+            }
         } else if let Ledger::BalanceSheet(B::Assets(asset)) = self { 
             match asset {
                 A::CurrentAssets(CurrentAssets::ImpairmentLoss(_))
@@ -1853,22 +1868,8 @@ impl Ledger {
                 | A::NonCurrentAssets(NonCurrentAssets::ImpairmentOfFixedAssets) => true,
                 _ => false,
             }
-        } else if let Ledger::BalanceSheet(B::Equity(equity)) = self { 
-            match equity {
-                E::CapitalStock(CapitalStock::TreasuryShares)
-                | E::RetainedEarnings(RetainedEarnings::DividendPaid) => false,
-                _ => true,
-            }
-        } else if let Ledger::ProfitLoss(P::Income(income)) = self { 
-            match income {
-                I::Sales(Sales::SalesReturnsAndAllowances) => false,
-                _ => true,
-            }
-        } else if let Ledger::ProfitLoss(P::Expenses(_)) = self {
-            false
-        } else if let Ledger::ControlAccounts(_) = self {
-            false
         } else {
+            // default case, but this should never be reached
             false
         }
     }
