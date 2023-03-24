@@ -849,7 +849,6 @@ impl<T: Config> Pallet<T> {
 		// Move data to new array erasing values that are to be recalculated
 		for asset in current_asset_basket {
 			if asset.symbol == *symbol {
-
 				let updated_entry = Self::update_asset_data(&asset, price  as u128, asset.issuance as u128);
 				intermediate_basket.push(updated_entry);
 			} else {
@@ -869,7 +868,6 @@ impl<T: Config> Pallet<T> {
 		// Move data to new array erasing values that are to be recalculated
 		for asset in current_asset_basket {
 			if asset.symbol == *symbol {
-
 				let updated_entry = Self::update_asset_data(&asset, asset.price as u128, issuance as u128);
 				intermediate_basket.push(updated_entry);
 			} else {
