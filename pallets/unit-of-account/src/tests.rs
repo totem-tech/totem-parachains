@@ -18,6 +18,7 @@ fn should_add_a_whitelisted_account_successfully() {
 			balance_to_use,
 			balance_to_use,
 		);
+
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
 	});

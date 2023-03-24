@@ -14,8 +14,11 @@ fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 benchmarks! {
 	whitelist_account {
 		let account: T::AccountId = whitelisted_caller();
-	}: _(RawOrigin::Signed(account.clone()))
 
+		let balance_to_use = T::Currency::minimum_balance() * 3_000_000_000u32.into() * 3_000_000_000u32.into();
+		let _ = T::Currency::make_free_balance_be(&account, balance_to_use);
+
+	}: _(RawOrigin::Signed(account.clone()))
 	verify {
 		assert_last_event::<T>(Event::AccountWhitelisted(account).into());
 	}
@@ -23,6 +26,10 @@ benchmarks! {
 
 	remove_account {
 		let account: T::AccountId = whitelisted_caller();
+
+		let balance_to_use = T::Currency::minimum_balance() * 3_000_000_000u32.into() * 3_000_000_000u32.into();
+		let deposit_acocunt = UnitOfAccount::<T>::get_deposit_account();
+		let _ = T::Currency::make_free_balance_be(&deposit_acocunt, balance_to_use);
 
 		WhitelistedAccounts::<T>::set(account.clone(), Some(()));
 
@@ -52,7 +59,7 @@ benchmarks! {
 
 	}: _(RawOrigin::Signed(account), ada_symbol.clone(), ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold)
 	verify {
-		assert_last_event::<T>(Event::AssetAddedToBasket(aca_symbol).into());
+		assert_last_event::<T>(Event::AssetAddedToBasket(ada_symbol).into());
 	}
 
 
@@ -85,7 +92,7 @@ benchmarks! {
 
 		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
 
-	}: _(RawOrigin::Signed(account), a_str_symbol.clone())
+	}: _(RawOrigin::Root, a_str_symbol.clone())
 	verify {
 		assert_last_event::<T>(Event::AssetRemoved(a_str_symbol).into());
 	}
