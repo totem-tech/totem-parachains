@@ -1835,29 +1835,41 @@ pub enum Ledger {
     ControlAccounts(ControlAccounts),
 }
 /// Implements a check on the balance type for the account. In general a debit balance is increased for Assets and Expenses
-/// and a credit balance is increased for Liabilities, Equity and Income. However there are specific exceptions.
-/// This allows a programmatic check on the balance type for the account.
+/// and a Credit balance is increased for Liabilities, Equity and Income. However there are specific exceptions.
+/// This allows a programmatic check on the balance type for every account.
 impl Ledger {
     pub fn is_credit_balance(&self) -> bool {
-        match self {
-            Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::ImpairmentLoss(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::CurrentAssetsCrypto(CurrentAssetsCrypto::CoinImpairment(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::CurrentAssetsCrypto(CurrentAssetsCrypto::TokenImpairment(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::FixedAssets(FixedAssets::AccumulatedDepreciation(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::IntagibleAssets(IntagibleAssets::ImpairmentLoss))) => true,
-            Ledger::BalanceSheet(B::Assets(A::IntagibleAssets(IntagibleAssets::AccumulatedDepreciationIntangibles(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::NonCurrentAssets(NonCurrentAssets::ImpairmentLossOn(_)))) => true,
-            Ledger::BalanceSheet(B::Assets(A::NonCurrentAssets(NonCurrentAssets::ImpairmentOfFixedAssets))) => true,
-            Ledger::BalanceSheet(B::Equity(E::ShareholdersEquity(_))) => true,
-            Ledger::BalanceSheet(B::Equity(E::OtherEquity(_))) => true,
-            Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::TreasuryShares))) => false,
-            Ledger::BalanceSheet(B::Equity(E::OtherReserves(_))) => true,
-            Ledger::BalanceSheet(B::Equity(E::RetainedEarnings(RetainedEarnings::DividendPaid))) => false,
-            Ledger::BalanceSheet(B::Liabilities(_)) => true,
-            Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesReturnsAndAllowances))) => false,
-            Ledger::ProfitLoss(P::Expenses(_)) => false,
-            Ledger::ControlAccounts(_) => false,
-            _ => false,
+        if let Ledger::BalanceSheet(B::Liabilities(_)) = self {
+            true
+        } else if let Ledger::BalanceSheet(B::Assets(asset)) = self { 
+            match asset {
+                A::CurrentAssets(CurrentAssets::ImpairmentLoss(_))
+                | A::CurrentAssetsCrypto(CurrentAssetsCrypto::CoinImpairment(_))
+                | A::CurrentAssetsCrypto(CurrentAssetsCrypto::TokenImpairment(_))
+                | A::FixedAssets(FixedAssets::AccumulatedDepreciation(_))
+                | A::IntagibleAssets(IntagibleAssets::ImpairmentLoss)
+                | A::IntagibleAssets(IntagibleAssets::AccumulatedDepreciationIntangibles(_))
+                | A::NonCurrentAssets(NonCurrentAssets::ImpairmentLossOn(_))
+                | A::NonCurrentAssets(NonCurrentAssets::ImpairmentOfFixedAssets) => true,
+                _ => false,
+            }
+        } else if let Ledger::BalanceSheet(B::Equity(equity)) = self { 
+            match equity {
+                E::CapitalStock(CapitalStock::TreasuryShares)
+                | E::RetainedEarnings(RetainedEarnings::DividendPaid) => false,
+                _ => true,
+            }
+        } else if let Ledger::ProfitLoss(P::Income(income)) = self { 
+            match income {
+                I::Sales(Sales::SalesReturnsAndAllowances) => false,
+                _ => true,
+            }
+        } else if let Ledger::ProfitLoss(P::Expenses(_)) = self {
+            false
+        } else if let Ledger::ControlAccounts(_) = self {
+            false
+        } else {
+            false
         }
     }
 }
