@@ -70,7 +70,11 @@ mod pallet {
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{ Currency, StorageVersion, Randomness },
+        traits::{ 
+            Currency, 
+            StorageVersion, 
+            Randomness,
+        },
         dispatch::{ 
             DispatchResult,
             DispatchResultWithPostInfo,
@@ -80,14 +84,16 @@ mod pallet {
             Hash,
             Zero,
             BadOrigin,
+            CheckedAdd,
+            // CheckedSub,
         },
     };
     use frame_system::pallet_prelude::*;
-    // use sp_runtime::traits::{Convert, Hash, Zero};
     use sp_std::prelude::*;
     
     use totem_common::TryConvert;
-    // use totem_primitives::accounting::*;
+    use totem_common::converter::Converter;
+    
     use totem_primitives::{ 
         accounting::*,
         LedgerBalance, 
@@ -274,7 +280,8 @@ mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
         
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
-        + Convert<[u8; 32], Self::AccountId>;
+        + Convert<[u8; 32], Self::AccountId>
+        + Convert<CurrencyBalanceOf<Self>, LedgerBalance>;
         type Currency: Currency<Self::AccountId>;
         type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
         type Acc: Posting<
@@ -373,7 +380,7 @@ mod pallet {
         #[pallet::weight(0/*TODO*/)]
         pub fn set_opening_balance(
             origin: OriginFor<T>,
-            entries: Vec<AdjustmentDetail>,
+            entries: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             block_number: T::BlockNumber,
         ) -> DispatchResultWithPostInfo {
             if ensure_none(origin.clone()).is_ok() {
@@ -393,9 +400,9 @@ mod pallet {
             // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance. 
             Self::combined_sanity_checks(&who, &entries)?;
             
-            // // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
-            // // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
-            // // the default value however is the block number in the arguments to this extrinsic.
+            // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
+            // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
+            // the default value however is the block number in the arguments to this extrinsic.
             let earliest_block_number = <BalanceByLedger<T>>::iter_prefix(&who)
                 .flat_map(|(ledger, _)| {
                     <PostingDetail<T>>::iter_prefix_values((who.clone(), ledger))
@@ -406,18 +413,21 @@ mod pallet {
                 .min()
                 .unwrap();
             
-            // // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
+            // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
             let current_block = frame_system::Pallet::<T>::block_number();
             let mut keys = Vec::new();
             entries
                 .iter()
                 .for_each(|e| {
+                    // Implement a check on the balance type for each ledger and adjust the posting amount to be negative or positive accordingly. No need to consider if the entered amount is negative because it is a primitive u128 and therefore will elilminate errors.
+                    let posting_amount = Self::increase_or_decrease(&e.ledger, e.amount, &e.debit_credit);
+
                     let record = Record {
                         primary_party: who.clone(),
                         counterparty: who.clone(),
                         ledger: e.ledger,
-                        amount: e.amount,
+                        amount: posting_amount,
                         debit_credit: e.debit_credit,
                         reference_hash,
                         changed_on_blocknumber: current_block.clone(),
@@ -447,7 +457,7 @@ mod pallet {
         #[pallet::weight(0/*TODO*/)]
         pub fn adjustment(
             origin: OriginFor<T>,
-            entries: Vec<AdjustmentDetail>,
+            entries: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             index: PostingIndex,
         ) -> DispatchResultWithPostInfo {
             if ensure_none(origin.clone()).is_ok() {
@@ -560,21 +570,44 @@ mod pallet {
                 
                 Ok((increase_amount, decrease_amount))
             }
+
+            fn increase_or_decrease(
+                ledger: &Ledger,
+                amount: CurrencyBalanceOf<T>,
+                debit_credit: &Indicator,
+            ) -> LedgerBalance {
+                let converted_amount: LedgerBalance = T::AccountingConverter::convert(amount);
+                // T::AccountingConverter::try_convert(amount).ok_or(Error::<T>::AmountOverflow)?;
+
+                // check that the ledger type is_credit_balance and correct the sign on the amount for posting.
+                let final_amount: LedgerBalance = match ledger.is_credit_balance() {
+                    true => match debit_credit {
+                        Indicator::Debit => -converted_amount,
+                        Indicator::Credit => converted_amount,
+                    },
+                    false => match debit_credit {
+                        Indicator::Debit => converted_amount,
+                        Indicator::Credit => -converted_amount,
+                    }
+                };
+                
+                final_amount
+            }
              
             fn debit_credit_matches(
-                entries: &Vec<AdjustmentDetail>,
+                entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             ) -> DispatchResult {
-                let debit_total: LedgerBalance = Zero::zero();
-                let credit_total: LedgerBalance = Zero::zero();
+                let debit_total: CurrencyBalanceOf<T> = Zero::zero();
+                let credit_total: CurrencyBalanceOf<T> = Zero::zero();
 
                 for entry in entries {
                     match entry.debit_credit {
                         Indicator::Debit => {
-                            debit_total.checked_add(entry.amount)
+                            debit_total.checked_add(&entry.amount)
                                 .ok_or(Error::<T>::BalanceValueOverflow)?;
                         },
                         Indicator::Credit => {
-                            credit_total.checked_add(entry.amount)
+                            credit_total.checked_add(&entry.amount)
                                 .ok_or(Error::<T>::BalanceValueOverflow)?;
                         },
                     }
@@ -588,7 +621,7 @@ mod pallet {
             }
 
         // fn accounting_equation_check(
-        //     entries: &AdjustmentDetail,
+        //     entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
         // ) -> DispatchResult {
         //     let mut assets_total: LedgerBalance = 0;
         //     let mut liabilities_total: LedgerBalance = 0;
@@ -597,15 +630,15 @@ mod pallet {
         //     for entry in entries {
         //         match entry.ledger {
         //             Ledger::BalanceSheet(B::Assets(_)) => {
-        //                 assets_total.checked_add(entry.amount)
+        //                 assets_total.checked_add(&entry.amount)
         //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
         //             },
         //             Ledger::BalanceSheet(B::Liabilities(_)) => {
-        //                 liabilities_total.checked_add(entry.amount)
+        //                 liabilities_total.checked_add(&entry.amount)
         //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
         //             },
         //             Ledger::BalanceSheet(B::Equity(_)) => {
-        //                 equity_total.checked_add(entry.amount)
+        //                 equity_total.checked_add(&entry.amount)
         //                     .ok_or(Error::<T>::BalanceValueOverflow)?;
         //             },
         //         }
@@ -620,13 +653,13 @@ mod pallet {
                                                                                                             
         fn combined_sanity_checks(
             who : &T::AccountId,
-            entries: &Vec<AdjustmentDetail>,
+            entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
         ) -> DispatchResult {
-            let assets_total: LedgerBalance = Zero::zero();
-            let liabilities_total: LedgerBalance = Zero::zero();
-            let equity_total: LedgerBalance = Zero::zero();
-            let debit_total: LedgerBalance = Zero::zero();
-            let credit_total: LedgerBalance = Zero::zero();
+            let assets_total: CurrencyBalanceOf<T> = Zero::zero();
+            let liabilities_total: CurrencyBalanceOf<T> = Zero::zero();
+            let equity_total: CurrencyBalanceOf<T> = Zero::zero();
+            let debit_total: CurrencyBalanceOf<T> = Zero::zero();
+            let credit_total: CurrencyBalanceOf<T> = Zero::zero();
             
             for entry in entries {
                 // This should fail if _any_ ledger has an opening balance already set
@@ -634,15 +667,15 @@ mod pallet {
                 ensure!(<OpeningBalance<T>>::get(&who, &entry.ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
                 match entry.ledger {
                     Ledger::BalanceSheet(B::Assets(_)) => {
-                        assets_total.checked_add(entry.amount)
+                        assets_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::BalanceSheet(B::Liabilities(_)) => {
-                        liabilities_total.checked_add(entry.amount)
+                        liabilities_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::BalanceSheet(B::Equity(_)) => {
-                        equity_total.checked_add(entry.amount)
+                        equity_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::ProfitLoss(_) => {
@@ -656,11 +689,11 @@ mod pallet {
                 }
                 match entry.debit_credit {
                     Indicator::Debit => {
-                        debit_total.checked_add(entry.amount)
+                        debit_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Indicator::Credit => {
-                        credit_total.checked_add(entry.amount)
+                        credit_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                 }

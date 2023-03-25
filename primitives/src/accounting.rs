@@ -39,8 +39,17 @@ mod chart_of_accounts;
 // pub use chart_of_accounts::{Ledger, {CurrentAssets, Sales, OperatingExpenses, _0030_, B,A,P,I,X,Cogs,Commissions,_0009_}};
 pub use chart_of_accounts::{Ledger, *};
 
-use crate::LedgerBalance;
-use frame_support::{dispatch::{ DispatchResult, EncodeLike, TypeInfo }, pallet_prelude::*};
+use crate::{ 
+	LedgerBalance, 
+};
+use frame_support::{
+	dispatch::{ 
+		DispatchResult, 
+		EncodeLike, 
+		TypeInfo,
+	},
+	pallet_prelude::*
+};
 // use scale_info::TypeInfo;
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
@@ -127,10 +136,10 @@ pub struct Detail<AccountId, Hash, BlockNumber> {
 
 // applicable_period_blocknumber is not included per record, but is included as an argument to the extrinisic setting these
 #[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
-pub struct AdjustmentDetail {
+pub struct AdjustmentDetail<Balance> {
 	pub ledger: Ledger,
 	pub debit_credit: Indicator,
-	pub amount: LedgerBalance,
+	pub amount: Balance,
 	// to be added after UoA is completed, as this determines the exchange rate to be used.
 	// pub asset: Assets,
 }
@@ -221,16 +230,8 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
-	
-	// fn debit_credit_balances(_e: &AdjustmentDetail) -> DispatchResult {
-	// 	unimplemented!("Used as a mock, shouldn't be called")
-	// }
 
-	// fn accounting_equation_check(_e: &AdjustmentDetail) -> DispatchResult {
-	// 	unimplemented!("Used as a mock, shouldn't be called")
-	// }
-
-	fn combined_sanity_checks(_o: &AccountId, _e: &AdjustmentDetail) -> DispatchResult {
+	fn combined_sanity_checks(_o: &AccountId, _e: &AdjustmentDetail<Coin>) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 

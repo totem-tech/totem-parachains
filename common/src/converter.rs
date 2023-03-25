@@ -23,6 +23,12 @@ impl Convert<u128, u128> for Converter {
     }
 }
 
+impl Convert<u128, i128> for Converter {
+    fn convert(x: u128) -> i128 {
+        x as i128
+    }
+}
+
 impl Convert<i128, i128> for Converter {
     fn convert(x: i128) -> i128 {
         x
