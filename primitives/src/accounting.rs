@@ -36,11 +36,11 @@
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
 mod chart_of_accounts;
-// pub use chart_of_accounts::{Ledger, {CurrentAssets, Sales, OperatingExpenses, _0030_, B,A,P,I,X,Cogs,Commissions,_0009_}};
 pub use chart_of_accounts::{Ledger, *};
 
 use crate::{ 
-	LedgerBalance, 
+	LedgerBalance,
+	PostingIndex,
 };
 use frame_support::{
 	dispatch::{ 
@@ -50,7 +50,6 @@ use frame_support::{
 	},
 	pallet_prelude::*
 };
-// use scale_info::TypeInfo;
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
 
@@ -142,6 +141,13 @@ pub struct AdjustmentDetail<Balance> {
 	pub amount: Balance,
 	// to be added after UoA is completed, as this determines the exchange rate to be used.
 	// pub asset: Assets,
+}
+
+// allows PostingDetail to be queried by the index of the posting and the account id
+#[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
+pub struct AccountIdIndexWrapper<AccountId> {
+	pub account_id: AccountId,
+	pub index: PostingIndex,
 }
 
 // Implementations

@@ -96,7 +96,7 @@ mod pallet {
     
     use totem_primitives::{ 
         accounting::*,
-        LedgerBalance, 
+        LedgerBalance,
         PostingIndex,
     };
     
@@ -281,7 +281,8 @@ mod pallet {
         
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
         + Convert<[u8; 32], Self::AccountId>
-        + Convert<CurrencyBalanceOf<Self>, LedgerBalance>;
+        + Convert<CurrencyBalanceOf<Self>, LedgerBalance>
+        + Convert<u32, Self::BlockNumber>;
         type Currency: Currency<Self::AccountId>;
         type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
         type Acc: Posting<
@@ -324,6 +325,10 @@ mod pallet {
         OpeningBalanceAlreadySet,
         /// The submitted details are not valid and cannot be adjusted
         AdjustmentNotPossible,
+        /// You can only make adjustments to existing records
+        IndexNotFound,
+        /// You cannot make adjustments in the future
+        ApplicablePeriodNotValid,
     }
     
     #[pallet::hooks]
@@ -429,7 +434,7 @@ mod pallet {
                         ledger: e.ledger,
                         amount: posting_amount,
                         debit_credit: e.debit_credit,
-                        reference_hash,
+                        reference_hash: reference_hash.clone(),
                         changed_on_blocknumber: current_block.clone(),
                         applicable_period_blocknumber: earliest_block_number.clone(),
                 };
@@ -448,40 +453,71 @@ mod pallet {
             Ok(().into())
         }
         
-        /// This function is intended for advanced book-keepers and accountants. It does not check the logical corrrectness of the entries but
-        /// does check for debit and credit correctness.
+        /// This function is intended for advanced book-keepers and accountants. 
+        /// It does not check the logical corrrectness of the entries but allows a limited number entries to be made.
+        /// It is used to make minor adjustments but cannot be used to make standalone journal postings as it requires an existing posting index.
+        /// There is a check for debit and credit correctness and the debits and credits are checked against the account type to determine increase or decrease in values.
         /// It is not intended for monetary movements so entries relating to those ledgers will be prevented.
-        /// It is intended to be used with existing entries, and therefore expects that the Index that is submitted is plausible.
         /// The number of entries should be bounded to 10 as it is not expected that a large number of corrections should be made at once.
         #[pallet::call_index(2)]
         #[pallet::weight(0/*TODO*/)]
         pub fn adjustment(
             origin: OriginFor<T>,
-            entries: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
+            adjustments: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             index: PostingIndex,
+            applicable_period: T::BlockNumber,
         ) -> DispatchResultWithPostInfo {
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
             let who = ensure_signed(origin)?;
 
-            // Check that the number of entries in the entries array is not greater than 10
+            // Check that the number of adjustments in the adjustments array is not greater than 10
             // TODO This should be a parameter in the runtime and a BoundedVec
-            if entries.len() > 10 {
+            if adjustments.len() > 10 {
                 return Err(Error::<T>::TooManyOpeningEntries.into())
             }
 
-            // Collect the ledgers that are implicated in the adjustment using the AccountId, the Ledger and the Index.
-            // for entry in entries
-            //     .iter() {
-            //         let ledger = entry.ledger;
-            //         let key = (who.clone(), ledger, index.clone());
-            //         ensure!(!<PostingDetail<T>>::contains_key(key), Error::<T>::AdjustmentNotPossible);
-            //     }
+            // Check that the index is not a zero u128 value
+            ensure!(index != 0u128, Error::<T>::IndexNotFound);
 
+            // check that the index is not the max value for the PostingIndex which is type u128
+            ensure!(index != u128::MAX, Error::<T>::IndexNotFound);
+
+            let current_block = frame_system::Pallet::<T>::block_number();
+            // adjustment period must be at least 7200 blocks in the past (1 day)
+            let threshold_block = current_block.clone() - T::AccountingConverter::convert(7200u32);
+            // check that the applicable_period is not in the future
+            ensure!(applicable_period <= threshold_block, Error::<T>::ApplicablePeriodNotValid);
 
             // check that the debits match the credits
-            Self::debit_credit_matches(&entries)?;
+            Self::debit_credit_matches(&adjustments)?;
+                
+            // check that at least one PostingDetail record exists for the index against this account
+            // ensure!(Self::has_posting_detail(who, &index), Error::<T>::IndexNotFound);
+
+            // <PostingDetail<T>>::iter_prefix(who)
+            //         .any(|(key, _)| key.1 == index);
+
+
+            let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
+            let mut keys = Vec::new();
+            for (index, adjustment) in adjustments
+                .iter()
+                .enumerate() {
+                    let posting_amount = Self::increase_or_decrease(&adjustment.ledger, adjustment.amount, &adjustment.debit_credit);
+                    let record = Record {
+                        primary_party: who.clone(),
+                        counterparty: who.clone(),
+                        ledger: adjustment.ledger,
+                        amount: posting_amount,
+                        debit_credit: adjustment.debit_credit,
+                        reference_hash: reference_hash.clone(),
+                        changed_on_blocknumber: current_block.clone(),
+                        applicable_period_blocknumber: applicable_period.clone(),
+                    };
+                    keys.push(record);
+                }
 
             Ok(().into())
         }
