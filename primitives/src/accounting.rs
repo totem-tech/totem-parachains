@@ -59,6 +59,7 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 
 	fn handle_multiposting_amounts(
 		keys: &[Record<AccountId, Hash, BlockNumber>],
+		index: Option<PostingIndex>,
 	) -> DispatchResult;
 
 	fn account_for_simple_transfer(
@@ -171,6 +172,7 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 
 	fn handle_multiposting_amounts(
 		_fwd: &[Record<AccountId, Hash, BlockNumber>],
+		_index: Option<PostingIndex>,
 	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}

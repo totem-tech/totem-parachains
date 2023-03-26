@@ -92,7 +92,6 @@ mod pallet {
     use sp_std::prelude::*;
     
     use totem_common::TryConvert;
-    use totem_common::converter::Converter;
     
     use totem_primitives::{ 
         accounting::*,
@@ -329,6 +328,8 @@ mod pallet {
         IndexNotFound,
         /// You cannot make adjustments in the future
         ApplicablePeriodNotValid,
+        /// You cannot make adjustments to these ledgers
+        IllegalAdjustment,
     }
     
     #[pallet::hooks]
@@ -443,7 +444,7 @@ mod pallet {
                 keys.push(record);
             });
 
-            T::Acc::handle_multiposting_amounts(&keys)?;
+            T::Acc::handle_multiposting_amounts(&keys, None)?;
             
             <OpeningBalanceDate<T>>::insert(who.clone(), earliest_block_number); 
             
@@ -481,44 +482,74 @@ mod pallet {
             // Check that the index is not a zero u128 value
             ensure!(index != 0u128, Error::<T>::IndexNotFound);
 
-            // check that the index is not the max value for the PostingIndex which is type u128
-            ensure!(index != u128::MAX, Error::<T>::IndexNotFound);
+            // check that the index is less than or equal to the current Posting Index Number
+            ensure!(index <= <PostingNumber<T>>::get(), Error::<T>::IndexNotFound);
 
             let current_block = frame_system::Pallet::<T>::block_number();
             // adjustment period must be at least 7200 blocks in the past (1 day)
             let threshold_block = current_block.clone() - T::AccountingConverter::convert(7200u32);
-            // check that the applicable_period is not in the future
             ensure!(applicable_period <= threshold_block, Error::<T>::ApplicablePeriodNotValid);
 
             // check that the debits match the credits
             Self::debit_credit_matches(&adjustments)?;
-                
-            // check that at least one PostingDetail record exists for the index against this account
-            // ensure!(Self::has_posting_detail(who, &index), Error::<T>::IndexNotFound);
+            
+            // Find at least one instance where the ledger and the index match for the account.
+            // this confirms that this adjustment is plausible. 
+            // Also reject any adjutment to internal native coin accounting.
+            let mut matched_index = false;
+            for i in 0..adjustments.len() {
+                let adjustment = &adjustments[i];
+                // checks to reject illegal native coin adjustments
+                if adjustment.ledger == 
+                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))) 
+                || adjustment.ledger == 
+                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))) 
+                || adjustment.ledger == 
+                Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkTransactionFees)))))
+                || adjustment.ledger == 
+                Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins))))
+                || adjustment.ledger == 
+                Ledger::ProfitLoss(P::Income(I::OtherOperatingIncome(OOPIN::BlockchainSlashedFundsIncome)))
+                || adjustment.ledger == 
+                Ledger::BalanceSheet(B::Equity(E::NetworkReserves)) {
+                    return Err(Error::<T>::IllegalAdjustment.into())
+                }
+                // try to find a match for the ledger and the index
+                if <PostingDetail<T>>::contains_key((&who, adjustment.ledger), index) {
+                    matched_index = true;
+                }
+            }
+            // ensure matched_index is true
+            ensure!(matched_index, Error::<T>::IndexNotFound);
 
-            // <PostingDetail<T>>::iter_prefix(who)
-            //         .any(|(key, _)| key.1 == index);
-
-
+            // At this point we passed all the checks and can proceed with the adjustment
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
             let mut keys = Vec::new();
-            for (index, adjustment) in adjustments
+            adjustments
                 .iter()
-                .enumerate() {
-                    let posting_amount = Self::increase_or_decrease(&adjustment.ledger, adjustment.amount, &adjustment.debit_credit);
+                .for_each(|a| {
+                    let posting_amount = Self::increase_or_decrease(
+                        &a.ledger, 
+                        a.amount, 
+                        &a.debit_credit
+                    );
                     let record = Record {
                         primary_party: who.clone(),
                         counterparty: who.clone(),
-                        ledger: adjustment.ledger,
+                        ledger: a.ledger,
                         amount: posting_amount,
-                        debit_credit: adjustment.debit_credit,
+                        debit_credit: a.debit_credit,
                         reference_hash: reference_hash.clone(),
                         changed_on_blocknumber: current_block.clone(),
                         applicable_period_blocknumber: applicable_period.clone(),
                     };
                     keys.push(record);
-                }
+                });
 
+                T::Acc::handle_multiposting_amounts(&keys, Some(index))?;
+
+            Self::deposit_event(Event::<T>::AdjustmentsPosted);
+            
             Ok(().into())
         }
     }
@@ -537,6 +568,7 @@ mod pallet {
             at_blocknumber: T::BlockNumber,
         },
         OpeningBalanceSet,
+        AdjustmentsPosted,
     }
         
     impl<T: Config> Pallet<T> {
@@ -553,6 +585,7 @@ mod pallet {
         fn post_amounts(
             key: Record<T::AccountId, T::Hash, T::BlockNumber>,
             posting_index: PostingIndex,
+            is_new_index: bool,
         ) -> DispatchResult {
                 let balance_key = (key.primary_party.clone(), key.ledger.clone());
                 // let posting_key = (key.primary_party.clone(), key.ledger.clone(), posting_index);
@@ -586,7 +619,9 @@ mod pallet {
                     GlobalLedger::<T>::insert(&key.ledger, key.amount.clone());
                 }; 
 
-                PostingNumber::<T>::put(posting_index);
+                if is_new_index {
+                    PostingNumber::<T>::put(posting_index);
+                }
                 PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
                             
                 Ok(())
@@ -761,22 +796,31 @@ mod pallet {
         /// Obviously the last posting does not need a reversal for if it errors, then it was not posted in the first place.
         fn handle_multiposting_amounts(
             keys: &[Record<T::AccountId, T::Hash, T::BlockNumber>],
+            index: Option<PostingIndex>,
         ) -> DispatchResult {
-            // Set initial value for posting index
             let mut posting_index: PostingIndex = 1;
-            // Only need to increment, if it exists, else this the the very first record (with value 1).
-            if <PostingNumber<T>>::exists() {
-                posting_index = match Self::posting_number().checked_add(1) {
-                    Some(i) => i,
-                    None => {
-                        fail!(Error::<T>::PostingIndexOverflow)
-                    },
-                }
-            };
+            let mut new_index: bool = true;
+            // check that the PostingIndex has been supplied
+            if index.is_none() {
+                // Set initial value for posting index
+                // Only need to increment, if it exists, else this the the very first record (with value 1).
+                if <PostingNumber<T>>::exists() {
+                    posting_index = match Self::posting_number().checked_add(1) {
+                        Some(i) => i,
+                        None => {
+                            fail!(Error::<T>::PostingIndexOverflow)
+                        },
+                    }
+                };
+            } else {
+                // the posting index has been supplied externally, therefor this is likely to be an adjustment of some kind, and we need to keep the original posting index.
+                posting_index = index.unwrap();
+                new_index = false;
+            }
             
             // Iterate over forward keys. If error, then reverse out prior postings.
             for (idx, key) in keys.iter().cloned().enumerate() {
-                if let Err(e) = Self::post_amounts(key, posting_index) {
+                if let Err(e) = Self::post_amounts(key, posting_index, new_index) {
                     // (Un)likely error before the value was updated. 
                     // Need to reverse-out the earlier postings to storage just in case
                     // it has changed in storage already
@@ -789,7 +833,7 @@ mod pallet {
                                 ..key
                             };
                             // If this fails it would be serious. This is not expected to fail.
-                            Self::post_amounts(reversed, posting_index)
+                            Self::post_amounts(reversed, posting_index, new_index)
                             .or(Err(Error::<T>::SystemFailure))?;
                         }
                     }
@@ -868,7 +912,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -918,7 +962,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -963,7 +1007,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -1008,7 +1052,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -1054,7 +1098,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -1130,7 +1174,7 @@ mod pallet {
             },
             ];
             
-            Self::handle_multiposting_amounts(&keys)?;
+            Self::handle_multiposting_amounts(&keys, None)?;
             
             Ok(())
         }
@@ -1175,7 +1219,7 @@ mod pallet {
         //         },
         //     ];
 
-        //     Self::handle_multiposting_amounts(&keys)?;
+        //     Self::handle_multiposting_amounts(&keys, None)?;
 
         //     Ok(())
         // }
@@ -1238,7 +1282,7 @@ mod pallet {
         //         },
         //     ];
 
-        //     Self::handle_multiposting_amounts(&keys)?;
+        //     Self::handle_multiposting_amounts(&keys, None)?;
 
         //     Ok(())
         // }
