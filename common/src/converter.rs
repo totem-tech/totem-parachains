@@ -29,6 +29,18 @@ impl Convert<u128, i128> for Converter {
     }
 }
 
+impl Convert<u32, u64> for Converter {
+	fn convert(x: u32) -> u64 {
+		x as u64
+	}
+}
+
+impl Convert<u64, i128> for Converter {
+	fn convert(x: u64) -> i128 {
+		x as i128
+	}
+}
+
 impl Convert<i128, i128> for Converter {
     fn convert(x: i128) -> i128 {
         x
@@ -62,4 +74,16 @@ impl TryConvert<u128, i128> for Converter {
     fn try_convert(x: u128) -> Option<i128> {
         i128::try_from(x).ok()
     }
+}
+
+impl TryConvert<u32, i128> for Converter {
+	fn try_convert(x: u32) -> Option<i128> {
+		i128::try_from(x).ok()
+	}
+}
+
+impl TryConvert<u64, i128> for Converter {
+	fn try_convert(x: u64) -> Option<i128> {
+		i128::try_from(x).ok()
+	}
 }

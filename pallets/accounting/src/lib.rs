@@ -50,7 +50,7 @@
 //!
 //! The UI provides spot rate for live results for Period close reporting (also known as Reporting Currency or Presentation Currency), which is supported byt the exchange rates module.
 //! General rules for Currency conversion at Period Close follow IFRS rules and are carried out as follows:
-//! * Revenue recognition in the period when they occur, 
+//! * Revenue recognition in the period when they occur,
 //! * Expenses recognised (including asset consumption) in the same period as the revenue to which they relate.
 //! * All other expenses are recognised in the period in which they occur.
 //! * Therefore the currency conversion for revenue and related expenses is calculated at the spot rate for the period (block number) in which they are recognised.
@@ -58,24 +58,27 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-//pub mod benchmarking;
-//pub mod mock;
-//pub mod tests;
+#![cfg_attr(not(feature = "std"), no_std)]
+mod benchmarking;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
 
 pub use pallet::*;
 
 #[frame_support::pallet]
 mod pallet {
-    
+
     use frame_support::{
         fail,
         pallet_prelude::*,
-        traits::{ 
-            Currency, 
-            StorageVersion, 
+        traits::{
+            Currency,
+            StorageVersion,
             Randomness,
         },
-        dispatch::{ 
+        dispatch::{
             DispatchResult,
             DispatchResultWithPostInfo,
         },
@@ -90,54 +93,54 @@ mod pallet {
     };
     use frame_system::pallet_prelude::*;
     use sp_std::prelude::*;
-    
+
     use totem_common::TryConvert;
-    
-    use totem_primitives::{ 
+
+    use totem_primitives::{
         accounting::*,
         LedgerBalance,
         PostingIndex,
     };
-    
+
     type CurrencyBalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-    
+
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
-    
+
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     #[pallet::storage_version(STORAGE_VERSION)]
     pub struct Pallet<T>(_);
-    
+
     /// The posting index is used to identify a group of related accounting entries
     /// It provides unicity when used in combination with AccountId and Ledger for obtaining a detailed accounting entry
     /// It is also a counter for the number of accounting entries made in the entire system
     #[pallet::storage]
     #[pallet::getter(fn posting_number)]
     pub type PostingNumber<T: Config> = StorageValue<
-    _, 
-    PostingIndex, 
+    _,
+    PostingIndex,
     ValueQuery
     >;
-    
+
     /// Accounting Balances for each account by the ledgers that it uses.
     /// Keys: AccountId, Ledger
     /// Will select all ledgers and balances used by an AccountId when
-    /// only the AccountId is used to query storage 
+    /// only the AccountId is used to query storage
     #[pallet::storage]
     #[pallet::getter(fn balance_by_ledger)]
     pub type BalanceByLedger<T: Config> = StorageDoubleMap<
-    _, 
-    Blake2_128Concat, T::AccountId, 
+    _,
+    Blake2_128Concat, T::AccountId,
     Blake2_128Concat, Ledger,
     LedgerBalance,
     >;
-    
+
     /// Detail of the accounting entry.
     /// Keys: AccountId, Ledger, Posting Index
     /// Will select all accounting entries for a given AccountId and Ledger combination when
-    /// only these keys are used to query storage 
+    /// only these keys are used to query storage
     #[pallet::storage]
     #[pallet::getter(fn posting_detail)]
     pub type PostingDetail<T: Config> = StorageDoubleMap<
@@ -146,22 +149,22 @@ mod pallet {
     Blake2_128Concat, PostingIndex,
     Detail<T::AccountId, T::Hash, T::BlockNumber>,
     >;
-    
+
     /// Yay! Totem!
     /// A global ledger providing a global overview of the entire state of the accounting
-    /// across all ledgers. It does not provide the detail of the posting, just the balances. 
+    /// across all ledgers. It does not provide the detail of the posting, just the balances.
     #[pallet::storage]
     #[pallet::getter(fn global_ledger)]
     pub type GlobalLedger<T: Config> = StorageMap<
-    _, 
-    Blake2_128Concat, Ledger, 
+    _,
+    Blake2_128Concat, Ledger,
     LedgerBalance,
     ValueQuery,
     >;
-    
+
     /// Accounting Reference [Date]
     /// This is the point in time from which the accounting periods are calculated.
-    /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set. 
+    /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set.
     /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year.
     /// However it can also be used for monthly period close activities as well as quarterly closes and so on.
     /// The calculations for FE engineers should be :
@@ -172,50 +175,50 @@ mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn accounting_ref_date)]
     pub type AccountingRefDate<T: Config> = StorageMap<
-    _, 
-    Blake2_128Concat, T::AccountId, 
-    T::BlockNumber, 
+    _,
+    Blake2_128Concat, T::AccountId,
+    T::BlockNumber,
     OptionQuery,
     >;
-    
+
     /// Opening Balance
     /// When taking over a legacy accounting system opening balances need to be added.
     /// This is not a mandatory requirement for new accounting, but conditions must be met.
     /// 1) Opening Balance is dependent on the accounting reference date being completed.
-    /// 2) If a balance already exists for any ledger associated with the account, 
+    /// 2) If a balance already exists for any ledger associated with the account,
     ///    we must use the earliest block number of all ledgers as the opening balance date.
     /// 3) Opening balance cannot be in the future by definition
     /// 4) If no balances exists in any ledger then the earliest it can be is the current block.
-    /// 5) Some ledgers may have a zero opening balance. For this reason this storage simply indicates if 
+    /// 5) Some ledgers may have a zero opening balance. For this reason this storage simply indicates if
     ///    an opening balance has been specifically set. It also prevents it being set twice.
     #[pallet::storage]
     #[pallet::getter(fn opening_balance)]
     pub type OpeningBalance<T: Config> = StorageDoubleMap<
     _,
-    Blake2_128Concat, T::AccountId, 
+    Blake2_128Concat, T::AccountId,
     Blake2_128Concat, Ledger,
     bool,
     >;
-    
+
     /// Opening Balance Date
     /// This is the block number at which the opening balance was set.
     /// It is global and not dependent on the Ledger account.
     #[pallet::storage]
     #[pallet::getter(fn opening_balance_date)]
     pub type OpeningBalanceDate<T: Config> = StorageMap<
-    _, 
-    Blake2_128Concat, T::AccountId, 
-    T::BlockNumber, 
+    _,
+    Blake2_128Concat, T::AccountId,
+    T::BlockNumber,
     ValueQuery,
     >;
-    
+
     // The genesis config type.
     // The Balances here should be exactly the same as configured in the Balances Pallet to set the opening balances correctly
     #[pallet::genesis_config]
     pub struct GenesisConfig<T: Config> {
         pub opening_balances: Vec<(T::AccountId, LedgerBalance)>,
     }
-    
+
     // The default value for the genesis config type.
     #[cfg(feature = "std")]
     impl<T: Config> Default for GenesisConfig<T> {
@@ -223,11 +226,11 @@ mod pallet {
             Self { opening_balances: Default::default() }
         }
     }
-    
+
     #[pallet::genesis_build]
     impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
         fn build(&self) {
-            
+
             let input = *b"TotemsOpeningBalancesGenesisHash";
             let reference_hash: T::Hash = T::Hashing::hash(input.encode().as_slice());
             let block_number: T::BlockNumber = 0u32.into();
@@ -237,15 +240,15 @@ mod pallet {
             // Reserves is a Credit Balance Account
             let account_for: Ledger = Ledger::BalanceSheet(B::Equity(E::NetworkReserves));
             let total = self.opening_balances.iter().fold(Zero::zero(), |account_balance: LedgerBalance, &(_, n)| account_balance + n);
-            
+
             <PostingNumber<T>>::put(&posting_index);
             <GlobalLedger::<T>>::insert(&mint_to, total.clone());
             <GlobalLedger::<T>>::insert(&account_for, total);
-            
+
             for (address, balance) in &self.opening_balances {
                 let account_balance_key_debit = (address.clone(), mint_to.clone());
                 let account_balance_key_credit = (address.clone(), account_for.clone());
-                
+
                 let detail_debit = Detail {
                     counterparty: address.clone(),
                     amount: balance.clone(),
@@ -254,7 +257,7 @@ mod pallet {
                     changed_on_blocknumber: block_number,
                     applicable_period_blocknumber: block_number,
                 };
-                
+
                 let detail_credit = Detail {
                     counterparty: address.clone(),
                     amount: balance.clone(),
@@ -263,7 +266,7 @@ mod pallet {
                     changed_on_blocknumber: block_number,
                     applicable_period_blocknumber: block_number,
                 };
-                
+
                 <BalanceByLedger::<T>>::insert(&address, &mint_to, balance.clone());
                 <BalanceByLedger::<T>>::insert(&address, &account_for, balance);
                 <PostingDetail::<T>>::insert(&account_balance_key_debit, &posting_index, detail_debit);
@@ -271,13 +274,13 @@ mod pallet {
             }
         }
     }
-    
+
     #[pallet::config]
     // pub trait Config: frame_system::Config + pallet_timestamp::Config {
     pub trait Config: frame_system::Config {
         // type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-        
+
         type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
         + Convert<[u8; 32], Self::AccountId>
         + Convert<CurrencyBalanceOf<Self>, LedgerBalance>
@@ -291,7 +294,7 @@ mod pallet {
             CurrencyBalanceOf<Self>,
         >;
     }
-    
+
     #[pallet::error]
     pub enum Error<T> {
         /// Posting index overflowed.
@@ -331,14 +334,14 @@ mod pallet {
         /// You cannot make adjustments to these ledgers
         IllegalAdjustment,
     }
-    
+
     #[pallet::hooks]
     impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
-    
+
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// This is the point in time from which the accounting periods are calculated.
-        /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set. 
+        /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set.
         /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year.
         #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
@@ -350,36 +353,36 @@ mod pallet {
                 return Err(BadOrigin.into())
             }
             let who = ensure_signed(origin)?;
-            
+
             // check that the block number is not already set
             ensure!(<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateAlreadySet);
-            
+
             let current_block = frame_system::Pallet::<T>::block_number();
             let minimum_reference_date = current_block.clone() + 446_400u32.into();
             let maximum_block_number = current_block + 5_256_000u32.into();
-            
-            // // check that the block number is in the future. This also confirms that it is not zero 
-            // // There should be a minimum of 62 Days in the future from the current block (446,400). 
+
+            // // check that the block number is in the future. This also confirms that it is not zero
+            // // There should be a minimum of 62 Days in the future from the current block (446,400).
             // // This allows for the current month or anoy month in progress
             ensure!(block_number > minimum_reference_date, Error::<T>::AccountingRefDateTooSoon);
-            
+
             // // check that the block number is not too far in the future.
             // // Maximum period is two years from now (5,256,000)
             ensure!(block_number < maximum_block_number, Error::<T>::AccountingRefDateTooLate);
-            
+
             // // set the block number
             <AccountingRefDate<T>>::insert(who.clone(), block_number.clone());
-            
+
             // // emit event
             Self::deposit_event(Event::<T>::AccountingRefDateSet { who, at_blocknumber: block_number });
-            
+
             Ok(().into())
         }
-        
-        /// The opening balances can be set for each ledger in the Balance Sheet. 
+
+        /// The opening balances can be set for each ledger in the Balance Sheet.
         /// A date for the opening balance needs to be set however and all accounting will conform to this date.
         /// As opening balances can be added after accounting entries have been made, we should take the earliest possible entry in all the ledgers as the opening balance date.
-        /// If no previous entries have been made then we assume that the opening balance date is that supplied by the extrinsic. 
+        /// If no previous entries have been made then we assume that the opening balance date is that supplied by the extrinsic.
         /// This extrinsic does not perform check against the validity of the debit and credit status for the entire ledger, only the incoming entries.
         /// The input Vec should be bounded to 166 entries which is the current size of the Balance Sheet
         #[pallet::call_index(1)]
@@ -393,19 +396,19 @@ mod pallet {
                 return Err(BadOrigin.into())
             }
             let who = ensure_signed(origin)?;
-            
+
             // Check that the number of entries in the entries array is not greater than 166
             // TODO This should be a parameter in the runtime and a BoundedVec
             if entries.len() > 166 {
                 return Err(Error::<T>::TooManyOpeningEntries.into())
             }
-            
+
             // you should not be allowed to set an opening balance until the accounting reference date has been set
             ensure!(!<AccountingRefDate<T>>::get(&who).is_none(), Error::<T>::AccountingRefDateNotSet);
-            
-            // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance. 
+
+            // Check that the entries conform to the accounting equation, and that all debits equal all credits. Also performs a (redundant?) check that the ledger does not already have an opening balance.
             Self::combined_sanity_checks(&who, &entries)?;
-            
+
             // If entries exist in any ledger in the PostingDetails storage, then the earliest blocknumber is taken from there and used, in preference to the one in the arguments to this extrinsic.
             // This is to ensure that the accounting reference date is not set before the earliest entry in the ledger.
             // the default value however is the block number in the arguments to this extrinsic.
@@ -418,7 +421,7 @@ mod pallet {
                 })
                 .min()
                 .unwrap();
-            
+
             // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
             let current_block = frame_system::Pallet::<T>::block_number();
@@ -445,16 +448,16 @@ mod pallet {
             });
 
             T::Acc::handle_multiposting_amounts(&keys, None)?;
-            
-            <OpeningBalanceDate<T>>::insert(who.clone(), earliest_block_number); 
-            
+
+            <OpeningBalanceDate<T>>::insert(who.clone(), earliest_block_number);
+
             // emit event
             Self::deposit_event(Event::<T>::OpeningBalanceSet);
 
             Ok(().into())
         }
-        
-        /// This function is intended for advanced book-keepers and accountants. 
+
+        /// This function is intended for advanced book-keepers and accountants.
         /// It does not check the logical corrrectness of the entries but allows a limited number entries to be made.
         /// It is used to make minor adjustments but cannot be used to make standalone journal postings as it requires an existing posting index.
         /// There is a check for debit and credit correctness and the debits and credits are checked against the account type to determine increase or decrease in values.
@@ -492,25 +495,25 @@ mod pallet {
 
             // check that the debits match the credits
             Self::debit_credit_matches(&adjustments)?;
-            
+
             // Find at least one instance where the ledger and the index match for the account.
-            // this confirms that this adjustment is plausible. 
+            // this confirms that this adjustment is plausible.
             // Also reject any adjutment to internal native coin accounting.
             let mut matched_index = false;
             for i in 0..adjustments.len() {
                 let adjustment = &adjustments[i];
                 // checks to reject illegal native coin adjustments
-                if adjustment.ledger == 
-                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance))) 
-                || adjustment.ledger == 
-                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))) 
-                || adjustment.ledger == 
+                if adjustment.ledger ==
+                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)))
+                || adjustment.ledger ==
+                Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance)))
+                || adjustment.ledger ==
                 Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::Admin(AdminCosts::Blockchain(InternalAccounting::NetworkTransactionFees)))))
-                || adjustment.ledger == 
+                || adjustment.ledger ==
                 Ledger::ProfitLoss(P::Expenses(X::OperatingExpenses(OPEX::TaxFinesPenalties(TFP::SlashedCoins))))
-                || adjustment.ledger == 
+                || adjustment.ledger ==
                 Ledger::ProfitLoss(P::Income(I::OtherOperatingIncome(OOPIN::BlockchainSlashedFundsIncome)))
-                || adjustment.ledger == 
+                || adjustment.ledger ==
                 Ledger::BalanceSheet(B::Equity(E::NetworkReserves)) {
                     return Err(Error::<T>::IllegalAdjustment.into())
                 }
@@ -529,8 +532,8 @@ mod pallet {
                 .iter()
                 .for_each(|a| {
                     let posting_amount = Self::increase_or_decrease(
-                        &a.ledger, 
-                        a.amount, 
+                        &a.ledger,
+                        a.amount,
                         &a.debit_credit
                     );
                     let record = Record {
@@ -549,11 +552,11 @@ mod pallet {
                 T::Acc::handle_multiposting_amounts(&keys, Some(index))?;
 
             Self::deposit_event(Event::<T>::AdjustmentsPosted);
-            
+
             Ok(().into())
         }
     }
-        
+
     #[pallet::event]
     #[pallet::generate_deposit(pub(super) fn deposit_event)]
     pub enum Event<T: Config> {
@@ -570,7 +573,7 @@ mod pallet {
         OpeningBalanceSet,
         AdjustmentsPosted,
     }
-        
+
     impl<T: Config> Pallet<T> {
         /// Basic posting function (warning! can cause imbalance if not called with corresponding debit or credit entries)
         /// The reason why this is a simple function is that one debit posting may or may not correspond with one or many credit
@@ -579,7 +582,7 @@ mod pallet {
         /// equal to the single debit in accounts receivable, but only one posting needs to be made to that account, and two posting for the others.
         /// The Totem Accounting Recipes are constructed using this simple function.
         /// The applicable_period_blocknumber is for re-targeting the entry in the accounts, i.e. for adjustments prior to or after the current period (generally accruals).
-        /// It is also used for reporting purposes. 
+        /// It is also used for reporting purposes.
         /// The changed_on_blocknumber is used to facilitate audit, but is not technically needed as a full archive node could also provide this information from the state
         /// changes apparent in every block.
         fn post_amounts(
@@ -603,7 +606,7 @@ mod pallet {
                 // Values could feasibly overflow, with no visibility on other accounts. In this event this function returns an error.
                 // Reversals must occur in the parent function (i.e. that calls this function).
                 // As all values passed to this function are already signed +/- we only need to sum to the previous balance and check for overflow
-                // Updates are only made to storage once tests below are passed for debits or credits.            
+                // Updates are only made to storage once tests below are passed for debits or credits.
                 match <BalanceByLedger<T>>::get(&key.primary_party, &key.ledger) {
                     None => BalanceByLedger::<T>::insert(&key.primary_party, &key.ledger, key.amount.clone()),
                     Some(b) => {
@@ -617,16 +620,16 @@ mod pallet {
                     GlobalLedger::<T>::insert(&key.ledger, new_global_balance);
                 } else {
                     GlobalLedger::<T>::insert(&key.ledger, key.amount.clone());
-                }; 
+                };
 
                 if is_new_index {
                     PostingNumber::<T>::put(posting_index);
                 }
                 PostingDetail::<T>::insert(&balance_key, &posting_index, detail);
-                            
+
                 Ok(())
             }
-            
+
             /// Return a pair of:
             /// - The amount given as a parameter, but signed.
             /// - The opposite of that amount.
@@ -638,7 +641,7 @@ mod pallet {
                 let decrease_amount = increase_amount
                 .checked_neg()
                 .ok_or(Error::<T>::AmountOverflow)?;
-                
+
                 Ok((increase_amount, decrease_amount))
             }
 
@@ -661,10 +664,10 @@ mod pallet {
                         Indicator::Credit => -converted_amount,
                     }
                 };
-                
+
                 final_amount
             }
-             
+
             fn debit_credit_matches(
                 entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             ) -> DispatchResult {
@@ -721,7 +724,7 @@ mod pallet {
 
         //     Ok(())
         // }
-                                                                                                            
+
         fn combined_sanity_checks(
             who : &T::AccountId,
             entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
@@ -731,7 +734,7 @@ mod pallet {
             let equity_total: CurrencyBalanceOf<T> = Zero::zero();
             let debit_total: CurrencyBalanceOf<T> = Zero::zero();
             let credit_total: CurrencyBalanceOf<T> = Zero::zero();
-            
+
             for entry in entries {
                 // This should fail if _any_ ledger has an opening balance already set
                 // this should not happen as the check is performed before this is called
@@ -769,25 +772,25 @@ mod pallet {
                     },
                 }
             }
-            
+
             if assets_total != liabilities_total + equity_total {
                 return Err(Error::<T>::AccountingEquationError.into());
             }
-            
+
             if debit_total != credit_total {
                 return Err(Error::<T>::DebitCreditMismatch.into());
             }
-            
+
             Ok(())
         }
-    }  
-        
+    }
+
     impl<T: Config> Posting<T::AccountId, T::Hash, T::BlockNumber, CurrencyBalanceOf<T>> for Pallet<T>
-    where 
+    where
         T: pallet_timestamp::Config,
     {
         type PostingIndex = PostingIndex;
-        
+
         /// The Totem Accounting Recipes are constructed using this function which handles posting to multiple accounts.
         /// It is exposed to other modules as a trait
         /// If for whatever reason an error occurs during the storage processing which is sequential
@@ -817,11 +820,11 @@ mod pallet {
                 posting_index = index.unwrap();
                 new_index = false;
             }
-            
+
             // Iterate over forward keys. If error, then reverse out prior postings.
             for (idx, key) in keys.iter().cloned().enumerate() {
                 if let Err(e) = Self::post_amounts(key, posting_index, new_index) {
-                    // (Un)likely error before the value was updated. 
+                    // (Un)likely error before the value was updated.
                     // Need to reverse-out the earlier postings to storage just in case
                     // it has changed in storage already
                     if idx > 1 {
@@ -840,24 +843,24 @@ mod pallet {
                     fail!(e)
                 }
             }
-            
+
             Ok(())
         }
-        
+
         /// This function simply returns the Totem escrow account address
         fn get_escrow_account() -> T::AccountId {
             let escrow_account: [u8; 32] = *b"TotemsEscrowAddress4LockingFunds";
-            
+
             T::AccountingConverter::convert(escrow_account)
         }
-        
+
         /// This function simply returns the Totem network fees account address
         fn get_netfees_account() -> T::AccountId {
             let netfees_account: [u8; 32] = *b"TotemAccountingNetworkFeeAddress";
-            
+
             T::AccountingConverter::convert(netfees_account)
         }
-        
+
         /// Adds a new accounting entry in the ledger in case of a transfer
         /// Reduce the Internal balance, and reduce the equity from the sender with the reverse for the receiver
         fn account_for_simple_transfer(
@@ -911,12 +914,12 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         /// This function takes the transaction fee and prepares to account for it in accounting.
         /// This is one of the few functions that will set the ledger accounts to be updated here. Fees
         /// are native to the Substrate Framework, and there may be other use cases.
@@ -931,14 +934,14 @@ mod pallet {
             // the same.
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
-            
+
             // Generate dummy Hash reference (it has no real bearing but allows posting to happen)
             let fee_hash: T::Hash = Self::get_pseudo_random_hash(payer.clone(), payer.clone());
-            
+
             // Get the dummy address for fees. Note this does not identify the receipients of fees (validators)
             // It is used just for generic self-referential accounting
             let netfee_address: T::AccountId = Self::get_netfees_account();
-            
+
             let keys = [
             Record {
                 primary_party: payer.clone(),
@@ -961,14 +964,14 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         /// This function takes an amount to be reserved for the user and prepares to account for it.
-        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        /// It is called from totem balances pallet after checks, and should not require further balance checks
         fn set_reserve_amount(
             beneficiary: T::AccountId,
             amount: CurrencyBalanceOf<T>,
@@ -980,10 +983,10 @@ mod pallet {
             // the same.
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
-            
+
             // Generate dummy Hash reference (it has no real bearing but allows posting to happen)
             let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
-            
+
             let keys = [
             Record {
                 primary_party: beneficiary.clone(),
@@ -1006,14 +1009,14 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         /// This function takes an amount to be reserved for the user and prepares to account for it.
-        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        /// It is called from totem balances pallet after checks, and should not require further balance checks
         fn unreserve_amount(
             beneficiary: T::AccountId,
             amount: CurrencyBalanceOf<T>,
@@ -1025,10 +1028,10 @@ mod pallet {
             // the same.
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
-            
+
             // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
             let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
-            
+
             let keys = [
             Record {
                 primary_party: beneficiary.clone(),
@@ -1051,15 +1054,15 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         /// This function takes slashes the reserved amount. It causes the coin supply to be reduced, which is handled
         /// by the balances pallet, however the accounting must book this direct to expenses.
-        /// It is called from totem balances pallet after checks, and should not require further balance checks 
+        /// It is called from totem balances pallet after checks, and should not require further balance checks
         fn slash_reserve(
             beneficiary: T::AccountId,
             amount: CurrencyBalanceOf<T>,
@@ -1071,10 +1074,10 @@ mod pallet {
             // the same.
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
-            
+
             // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
             let ref_hash: T::Hash = Self::get_pseudo_random_hash(beneficiary.clone(), beneficiary.clone());
-            
+
             let keys = [
             Record {
                 primary_party: beneficiary.clone(),
@@ -1097,12 +1100,12 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         /// This function reassigns a reserve amount to another beneficiary. Usually used in the context of slashing.
         /// It is called from the balances pallet and all previous checks on balances have already been performed before this is called.
         fn reassign_reserve(
@@ -1118,10 +1121,10 @@ mod pallet {
             // the same.
             let current_block = frame_system::Pallet::<T>::block_number(); // For audit on change
             let current_block_dupe = current_block; // Applicable period for accounting
-            
+
             // Generate dummy Hash reference (it has no real bearing in this use case, but allows posting to happen)
             let ref_hash: T::Hash = Self::get_pseudo_random_hash(slashed.clone(), beneficiary.clone());
-            
+
             // Select the account ledger to update
             let beneficiary_ledger = match is_free_balance {
                 // the funds will be moved to the free balance of the beneficiary
@@ -1129,7 +1132,7 @@ mod pallet {
                 // the funds will be moved to the reserved balance of the beneficiary
                 false => Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalReservedBalance))),
             };
-            
+
             // First handle the slashing on the slashed account, then handle the addition of the funds to the new account
             let keys = [
             Record {
@@ -1173,12 +1176,12 @@ mod pallet {
                 applicable_period_blocknumber: current_block_dupe,
             },
             ];
-            
+
             Self::handle_multiposting_amounts(&keys, None)?;
-            
+
             Ok(())
         }
-        
+
         // SUSPENDED until the ASSET_TX_PAYMENT Pallet introduced.
         // /// This function handles burnt fee amounts when the fee rewards distribution fails.
         // /// Related to the asset_tx_payment pallet HandleCredit
@@ -1195,7 +1198,7 @@ mod pallet {
         //     let netfee_address: T::AccountId = Self::get_netfees_account();
 
         //     // this is a single adjustment on the network fees account keeping the current balance correct,
-        //     // but also indicating 
+        //     // but also indicating
         //     let keys = [
         //         Record {
         //             primary_party: netfee_address.clone(),
@@ -1273,7 +1276,7 @@ mod pallet {
         //         Record {
         //             primary_party: author.clone(),
         //             counterparty: netfee_address.clone(),
-        //             ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome::NetworkValidationIncome)))), 
+        //             ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::Blockchain(InternalIncome::NetworkValidationIncome)))),
         //             amount: increase_amount,
         //             debit_credit: Indicator::Credit,
         //             reference_hash: fee_hash,
@@ -1286,7 +1289,7 @@ mod pallet {
 
         //     Ok(())
         // }
-                                                
+
         fn get_pseudo_random_hash(sender: T::AccountId, recipient: T::AccountId) -> T::Hash {
             let tuple = (sender.clone(), recipient);
             let sender_encoded = sender.encode();
@@ -1298,7 +1301,7 @@ mod pallet {
                 frame_system::Pallet::<T>::extrinsic_index(),
                 frame_system::Pallet::<T>::block_number(),
             );
-            
+
             T::Hashing::hash(input.encode().as_slice()) // default hash BlakeTwo256
         }
     }
