@@ -31,12 +31,11 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 use super::*;
 use crate::{self as pallet_accounting};
-use frame_support::{parameter_types, traits::{ConstU32, ConstU64}};
+use frame_support::{parameter_types, traits::{ConstU32, ConstU64, GenesisBuild}};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
@@ -46,6 +45,8 @@ use sp_runtime::{
 };
 use sp_std::convert::{TryFrom, TryInto};
 use totem_common::converter::Converter;
+use frame_benchmarking::account;
+use totem_primitives::accounting::*;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -147,7 +148,83 @@ impl pallet_balances_totem::Config for Test {
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
 
+	let mut endowed_accounts = vec![];
+	let account_1 = account::<AccountId>("", 0, 0);
+	let account_2 = account::<AccountId>("", 0, 0);
+
+	endowed_accounts.push(account_1);
+	endowed_accounts.push(account_2);
+
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_accounting::GenesisConfig::<Test> { opening_balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect() }
+		.assimilate_storage(&mut t)
+		.unwrap();
+
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1000));
 	ext
 }
+
+pub fn construct_adjustment_details_for_debit_credit<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let adjustment_detail_credit = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		debit_credit: Indicator::Credit,
+		amount: amount.clone()
+	};
+
+	let adjustment_detail_debit = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		debit_credit: Indicator::Debit,
+		amount
+	};
+
+	adjustment_details.push(adjustment_detail_credit);
+	adjustment_details.push(adjustment_detail_debit);
+
+	adjustment_details
+}
+
+pub fn construct_adjustment_details_for_profit_and_loss_ledger<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let adjustment_detail_credit = AdjustmentDetail {
+		ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))),
+		debit_credit: Indicator::Credit,
+		amount: amount.clone()
+	};
+
+	let adjustment_detail_debit = AdjustmentDetail {
+		ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))),
+		debit_credit: Indicator::Debit,
+		amount
+	};
+
+	adjustment_details.push(adjustment_detail_credit);
+	adjustment_details.push(adjustment_detail_debit);
+
+	adjustment_details
+}
+
+pub fn construct_adjustment_details_for_control_accounts<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let adjustment_detail_credit = AdjustmentDetail {
+		ledger: Ledger::ControlAccounts(ControlAccounts::BorrowingsControl),
+		debit_credit: Indicator::Credit,
+		amount: amount.clone()
+	};
+
+	let adjustment_detail_debit = AdjustmentDetail {
+		ledger: Ledger::ControlAccounts(ControlAccounts::BorrowingsControl),
+		debit_credit: Indicator::Debit,
+		amount
+	};
+
+	adjustment_details.push(adjustment_detail_credit);
+	adjustment_details.push(adjustment_detail_debit);
+
+	adjustment_details
+}
+

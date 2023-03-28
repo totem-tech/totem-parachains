@@ -333,6 +333,8 @@ mod pallet {
         ApplicablePeriodNotValid,
         /// You cannot make adjustments to these ledgers
         IllegalAdjustment,
+		/// No Earliest block number
+		NoEarliestBlockNumber
     }
 
     #[pallet::hooks]
@@ -419,8 +421,13 @@ mod pallet {
                     .min()
                     .into_iter()
                 })
-                .min()
-                .unwrap();
+                .min();
+
+			if earliest_block_number.is_none() {
+				return Err(Error::<T>::NoEarliestBlockNumber.into());
+			}
+
+			let earliest_block_number = earliest_block_number.unwrap();
 
             // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
