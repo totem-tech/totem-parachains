@@ -734,13 +734,13 @@ mod pallet {
 
         fn combined_sanity_checks(
             who : &T::AccountId,
-            entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
+				entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
         ) -> DispatchResult {
-            let assets_total: CurrencyBalanceOf<T> = Zero::zero();
-            let liabilities_total: CurrencyBalanceOf<T> = Zero::zero();
-            let equity_total: CurrencyBalanceOf<T> = Zero::zero();
-            let debit_total: CurrencyBalanceOf<T> = Zero::zero();
-            let credit_total: CurrencyBalanceOf<T> = Zero::zero();
+            let mut assets_total: CurrencyBalanceOf<T> = Zero::zero();
+            let mut liabilities_total: CurrencyBalanceOf<T> = Zero::zero();
+            let mut equity_total: CurrencyBalanceOf<T> = Zero::zero();
+            let mut debit_total: CurrencyBalanceOf<T> = Zero::zero();
+            let mut credit_total: CurrencyBalanceOf<T> = Zero::zero();
 
             for entry in entries {
                 // This should fail if _any_ ledger has an opening balance already set
@@ -748,15 +748,15 @@ mod pallet {
                 ensure!(<OpeningBalance<T>>::get(&who, &entry.ledger).is_none(), Error::<T>::OpeningBalanceAlreadySet);
                 match entry.ledger {
                     Ledger::BalanceSheet(B::Assets(_)) => {
-                        assets_total.checked_add(&entry.amount)
+                        assets_total = assets_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::BalanceSheet(B::Liabilities(_)) => {
-                        liabilities_total.checked_add(&entry.amount)
+						liabilities_total = liabilities_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::BalanceSheet(B::Equity(_)) => {
-                        equity_total.checked_add(&entry.amount)
+                        equity_total = equity_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Ledger::ProfitLoss(_) => {
@@ -770,18 +770,18 @@ mod pallet {
                 }
                 match entry.debit_credit {
                     Indicator::Debit => {
-                        debit_total.checked_add(&entry.amount)
+                        debit_total = debit_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                     Indicator::Credit => {
-                        credit_total.checked_add(&entry.amount)
+                        credit_total = credit_total.checked_add(&entry.amount)
                         .ok_or(Error::<T>::BalanceValueOverflow)?;
                     },
                 }
             }
 
             if assets_total != liabilities_total + equity_total {
-                return Err(Error::<T>::AccountingEquationError.into());
+					return Err(Error::<T>::AccountingEquationError.into());
             }
 
             if debit_total != credit_total {

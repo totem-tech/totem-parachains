@@ -165,19 +165,27 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	ext
 }
 
-pub fn construct_adjustment_details_for_debit_credit<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+// Build genesis storage according to the mock runtime.
+pub fn new_test_ext_without_opening_balance() -> sp_io::TestExternalities {
+	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1000));
+	ext
+}
+
+pub fn construct_adjustment_details<Balance: Clone>(ledger: Ledger, credit_amount: Balance, debit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
 	let mut adjustment_details = vec![];
 
 	let adjustment_detail_credit = AdjustmentDetail {
-		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		ledger,
 		debit_credit: Indicator::Credit,
-		amount: amount.clone()
+		amount: credit_amount
 	};
 
 	let adjustment_detail_debit = AdjustmentDetail {
-		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		ledger,
 		debit_credit: Indicator::Debit,
-		amount
+		amount: debit_amount
 	};
 
 	adjustment_details.push(adjustment_detail_credit);
@@ -186,44 +194,72 @@ pub fn construct_adjustment_details_for_debit_credit<Balance: Clone>(amount: Bal
 	adjustment_details
 }
 
-pub fn construct_adjustment_details_for_profit_and_loss_ledger<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+pub fn construct_adjustment_details_for_too_many_entries<Balance: Clone>(credit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
 	let mut adjustment_details = vec![];
 
-	let adjustment_detail_credit = AdjustmentDetail {
-		ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))),
-		debit_credit: Indicator::Credit,
-		amount: amount.clone()
-	};
+	let mut length = 200;
 
-	let adjustment_detail_debit = AdjustmentDetail {
-		ledger: Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices))),
-		debit_credit: Indicator::Debit,
-		amount
-	};
+	while length != 0 {
+		let adjustment_detail_asset = AdjustmentDetail {
+			ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+			debit_credit: Indicator::Credit,
+			amount: credit_amount.clone()
+		};
+		adjustment_details.push(adjustment_detail_asset);
 
-	adjustment_details.push(adjustment_detail_credit);
-	adjustment_details.push(adjustment_detail_debit);
+		length -= 1;
+	}
 
 	adjustment_details
 }
 
-pub fn construct_adjustment_details_for_control_accounts<Balance: Clone>(amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+pub fn construct_adjustment_details_for_credit_debit_mismatch<Balance: Clone>(credit_amount: Balance, debit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
 	let mut adjustment_details = vec![];
 
-	let adjustment_detail_credit = AdjustmentDetail {
-		ledger: Ledger::ControlAccounts(ControlAccounts::BorrowingsControl),
+	let adjustment_detail_asset_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
 		debit_credit: Indicator::Credit,
-		amount: amount.clone()
+		amount: credit_amount.clone()
 	};
 
-	let adjustment_detail_debit = AdjustmentDetail {
-		ledger: Ledger::ControlAccounts(ControlAccounts::BorrowingsControl),
+	let adjustment_detail_asset_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		debit_credit: Indicator::Credit,
+		amount: credit_amount.clone()
+	};
+	adjustment_details.push(adjustment_detail_asset_1);
+	adjustment_details.push(adjustment_detail_asset_2);
+
+
+	let adjustment_detail_liabilities_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::ContractLiabilities))),
 		debit_credit: Indicator::Debit,
-		amount
+		amount: debit_amount.clone()
 	};
 
-	adjustment_details.push(adjustment_detail_credit);
-	adjustment_details.push(adjustment_detail_debit);
+	let adjustment_detail_liabilities_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::ContractLiabilities))),
+		debit_credit: Indicator::Debit,
+		amount: debit_amount.clone()
+	};
+
+	adjustment_details.push(adjustment_detail_liabilities_1);
+	adjustment_details.push(adjustment_detail_liabilities_2);
+
+	let adjustment_detail_equity_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::OrdinaryShares))),
+		debit_credit: Indicator::Credit,
+		amount: debit_amount.clone()
+	};
+
+	let adjustment_detail_equity_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::OrdinaryShares))),
+		debit_credit: Indicator::Credit,
+		amount: debit_amount.clone()
+	};
+
+	adjustment_details.push(adjustment_detail_equity_1);
+	adjustment_details.push(adjustment_detail_equity_2);
 
 	adjustment_details
 }
