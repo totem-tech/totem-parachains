@@ -10915,7 +10915,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-node"
-version = "1.4.3"
+version = "1.4.4"
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -10975,7 +10975,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-runtime"
-version = "1.4.3"
+version = "1.4.4"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
