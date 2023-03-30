@@ -77,14 +77,14 @@ fn set_opening_balance_works() {
 		assert_ok!(res);
 
 		let ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
-		let adjustment_details_assets = construct_adjustment_details(ledger,1_000_000u64, 1_000_000u64);
+		let mut adjustment_details = construct_adjustment_details(ledger,1_000_000u64, 1_000_000u64);
 
 		let ledger = Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::ContractLiabilities)));
 		let adjustment_details_liabilities = construct_adjustment_details(ledger,1_000_000u64, 1_000_000u64);
 
-		let mut adjustment_details = vec![];
-		adjustment_details_assets.iter().map(|a| adjustment_details.push(a.clone()));
-		adjustment_details_liabilities.iter().map(|a| adjustment_details.push(a.clone()));
+		adjustment_details.extend(adjustment_details_liabilities);
+
+		dbg!(adjustment_details.clone());
 		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
 		assert_ok!(res);
 	});
