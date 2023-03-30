@@ -886,7 +886,7 @@ impl<T: Config> Pallet<T> {
 		let asset_data = AssetData {
 			symbol: asset.symbol.clone(),
 			issuance,
-			inverse_issuance: Self::invert_issuance(asset.issuance as u128),
+			inverse_issuance: Self::invert_issuance(issuance as u128),
 			price,
 			weighting_per_asset: None,
 			weight_adjusted_price: None,
