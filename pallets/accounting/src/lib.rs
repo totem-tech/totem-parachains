@@ -678,17 +678,17 @@ mod pallet {
             fn debit_credit_matches(
                 entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
             ) -> DispatchResult {
-                let debit_total: CurrencyBalanceOf<T> = Zero::zero();
-                let credit_total: CurrencyBalanceOf<T> = Zero::zero();
+                let mut debit_total: CurrencyBalanceOf<T> = Zero::zero();
+                let mut credit_total: CurrencyBalanceOf<T> = Zero::zero();
 
                 for entry in entries {
                     match entry.debit_credit {
                         Indicator::Debit => {
-                            debit_total.checked_add(&entry.amount)
+                            debit_total = debit_total.checked_add(&entry.amount)
                                 .ok_or(Error::<T>::BalanceValueOverflow)?;
                         },
                         Indicator::Credit => {
-                            credit_total.checked_add(&entry.amount)
+                            credit_total = credit_total.checked_add(&entry.amount)
                                 .ok_or(Error::<T>::BalanceValueOverflow)?;
                         },
                     }

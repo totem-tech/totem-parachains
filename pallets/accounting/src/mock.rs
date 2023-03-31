@@ -33,7 +33,6 @@
 // GNU General Public License for more details.
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
-use super::*;
 use crate::{self as pallet_accounting};
 use frame_support::{parameter_types, traits::{ConstU32, ConstU64, GenesisBuild}};
 use frame_system as system;
@@ -146,8 +145,6 @@ impl pallet_balances_totem::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
-
 	let mut endowed_accounts = vec![];
 	let account_1 = account::<AccountId>("", 0, 0);
 	let account_2 = account::<AccountId>("", 0, 0);
@@ -161,15 +158,7 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		.unwrap();
 
 	let mut ext = sp_io::TestExternalities::new(t);
-	ext.execute_with(|| System::set_block_number(1000));
-	ext
-}
-
-// Build genesis storage according to the mock runtime.
-pub fn new_test_ext_without_opening_balance() -> sp_io::TestExternalities {
-	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap();
-	let mut ext = sp_io::TestExternalities::new(t);
-	ext.execute_with(|| System::set_block_number(1000));
+	ext.execute_with(|| System::set_block_number(10000));
 	ext
 }
 
