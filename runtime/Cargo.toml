@@ -83,7 +83,7 @@ xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 
 # Cumulus Dependencies
-cumulus-pallet-aura-ext = { git = 'https://github.com/paritytech/cumulus', default-features = false , branch = 'polkadot-v0.9.36'} 
+cumulus-pallet-aura-ext = { git = 'https://github.com/paritytech/cumulus', default-features = false , branch = 'polkadot-v0.9.36'}
 cumulus-pallet-dmp-queue = { git = 'https://github.com/paritytech/cumulus', default-features = false, branch = 'polkadot-v0.9.36' }
 cumulus-pallet-parachain-system = { git = 'https://github.com/paritytech/cumulus', default-features = false, branch = 'polkadot-v0.9.36' }
 cumulus-pallet-session-benchmarking = { git = "https://github.com/paritytech/cumulus", default-features = false, version = "3.0.0", branch = "polkadot-v0.9.36"}
@@ -162,6 +162,7 @@ runtime-benchmarks = [
 	"xcm-builder/runtime-benchmarks",
 	"cumulus-pallet-session-benchmarking/runtime-benchmarks",
 	"cumulus-pallet-xcmp-queue/runtime-benchmarks",
+	"pallet-accounting/runtime-benchmarks"
 ]
 
 try-runtime = [
