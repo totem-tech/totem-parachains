@@ -102,7 +102,7 @@ mod pallet {
         PostingIndex,
     };
 
-    type CurrencyBalanceOf<T> =
+    pub type CurrencyBalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     /// The current storage version.
