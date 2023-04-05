@@ -128,6 +128,7 @@ impl pallet_accounting::Config for Test {
 	type Currency = Balances;
 	type RandomThing = RandomnessCollectiveFlip;
 	type Acc = pallet_accounting::Pallet<Test>;
+	type WeightInfo = ();
 }
 
 impl pallet_balances_totem::Config for Test {

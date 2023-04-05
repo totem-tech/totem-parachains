@@ -7,7 +7,7 @@ impl pallet_accounting::Config for Runtime {
     type Currency = Balances;
     type RandomThing = RandomnessCollectiveFlip;
     type Acc = pallet_accounting::Pallet<Self>;
-    // type WeightInfo = ();
+	type WeightInfo = pallet_accounting::weights::TotemWeight<Runtime>;
 }
 
 // impl pallet_archive::Config for Runtime {

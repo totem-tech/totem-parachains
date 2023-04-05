@@ -64,8 +64,10 @@ mod benchmarking;
 mod mock;
 #[cfg(test)]
 mod tests;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -101,8 +103,9 @@ mod pallet {
         LedgerBalance,
         PostingIndex,
     };
+	use crate::WeightInfo;
 
-    pub type CurrencyBalanceOf<T> =
+	pub type CurrencyBalanceOf<T> =
     <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
     /// The current storage version.
@@ -293,6 +296,8 @@ mod pallet {
             Self::BlockNumber,
             CurrencyBalanceOf<Self>,
         >;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -344,7 +349,7 @@ mod pallet {
         /// It is applicable across all ledgers for the identity and can only be set. It cannot be changed once set.
         /// It is usually some point in the future, and from then onwards twelve months will be counted for the fiscal year.
         #[pallet::call_index(0)]
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::set_accounting_ref_date())]
         pub fn set_accounting_ref_date(
             origin: OriginFor<T>,
             block_number: T::BlockNumber,
@@ -386,7 +391,7 @@ mod pallet {
         /// This extrinsic does not perform check against the validity of the debit and credit status for the entire ledger, only the incoming entries.
         /// The input Vec should be bounded to 166 entries which is the current size of the Balance Sheet
         #[pallet::call_index(1)]
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::set_opening_balance())]
         pub fn set_opening_balance(
             origin: OriginFor<T>,
             entries: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
@@ -463,7 +468,7 @@ mod pallet {
         /// It is not intended for monetary movements so entries relating to those ledgers will be prevented.
         /// The number of entries should be bounded to 10 as it is not expected that a large number of corrections should be made at once.
         #[pallet::call_index(2)]
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::adjustment())]
         pub fn adjustment(
             origin: OriginFor<T>,
             adjustments: Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,
