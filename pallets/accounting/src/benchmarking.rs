@@ -51,7 +51,8 @@ benchmarks! {
 	}
 
 	set_opening_balance {
-		let account: T::AccountId = whitelisted_caller();
+		let account: T::AccountId = account("", 0, 0);
+		//let account: T::AccountId = whitelisted_caller();
 
 		let _ = Accounting::<T>::set_accounting_ref_date(RawOrigin::Signed(account.clone()).into(), 500400u32.into());
 
@@ -73,7 +74,8 @@ benchmarks! {
 	}
 
 	adjustment {
-		let account: T::AccountId = whitelisted_caller();
+		let account: T::AccountId = account("", 0, 0);
+		//let account: T::AccountId = whitelisted_caller();
 
 		let _ = Accounting::<T>::set_accounting_ref_date(RawOrigin::Signed(account.clone()).into(), 500400u32.into());
 
@@ -103,4 +105,4 @@ benchmarks! {
 	}
 }
 
-impl_benchmark_test_suite!(Template, crate::mock::new_test_ext(), crate::mock::Test,);
+impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test,);

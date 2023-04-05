@@ -421,13 +421,9 @@ mod pallet {
                     .min()
                     .into_iter()
                 })
-                .min();
-
-			if earliest_block_number.is_none() {
-				return Err(Error::<T>::NoEarliestBlockNumber.into());
-			}
-
-			let earliest_block_number = earliest_block_number.unwrap();
+                .min().ok_or_else(|| {
+				Error::<T>::NoEarliestBlockNumber
+			})?;
 
             // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
