@@ -7,6 +7,8 @@ impl pallet_accounting::Config for Runtime {
     type Currency = Balances;
     type RandomThing = RandomnessCollectiveFlip;
     type Acc = pallet_accounting::Pallet<Self>;
+	type MaxOpeningBalanceAdjustmentDetailsEntry = ConstU32<166>;
+	type MaxAdjustmentDetailsEntry = ConstU32<10>;
 	type WeightInfo = pallet_accounting::weights::TotemWeight<Runtime>;
 }
 

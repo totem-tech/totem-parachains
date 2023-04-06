@@ -296,6 +296,8 @@ mod pallet {
             Self::BlockNumber,
             CurrencyBalanceOf<Self>,
         >;
+		type MaxOpeningBalanceAdjustmentDetailsEntry: Get<u32>;
+		type MaxAdjustmentDetailsEntry: Get<u32>;
 		/// Weightinfo for pallet
 		type WeightInfo: WeightInfo;
     }
@@ -403,8 +405,7 @@ mod pallet {
             let who = ensure_signed(origin)?;
 
             // Check that the number of entries in the entries array is not greater than 166
-            // TODO This should be a parameter in the runtime and a BoundedVec
-            if entries.len() > 166 {
+            if entries.len() > T::MaxOpeningBalanceAdjustmentDetailsEntry::get() as usize {
                 return Err(Error::<T>::TooManyOpeningEntries.into())
             }
 
@@ -481,8 +482,7 @@ mod pallet {
             let who = ensure_signed(origin)?;
 
             // Check that the number of adjustments in the adjustments array is not greater than 10
-            // TODO This should be a parameter in the runtime and a BoundedVec
-            if adjustments.len() > 10 {
+            if adjustments.len() > T::MaxAdjustmentDetailsEntry::get() as usize {
                 return Err(Error::<T>::TooManyOpeningEntries.into())
             }
 

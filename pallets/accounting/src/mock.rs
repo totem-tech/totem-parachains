@@ -128,6 +128,8 @@ impl pallet_accounting::Config for Test {
 	type Currency = Balances;
 	type RandomThing = RandomnessCollectiveFlip;
 	type Acc = pallet_accounting::Pallet<Test>;
+	type MaxOpeningBalanceAdjustmentDetailsEntry = ConstU32<166>;
+	type MaxAdjustmentDetailsEntry = ConstU32<10>;
 	type WeightInfo = ();
 }
 
