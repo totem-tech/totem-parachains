@@ -7,21 +7,16 @@ use frame_support::{assert_err, assert_ok};
 use sp_runtime::ModuleError;
 use totem_primitives::unit_of_account::{COIN, CoinType};
 
-const BALANCE_TO_USE: u64 = 1_000_000_000_000u64;
+// const BALANCE_TO_USE: u64 = 1_000_000_000_000u64;
 
 #[test]
 fn should_add_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
+		// let account = account::<AccountId>("", 0, 0);
 
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 100, 0));
 
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
 	});
 }
@@ -29,28 +24,18 @@ fn should_add_a_whitelisted_account_successfully() {
 #[test]
 fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		// let account_0 = account::<AccountId>("", 0, 0);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
 
-		let account_1 = account::<AccountId>("", 1, 0);
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_1.clone()));
+		// let account_1 = account::<AccountId>("", 1, 0);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(2));
 		assert_ok!(res);
 
-		let account_2 = account::<AccountId>("", 2, 0);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_2.clone()));
+		// let account_2 = account::<AccountId>("", 2, 0);
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(3));
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -65,16 +50,11 @@ fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 #[test]
 fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		// let account_0 = account::<AccountId>("", 0, 0);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 
 		assert_err!(
 			res,
@@ -90,51 +70,41 @@ fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 #[test]
 fn should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		// let account_0 = account::<AccountId>("", 0, 0);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
 
 		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None);
 		assert_ok!(res);
 
-		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(account_0), None);
+		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
 	});
 }
 
 #[test]
 fn sudo_should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
-		assert_ok!(Balances::set_balance(
-			RuntimeOrigin::root(),
-			account.clone(),
-			BALANCE_TO_USE,
-			BALANCE_TO_USE,
-		));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
+		// let account_0 = account::<AccountId>("", 0, 0);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
 
 		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(account_0.clone()));
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1));
 		assert_ok!(res);
 
-		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(account_0), None);
+		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
 	});
 }
 
 #[test]
 fn remove_account_should_fail_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
+		// let account_0 = account::<AccountId>("", 0, 0);
 		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(account_0.clone()), None);
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None);
 
 		assert_err!(
 			res,
@@ -150,8 +120,8 @@ fn remove_account_should_fail_when_account_is_not_whitelisted() {
 #[test]
 fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
-		let account_0 = account::<AccountId>("", 0, 0);
-		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(account_0));
+		// let account_0 = account::<AccountId>("", 0, 0);
+		let res = PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1));
 
 		assert_err!(
 			res,
