@@ -1,23 +1,25 @@
 use super::*;
-use crate::{mock::*, *};
+// use crate::{mock::*, *};
+use crate::{mock::*};
 use frame_benchmarking::account;
-use frame_support::{assert_err, assert_ok, traits::ConstU32};
+// use frame_support::{assert_err, assert_ok, traits::ConstU32};
+use frame_support::{assert_err, assert_ok};
 use sp_runtime::ModuleError;
 use totem_primitives::unit_of_account::{COIN, CoinType};
 
-const balance_to_use: u64 = 1_000_000_000_000u64;
+const BALANCE_TO_USE: u64 = 1_000_000_000_000u64;
 
 #[test]
 fn should_add_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		let account = account::<AccountId>("", 0, 0);
 
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
 			account.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account.clone()));
 		assert_ok!(res);
@@ -28,22 +30,22 @@ fn should_add_a_whitelisted_account_successfully() {
 fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 	new_test_ext().execute_with(|| {
 		let account_0 = account::<AccountId>("", 0, 0);
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
-			account_0.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			account.clone(),
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
 		assert_ok!(res);
 
 		let account_1 = account::<AccountId>("", 1, 0);
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
-			account_1.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			account.clone(),
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_1.clone()));
 		assert_ok!(res);
 
@@ -64,12 +66,12 @@ fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 	new_test_ext().execute_with(|| {
 		let account_0 = account::<AccountId>("", 0, 0);
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
-			account_0.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			account.clone(),
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
 		assert_ok!(res);
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
@@ -89,12 +91,12 @@ fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 fn should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		let account_0 = account::<AccountId>("", 0, 0);
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
-			account_0.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			account.clone(),
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
 		assert_ok!(res);
 
@@ -110,12 +112,12 @@ fn should_remove_a_whitelisted_account_successfully() {
 fn sudo_should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		let account_0 = account::<AccountId>("", 0, 0);
-		Balances::set_balance(
+		assert_ok!(Balances::set_balance(
 			RuntimeOrigin::root(),
-			account_0.clone(),
-			balance_to_use,
-			balance_to_use,
-		);
+			account.clone(),
+			BALANCE_TO_USE,
+			BALANCE_TO_USE,
+		));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(account_0.clone()));
 		assert_ok!(res);
 
