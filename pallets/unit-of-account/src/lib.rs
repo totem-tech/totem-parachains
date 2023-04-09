@@ -146,8 +146,9 @@ pub mod pallet {
 		#[pallet::constant]
 		type AccountBytes: Get<[u8; 32]>;
 
-		/// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
-		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId> + Convert<f64, LedgerBalance>;
+		// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
+		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId> 
+			+ Convert<f64, LedgerBalance>;
 	}
 
 	/// The current storage version.

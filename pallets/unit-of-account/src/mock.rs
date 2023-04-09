@@ -1,15 +1,20 @@
 use super::*;
 use crate::{self as pallet_unit_of_account};
 
-use frame_support::{parameter_types, traits::ConstU64};
+use frame_support::{
+	parameter_types, 
+	traits::ConstU64
+};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, ConstU32, IdentifyAccount, IdentityLookup, Verify},
-	MultiSignature,
+	traits::{
+		BlakeTwo256, 
+		ConstU32, 
+		IdentityLookup, 
+	},
 };
-use sp_std::convert::{TryFrom, TryInto};
 use totem_common::converter::Converter;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -33,19 +38,11 @@ frame_support::construct_runtime!(
 
 parameter_types! {
 	pub const BlockHashCount: u64 = 250;
-	pub const SS58Prefix: u8 = 42;
 }
-
-/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
-
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
 impl system::Config for Test {
 	type AccountData = pallet_balances_totem::AccountData<u64>;
-	type AccountId = AccountId;
+	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockHashCount = BlockHashCount;
 	type BlockLength = ();
@@ -65,7 +62,7 @@ impl system::Config for Test {
 	type OnSetCode = ();
 	type RuntimeOrigin = RuntimeOrigin;
 	type PalletInfo = PalletInfo;
-	type SS58Prefix = SS58Prefix;
+	type SS58Prefix = ();
 	type SystemWeightInfo = ();
 	type Version = ();
 }

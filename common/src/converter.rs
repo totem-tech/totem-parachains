@@ -36,6 +36,26 @@ impl Convert<[u8; 32], AccountId32> for Converter {
     }
 }
 
+impl Convert<[u8; 32], u64> for Converter {
+    fn convert(a: [u8; 32]) -> u64 {
+        let mut result: u64 = 0;
+        for i in 0..a.len() {
+            result = result << 8 | a[i] as u64;
+        }
+        result
+    }
+}
+
+impl Convert<u64, [u8; 32]> for Converter {
+    fn convert(a: u64) -> [u8; 32] {
+        let mut result: [u8; 32] = [0; 32];
+        for i in 0..result.len() {
+            result[31 - i] = (a >> (8 * i)) as u8;
+        }
+        result
+    }
+}
+
 impl Convert<LedgerBalance, f64> for Converter {
 	fn convert(x: LedgerBalance) -> f64 {
 		x as f64 / STORAGE_MULTIPLIER as f64
