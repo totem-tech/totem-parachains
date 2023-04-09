@@ -39,6 +39,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -81,13 +86,13 @@ mod pallet {
     #[pallet::storage]
     #[pallet::getter(fn team_hash_owner)]
     pub type TeamHashOwner<T: Config> = StorageMap<_, Blake2_128Concat, T::Hash, T::AccountId>;
-    
+
     /// List of owned teams.
     #[pallet::storage]
     #[pallet::getter(fn owner_teams_list)]
     pub type OwnerTeamsList<T: Config> =
     StorageMap<_, Blake2_128Concat, T::AccountId, Vec<T::Hash>>;
-    
+
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
@@ -151,9 +156,7 @@ mod pallet {
             // TODO limit nr of teams per Account.
             TeamHashStatus::<T>::insert(team_hash, &team_status);
             TeamHashOwner::<T>::insert(team_hash, &who);
-            OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+            OwnerTeamsList::<T>::insert(&who, vec![team_hash]);
 
             Self::deposit_event(Event::TeamRegistered(team_hash, who));
 
@@ -170,7 +173,7 @@ mod pallet {
             }
             // check transaction is signed.
             let changer: T::AccountId = ensure_signed(origin)?;
-            
+
             ensure!(
                 TeamHashStatus::<T>::contains_key(team_hash),
                 Error::<T>::TeamDoesNotExist
