@@ -73,13 +73,9 @@ parameter_types! {
 /// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
 pub type Signature = MultiSignature;
 
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
 impl system::Config for Test {
 	type AccountData = pallet_balances_totem::AccountData<u64>;
-	type AccountId = AccountId;
+	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockHashCount = BlockHashCount;
 	type BlockLength = ();
@@ -149,11 +145,9 @@ impl pallet_balances_totem::Config for Test {
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut endowed_accounts = vec![];
-	let account_1 = account::<AccountId>("", 0, 0);
-	let account_2 = account::<AccountId>("", 0, 0);
 
-	endowed_accounts.push(account_1);
-	endowed_accounts.push(account_2);
+	endowed_accounts.push(1);
+	endowed_accounts.push(2);
 
 	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
 	pallet_accounting::GenesisConfig::<Test> { opening_balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect() }

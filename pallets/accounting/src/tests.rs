@@ -8,9 +8,7 @@ use totem_primitives::accounting::*;
 #[test]
 fn set_accounting_ref_date_works() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
-
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
     });
 }
@@ -18,11 +16,10 @@ fn set_accounting_ref_date_works() {
 #[test]
 fn set_accounting_ref_date_fails_when_account_date_is_already_set() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -37,8 +34,7 @@ fn set_accounting_ref_date_fails_when_account_date_is_already_set() {
 #[test]
 fn set_accounting_ref_date_fails_when_account_ref_date_is_too_soon() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 100);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 100);
 
 		assert_err!(
 			res,
@@ -54,8 +50,7 @@ fn set_accounting_ref_date_fails_when_account_ref_date_is_too_soon() {
 #[test]
 fn set_accounting_ref_date_fails_when_account_ref_date_is_too_late() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 6_256_000);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 6_256_000);
 
 		assert_err!(
 			res,
@@ -71,8 +66,7 @@ fn set_accounting_ref_date_fails_when_account_ref_date_is_too_late() {
 #[test]
 fn set_opening_balance_works() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -83,18 +77,18 @@ fn set_opening_balance_works() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_ok!(res);
 
 		let posting_number = Accounting::posting_number();
 
-		let asset_posting_details = Accounting::posting_detail((account.clone(), asset_ledger), posting_number).unwrap();
+		let asset_posting_details = Accounting::posting_detail((1, asset_ledger), posting_number).unwrap();
 		assert_eq!(asset_posting_details.amount, 1000000);
 
-		let liabilities_posting_details = Accounting::posting_detail((account.clone(), liabilities_ledger), posting_number).unwrap();
+		let liabilities_posting_details = Accounting::posting_detail((1, liabilities_ledger), posting_number).unwrap();
 		assert_eq!(liabilities_posting_details.amount, 1000000);
 
-		let balance_by_ledger = Accounting::balance_by_ledger(&account.clone(), &liabilities_ledger).unwrap();
+		let balance_by_ledger = Accounting::balance_by_ledger(&1, &liabilities_ledger).unwrap();
 		assert_eq!(balance_by_ledger, 0);
 
 		let global_ledger = Accounting::global_ledger(&liabilities_ledger);
@@ -105,11 +99,9 @@ fn set_opening_balance_works() {
 #[test]
 fn set_opening_balance_fails_when_too_many_open_entries() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 2, 77);
-
 		let adjustment_details = construct_adjustment_details_for_too_many_entries(1_000_000u64);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -124,14 +116,13 @@ fn set_opening_balance_fails_when_too_many_open_entries() {
 #[test]
 fn set_opening_balance_fails_when_ledger_is_profit_and_loss() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let ledger = Ledger::ProfitLoss(P::Income(I::Sales(Sales::SalesOfServices)));
 		let adjustment_details = construct_adjustment_details(ledger, 1_000_000u64, 1_000_000u64);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -146,14 +137,13 @@ fn set_opening_balance_fails_when_ledger_is_profit_and_loss() {
 #[test]
 fn set_opening_balance_fails_when_ledger_is_control_accounts() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let ledger = Ledger::ControlAccounts(ControlAccounts::BorrowingsControl);
 		let adjustment_details = construct_adjustment_details(ledger, 1_000_000u64, 1_000_000u64);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -168,14 +158,13 @@ fn set_opening_balance_fails_when_ledger_is_control_accounts() {
 #[test]
 fn set_opening_balance_fails_when_accounting_equation_error() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
 		let adjustment_details = construct_adjustment_details(ledger,2_000_000u64, 1_000_000u64);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -190,14 +179,13 @@ fn set_opening_balance_fails_when_accounting_equation_error() {
 #[test]
 fn set_opening_balance_fails_when_debit_credit_mismatch() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 
 		let adjustment_details = construct_adjustment_details_for_credit_debit_mismatch(2_000_000u64, 1_000_000u64);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -212,14 +200,13 @@ fn set_opening_balance_fails_when_debit_credit_mismatch() {
 #[test]
 fn set_opening_balance_fails_when_balance_value_overflow() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 
 		let adjustment_details = construct_adjustment_details_for_credit_debit_mismatch(u64::MAX, u64::MAX);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details, 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details, 100);
 		assert_err!(
 			res,
 			DispatchError::Module(ModuleError {
@@ -234,8 +221,7 @@ fn set_opening_balance_fails_when_balance_value_overflow() {
 #[test]
 fn set_adjustment_works() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -246,7 +232,7 @@ fn set_adjustment_works() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -259,16 +245,16 @@ fn set_adjustment_works() {
 
 		let posting_number = Accounting::posting_number();
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 100);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 100);
 		assert_ok!(res);
 
-		let asset_posting_details = Accounting::posting_detail((account.clone(), asset_ledger), posting_number).unwrap();
+		let asset_posting_details = Accounting::posting_detail((1, asset_ledger), posting_number).unwrap();
 		assert_eq!(asset_posting_details.amount, 2000000);
 
-		let liabilities_posting_details = Accounting::posting_detail((account.clone(), liabilities_ledger), posting_number).unwrap();
+		let liabilities_posting_details = Accounting::posting_detail((1, liabilities_ledger), posting_number).unwrap();
 		assert_eq!(liabilities_posting_details.amount, 2000000);
 
-		let balance_by_ledger = Accounting::balance_by_ledger(&account.clone(), &liabilities_ledger).unwrap();
+		let balance_by_ledger = Accounting::balance_by_ledger(&1, &liabilities_ledger).unwrap();
 		assert_eq!(balance_by_ledger, 0);
 
 		let global_ledger = Accounting::global_ledger(&liabilities_ledger);
@@ -279,8 +265,7 @@ fn set_adjustment_works() {
 #[test]
 fn set_adjustment_fails_when_index_is_zero() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -291,7 +276,7 @@ fn set_adjustment_fails_when_index_is_zero() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -304,7 +289,7 @@ fn set_adjustment_fails_when_index_is_zero() {
 
 		let posting_number = 0;
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 100);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 100);
 
 		assert_err!(
 			res,
@@ -320,8 +305,7 @@ fn set_adjustment_fails_when_index_is_zero() {
 #[test]
 fn set_adjustment_fails_when_applicable_period_is_not_valid() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -332,7 +316,7 @@ fn set_adjustment_fails_when_applicable_period_is_not_valid() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -345,7 +329,7 @@ fn set_adjustment_fails_when_applicable_period_is_not_valid() {
 
 		let posting_number = Accounting::posting_number();
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 1500000);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 1500000);
 
 		assert_err!(
 			res,
@@ -361,8 +345,7 @@ fn set_adjustment_fails_when_applicable_period_is_not_valid() {
 #[test]
 fn set_adjustment_fails_when_debit_credit_mismatch() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -373,7 +356,7 @@ fn set_adjustment_fails_when_debit_credit_mismatch() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -386,7 +369,7 @@ fn set_adjustment_fails_when_debit_credit_mismatch() {
 
 		let posting_number = Accounting::posting_number();
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 100);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 100);
 
 		assert_err!(
 			res,
@@ -402,8 +385,7 @@ fn set_adjustment_fails_when_debit_credit_mismatch() {
 #[test]
 fn set_adjustment_fails_when_balance_value_overflow() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -414,14 +396,14 @@ fn set_adjustment_fails_when_balance_value_overflow() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let updated_adjustment_details = construct_adjustment_details_for_credit_debit_mismatch(u64::MAX, u64::MAX);
 
 		let posting_number = Accounting::posting_number();
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 100);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 100);
 
 		assert_err!(
 			res,
@@ -437,8 +419,7 @@ fn set_adjustment_fails_when_balance_value_overflow() {
 #[test]
 fn set_adjustment_fails_when_illegal_adjustment() {
 	new_test_ext().execute_with(|| {
-		let account = account::<AccountId>("", 0, 0);
-		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(account.clone()), 500400);
+		let res = Accounting::set_accounting_ref_date(RuntimeOrigin::signed(1), 500400);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount)));
@@ -449,7 +430,7 @@ fn set_adjustment_fails_when_illegal_adjustment() {
 
 		adjustment_details.extend(adjustment_details_liabilities);
 
-		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(account.clone()), adjustment_details.clone(), 100);
+		let res = Accounting::set_opening_balance(RuntimeOrigin::signed(1), adjustment_details.clone(), 100);
 		assert_ok!(res);
 
 		let asset_ledger = Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::InternalBalance)));
@@ -462,7 +443,7 @@ fn set_adjustment_fails_when_illegal_adjustment() {
 
 		let posting_number = Accounting::posting_number();
 
-		let res = Accounting::adjustment(RuntimeOrigin::signed(account.clone()), updated_adjustment_details, posting_number, 100);
+		let res = Accounting::adjustment(RuntimeOrigin::signed(1), updated_adjustment_details, posting_number, 100);
 
 		assert_err!(
 			res,
@@ -474,5 +455,4 @@ fn set_adjustment_fails_when_illegal_adjustment() {
 		);
 	});
 }
-
 
