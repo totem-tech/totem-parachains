@@ -39,12 +39,10 @@ use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     testing::Header,
-    traits::{BlakeTwo256, IdentityLookup, IdentifyAccount, Verify},
-	MultiSignature,
+    traits::{BlakeTwo256, IdentityLookup},
 };
 use sp_std::convert::{TryFrom, TryInto};
 use totem_common::converter::Converter;
-use frame_benchmarking::account;
 use totem_primitives::accounting::*;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
@@ -69,9 +67,6 @@ parameter_types! {
     pub const BlockHashCount: u64 = 250;
     pub const SS58Prefix: u16 = 2007;
 }
-
-/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
 
 impl system::Config for Test {
 	type AccountData = pallet_balances_totem::AccountData<u64>;
