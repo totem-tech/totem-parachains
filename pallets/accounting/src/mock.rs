@@ -31,22 +31,19 @@
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
-
-#![cfg(any(test, feature = "mock"))]
-
-use crate as pallet_accounting;
-use frame_support::parameter_types;
+use crate::{self as pallet_accounting};
+use frame_support::{parameter_types, traits::{ConstU32, ConstU64, GenesisBuild}};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
     testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
 };
-use totem_common::traits::accounting::Posting;
-use totem_common::types::accounting::Record;
+use sp_std::convert::{TryFrom, TryInto};
+use totem_common::converter::Converter;
+use totem_primitives::accounting::*;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -59,109 +56,192 @@ frame_support::construct_runtime!(
         UncheckedExtrinsic = UncheckedExtrinsic,
     {
         System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
-        Accounting: pallet_accounting::{Pallet, Storage, Event<T>},
-        Balances: pallet_balances_totem::{Pallet, Call, Storage, Event<T>},
+		Timestamp: pallet_timestamp::{Pallet, Call, Storage, Inherent},
+		RandomnessCollectiveFlip: pallet_randomness::{Pallet, Storage},
+		Accounting: pallet_accounting::{Pallet, Storage, Event<T>},
+		Balances: pallet_balances_totem::{Pallet, Call, Storage, Event<T>},
     }
 );
-
-impl Posting for Test {
-    // type Account = totem_common::types::Account;
-    type PostingIndex = totem_common::types::PostingIndex;
-    type LedgerBalance = totem_common::types::LedgerBalance;
-
-    fn handle_multiposting_amounts(
-        // keys: Vec<Record<AccountId, Hash, BlockNumber, Self::Account, Self::LedgerBalance>>,
-        keys: Vec<Record<AccountId, Ledger, Self::LedgerBalance, Indicator, Hash, BlockNumber>>,
-    ) -> DispatchResult {
-        unimplemented!()
-    }
-
-    fn account_for_fees(f: CoinAmount, p: AccountId) -> DispatchResult {
-        unimplemented!()
-    }
-
-    // fn account_for_burnt_fees(f: CoinAmount, p: AccountId) -> DispatchResult {
-    //     unimplemented!()
-    // }
-    
-    // fn distribute_fees_rewards(f: CoinAmount, p: AccountId) -> DispatchResult {
-    //     unimplemented!()
-    // }
-
-    fn get_escrow_account() -> AccountId {
-        unimplemented!()
-    }
-
-    fn get_netfees_account() -> AccountId {
-        unimplemented!()
-    }
-
-    fn get_pseudo_random_hash(s: AccountId, r: AccountId) -> Hash {
-        unimplemented!()
-    }
-}
 
 parameter_types! {
     pub const BlockHashCount: u64 = 250;
     pub const SS58Prefix: u16 = 2007;
 }
+
 impl system::Config for Test {
-    type BaseCallFilter = ();
-    type BlockWeights = ();
-    type BlockLength = ();
-    type DbWeight = ();
-    type RuntimeOrigin = RuntimeOrigin;
-    type RuntimeCall = RuntimeCall;
-    type Index = u64;
-    type BlockNumber = u64;
-    type Hash = H256;
-    type Hashing = BlakeTwo256;
-    type AccountId = u64;
-    type Lookup = IdentityLookup<Self::AccountId>;
-    type Header = Header;
-    type RuntimeEvent = RuntimeEvent;
-    type BlockHashCount = BlockHashCount;
-    type Version = ();
-    type PalletInfo = PalletInfo;
-    type AccountData = pallet_balances_totem::AccountData<u64>;
-    type OnNewAccount = ();
-    type OnKilledAccount = ();
-    type SystemWeightInfo = ();
-    type SS58Prefix = SS58Prefix;
-    type OnSetCode = ();
+	type AccountData = pallet_balances_totem::AccountData<u64>;
+	type AccountId = u64;
+	type BaseCallFilter = frame_support::traits::Everything;
+	type BlockHashCount = BlockHashCount;
+	type BlockLength = ();
+	type BlockNumber = u64;
+	type BlockWeights = ();
+	type RuntimeCall = RuntimeCall;
+	type DbWeight = ();
+	type RuntimeEvent = RuntimeEvent;
+	type Hash = H256;
+	type Hashing = BlakeTwo256;
+	type Header = Header;
+	type Index = u64;
+	type Lookup = IdentityLookup<Self::AccountId>;
+	type MaxConsumers = frame_support::traits::ConstU32<16>;
+	type OnKilledAccount = ();
+	type OnNewAccount = ();
+	type OnSetCode = ();
+	type RuntimeOrigin = RuntimeOrigin;
+	type PalletInfo = PalletInfo;
+	type SS58Prefix = SS58Prefix;
+	type SystemWeightInfo = ();
+	type Version = ();
 }
 
 parameter_types! {
-    pub BlockWeights: frame_system::limits::BlockWeights =
-        frame_system::limits::BlockWeights::simple_max(1024);
     pub static ExistentialDeposit: u64 = 0;
 }
+
+impl pallet_randomness::Config for Test {}
 
 parameter_types! {
     pub const MaxReserves: u32 = 2;
 }
-impl pallet_balances_totem::Config for Test {
-    type Balance = u64;
-    type DustRemoval = ();
-    type RuntimeEvent = RuntimeEvent;
-    type ExistentialDeposit = ExistentialDeposit;
-    type AccountStore = system::Pallet<Test>;
-    type MaxLocks = ();
-    type MaxReserves = MaxReserves;
-    type ReserveIdentifier = [u8; 8];
-    type WeightInfo = ();
-    type Accounting = Test;
+
+impl pallet_timestamp::Config for Test {
+	/// A timestamp: milliseconds since the unix epoch.
+	type Moment = u64;
+	type OnTimestampSet = ();
+	type MinimumPeriod = ConstU64<100>;
+	type WeightInfo = ();
 }
 
 impl pallet_accounting::Config for Test {
-    type RuntimeEvent = RuntimeEvent;
-    type AccountingConverter = totem_common::converter::Converter;
+	type RuntimeEvent = RuntimeEvent;
+	type AccountingConverter = Converter;
+	type Currency = Balances;
+	type RandomThing = RandomnessCollectiveFlip;
+	type Acc = pallet_accounting::Pallet<Test>;
+	type MaxOpeningBalanceAdjustmentDetailsEntry = ConstU32<166>;
+	type MaxAdjustmentDetailsEntry = ConstU32<10>;
+	type WeightInfo = ();
+}
+
+impl pallet_balances_totem::Config for Test {
+	type Balance = u64;
+	type DustRemoval = ();
+	type RuntimeEvent = RuntimeEvent;
+	type ExistentialDeposit = ExistentialDeposit;
+	type AccountStore = system::Pallet<Test>;
+	type MaxLocks = ();
+	type MaxReserves = ConstU32<2>;
+	type ReserveIdentifier = [u8; 8];
+	type WeightInfo = pallet_balances_totem::weights::SubstrateWeight<Test>;
+	type Accounting = Accounting;
 }
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-    system::GenesisConfig::default()
-        .build_storage::<Test>()
-        .unwrap()
-        .into()
+	let mut endowed_accounts = vec![];
+
+	endowed_accounts.push(1);
+	endowed_accounts.push(2);
+
+	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+	pallet_accounting::GenesisConfig::<Test> { opening_balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect() }
+		.assimilate_storage(&mut t)
+		.unwrap();
+
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(10000));
+	ext
 }
+
+pub fn construct_adjustment_details<Balance: Clone>(ledger: Ledger, credit_amount: Balance, debit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let adjustment_detail_credit = AdjustmentDetail {
+		ledger,
+		debit_credit: Indicator::Credit,
+		amount: credit_amount
+	};
+
+	let adjustment_detail_debit = AdjustmentDetail {
+		ledger,
+		debit_credit: Indicator::Debit,
+		amount: debit_amount
+	};
+
+	adjustment_details.push(adjustment_detail_credit);
+	adjustment_details.push(adjustment_detail_debit);
+
+	adjustment_details
+}
+
+pub fn construct_adjustment_details_for_too_many_entries<Balance: Clone>(credit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let mut length = 200;
+
+	while length != 0 {
+		let adjustment_detail_asset = AdjustmentDetail {
+			ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+			debit_credit: Indicator::Credit,
+			amount: credit_amount.clone()
+		};
+		adjustment_details.push(adjustment_detail_asset);
+
+		length -= 1;
+	}
+
+	adjustment_details
+}
+
+pub fn construct_adjustment_details_for_credit_debit_mismatch<Balance: Clone>(credit_amount: Balance, debit_amount: Balance) -> Vec<AdjustmentDetail<Balance>>{
+	let mut adjustment_details = vec![];
+
+	let adjustment_detail_asset_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		debit_credit: Indicator::Credit,
+		amount: credit_amount.clone()
+	};
+
+	let adjustment_detail_asset_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Assets(A::CurrentAssets(CurrentAssets::BankCurrentAccount))),
+		debit_credit: Indicator::Credit,
+		amount: credit_amount.clone()
+	};
+	adjustment_details.push(adjustment_detail_asset_1);
+	adjustment_details.push(adjustment_detail_asset_2);
+
+
+	let adjustment_detail_liabilities_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::ContractLiabilities))),
+		debit_credit: Indicator::Debit,
+		amount: debit_amount.clone()
+	};
+
+	let adjustment_detail_liabilities_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Liabilities(L::CurrentLiabilities(CurrentLiabilities::ContractLiabilities))),
+		debit_credit: Indicator::Debit,
+		amount: debit_amount.clone()
+	};
+
+	adjustment_details.push(adjustment_detail_liabilities_1);
+	adjustment_details.push(adjustment_detail_liabilities_2);
+
+	let adjustment_detail_equity_1 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::OrdinaryShares))),
+		debit_credit: Indicator::Credit,
+		amount: debit_amount.clone()
+	};
+
+	let adjustment_detail_equity_2 = AdjustmentDetail {
+		ledger: Ledger::BalanceSheet(B::Equity(E::CapitalStock(CapitalStock::OrdinaryShares))),
+		debit_credit: Indicator::Credit,
+		amount: debit_amount.clone()
+	};
+
+	adjustment_details.push(adjustment_detail_equity_1);
+	adjustment_details.push(adjustment_detail_equity_2);
+
+	adjustment_details
+}
+

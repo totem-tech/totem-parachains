@@ -204,7 +204,7 @@ pub mod pallet {
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::config]
-	pub trait Config<I: 'static = ()>: frame_system::Config + pallet_accounting::Config {
+	pub trait Config<I: 'static = ()>: frame_system::Config {
 		/// The balance of an account.
 		type Balance: Parameter
 			+ Member
@@ -1042,7 +1042,7 @@ impl<T: Config<I>, I: 'static> Pallet<T, I> {
 									.ok_or(ArithmeticError::Overflow)?;
 									// Added for Totem Accounting
 									// Errors should not happen at this point otherwise the accounting and the blockchain balance will be incorrect. Used .ok() shim.
-									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, false).ok();								
+									T::Accounting::reassign_reserve(slashed.clone(), beneficiary.clone(), actual, false).ok();
 								},
 							Status::Reserved => {
 								to_account.reserved = to_account
@@ -1572,7 +1572,7 @@ where
 				.map(|(_, maybe_dust_cleaner)| maybe_dust_cleaner)
 			},
 		)?;
-		
+
 		// Added for Totem Accounting
 		T::Accounting::account_for_simple_transfer(transactor.clone(), dest.clone(), value)?;
 

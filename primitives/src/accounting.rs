@@ -36,12 +36,20 @@
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
 mod chart_of_accounts;
-// pub use chart_of_accounts::{Ledger, {CurrentAssets, Sales, OperatingExpenses, _0030_, B,A,P,I,X,Cogs,Commissions,_0009_}};
 pub use chart_of_accounts::{Ledger, *};
 
-use crate::LedgerBalance;
-use frame_support::{dispatch::{ DispatchResult, EncodeLike, TypeInfo }, pallet_prelude::*};
-// use scale_info::TypeInfo;
+use crate::{ 
+	LedgerBalance,
+	PostingIndex,
+};
+use frame_support::{
+	dispatch::{ 
+		DispatchResult, 
+		EncodeLike, 
+		TypeInfo,
+	},
+	pallet_prelude::*
+};
 use sp_runtime::traits::Member;
 use sp_std::prelude::*;
 
@@ -51,6 +59,7 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 
 	fn handle_multiposting_amounts(
 		keys: &[Record<AccountId, Hash, BlockNumber>],
+		index: Option<PostingIndex>,
 	) -> DispatchResult;
 
 	fn account_for_simple_transfer(
@@ -94,7 +103,7 @@ pub trait Posting<AccountId, Hash, BlockNumber, CoinAmount> {
 
 /// Debit or Credit Indicator
 /// Debit and Credit balances are account specific - see chart of accounts.
-#[derive(MaxEncodedLen, Clone, Decode, Encode, Copy, TypeInfo)]
+#[derive(MaxEncodedLen, Clone, Decode, PartialEq, Encode, Copy, Debug, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum Indicator {
 	/// Debit
@@ -125,6 +134,23 @@ pub struct Detail<AccountId, Hash, BlockNumber> {
 	pub applicable_period_blocknumber: BlockNumber,
 }
 
+// applicable_period_blocknumber is not included per record, but is included as an argument to the extrinisic setting these
+#[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
+pub struct AdjustmentDetail<Balance> {
+	pub ledger: Ledger,
+	pub debit_credit: Indicator,
+	pub amount: Balance,
+	// to be added after UoA is completed, as this determines the exchange rate to be used.
+	// pub asset: Assets,
+}
+
+// allows PostingDetail to be queried by the index of the posting and the account id
+#[derive(MaxEncodedLen, PartialEq, Clone, Decode, Encode, Debug, TypeInfo)]
+pub struct AccountIdIndexWrapper<AccountId> {
+	pub account_id: AccountId,
+	pub index: PostingIndex,
+}
+
 // Implementations
 
 impl EncodeLike<Indicator> for bool {}
@@ -146,6 +172,7 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 
 	fn handle_multiposting_amounts(
 		_fwd: &[Record<AccountId, Hash, BlockNumber>],
+		_index: Option<PostingIndex>,
 	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
@@ -211,4 +238,9 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
+
+	fn combined_sanity_checks(_o: &AccountId, _e: &AdjustmentDetail<Coin>) -> DispatchResult {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
+
 }

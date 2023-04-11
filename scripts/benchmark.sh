@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # To run this, you must be in the root directory.
 # Execute ./scripts/benchmark.sh
-# Runtime is dev by default because this contains the benchmarking methods 
+# Runtime is dev by default because this contains the benchmarking methods
 # After completion the generated benchmark files should be copied to the relevant pallets directory
 # and renamed to `weights.rs`
 
@@ -16,7 +16,8 @@ benchmarkOutput=./weights
 # Set the pallets to benchmark
 # Should include all pallets in the runtime
 pallets=(
-    pallet_balances_totem
+    pallet_balances_totem,
+    pallet_accounting
 )
 
 # Loop through the pallets and run the benchmark
