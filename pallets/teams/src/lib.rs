@@ -198,9 +198,7 @@ mod pallet {
             };
 
             // retain all other teams except the one we want to delete
-            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
-                owner_teams_list.retain(|h| h != &team_hash)
-            })?;
+			Self::remove_team_from_owner_list(&team_owner, team_hash.clone())?;
 
             // remove team from owner
             TeamHashOwner::<T>::remove(team_hash);
@@ -209,9 +207,19 @@ mod pallet {
             TeamHashStatus::<T>::remove(team_hash);
 
             // record the fact of deletion by whom
-            DeletedTeams::<T>::mutate_or_err(team_hash, |deleted_team| {
-                deleted_team.push(deleted_team_struct)
-            })?;
+			DeletedTeams::<T>::try_mutate(team_hash, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_vec) => {
+						team_vec.push(deleted_team_struct);
+						Ok(())
+					},
+					None => {
+						let new_team_vec = vec![deleted_team_struct];
+						*teams = Some(new_team_vec);
+						Ok(())
+					}
+				}
+			});
 
             Self::deposit_event(Event::TeamDeleted(
                 team_hash,
@@ -447,5 +455,19 @@ mod pallet {
             // check validity of team
             Self::is_team_valid(h) && Self::is_team_owner(o, h)
         }
-    }
+	}
+
+	impl<T: Config> Pallet<T> {
+		fn remove_team_from_owner_list(account_id: &T::AccountId, team_hash: T::Hash) -> DispatchResult {
+			let mut teams = <OwnerTeamsList<T>>::get(account_id).ok_or_else(|| Error::<T>::TeamDoesNotExist)?;
+
+			if let Some(index) = teams.iter().position(|h| h.as_ref() == team_hash.as_ref()) {
+				teams.remove(index);
+
+				<OwnerTeamsList<T>>::insert(account_id, teams);
+			}
+
+			Ok(())
+		}
+	}
 }

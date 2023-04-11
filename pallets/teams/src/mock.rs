@@ -1,16 +1,13 @@
-use super::*;
 use crate::{self as pallet_teams};
 
-use frame_support::{parameter_types, traits::ConstU64};
+use frame_support::{parameter_types};
 use frame_system as system;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
-	traits::{BlakeTwo256, ConstU32, IdentifyAccount, IdentityLookup, Verify},
-	MultiSignature,
+	traits::{BlakeTwo256,  IdentityLookup},
 };
 use sp_std::convert::{TryFrom, TryInto};
-use totem_common::converter::Converter;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -32,16 +29,9 @@ parameter_types! {
 	pub const SS58Prefix: u8 = 42;
 }
 
-/// Alias to 512-bit hash when used in the context of a transaction signature on the chain.
-pub type Signature = MultiSignature;
-
-/// Some way of identifying an account on the chain. We intentionally make it equivalent
-/// to the public key of our transaction signing scheme.
-pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
 impl system::Config for Test {
 	type AccountData = ();
-	type AccountId = AccountId;
+	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockHashCount = BlockHashCount;
 	type BlockLength = ();
