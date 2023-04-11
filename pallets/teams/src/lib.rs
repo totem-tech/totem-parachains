@@ -59,7 +59,6 @@ mod pallet {
 
     use sp_std::prelude::*;
 
-    use totem_common::StorageMapExt;
     use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
 
     /// The current storage version.
@@ -132,6 +131,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(0)]
         pub fn add_new_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -164,6 +164,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(1)]
         pub fn remove_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -219,7 +220,7 @@ mod pallet {
 						Ok(())
 					}
 				}
-			});
+			})?;
 
             Self::deposit_event(Event::TeamDeleted(
                 team_hash,
@@ -232,6 +233,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(2)]
         pub fn reassign_team(
             origin: OriginFor<T>,
             new_owner: T::AccountId,
@@ -257,15 +259,23 @@ mod pallet {
             ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned);
 
             // retain all other teams except the one we want to reassign
-            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
-                owner_teams_list.retain(|h| h != &team_hash)
-            })?;
+			Self::remove_team_from_owner_list(&team_owner, team_hash.clone())?;
 
-            // Set new owner for hash
+			// Set new owner for hash
             TeamHashOwner::<T>::insert(team_hash, &new_owner);
-            OwnerTeamsList::<T>::mutate_or_err(&new_owner, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+			OwnerTeamsList::<T>::try_mutate(&new_owner, |hashes| -> DispatchResult {
+				match hashes {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(team_hash);
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![team_hash];
+						*hashes = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::TeamReassigned(
                 team_hash,
@@ -277,6 +287,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(3)]
         pub fn close_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -309,6 +320,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(4)]
         pub fn reopen_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -316,6 +328,10 @@ mod pallet {
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
+			ensure!(
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
+            );
             // Can only reopen a team that is in status "closed"
             let changer = ensure_signed(origin)?;
             let team_status: TeamStatus = match Self::team_hash_status(team_hash) {
@@ -344,6 +360,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(5)]
         pub fn set_status_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
