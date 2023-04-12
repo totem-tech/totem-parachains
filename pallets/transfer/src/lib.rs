@@ -98,7 +98,7 @@ mod pallet {
             if let Err(_) =
                 T::Currency::transfer(&from, &to, amount, ExistenceRequirement::KeepAlive)
             {
-                return Err(Error::<T>::ErrorDuringTransfer);
+                return Err(Error::<T>::ErrorDuringTransfer.into());
             }
 
             T::Bonsai::end_tx(tx_uid)?;
