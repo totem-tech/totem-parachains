@@ -16,8 +16,7 @@ benchmarkOutput=./weights
 # Set the pallets to benchmark
 # Should include all pallets in the runtime
 pallets=(
-    pallet_balances_totem,
-    pallet_teams
+    pallet_balances_totem
 )
 
 # Loop through the pallets and run the benchmark

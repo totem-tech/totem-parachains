@@ -28,16 +28,8 @@ sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkad
 # frame
 frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", branch = 'polkadot-v0.9.36', default-features = false }
 frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
-frame-system-benchmarking = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36", optional = true }
-frame-benchmarking = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36", optional = true }
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 
 [dev-dependencies]
-sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-sp-runtime = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
-frame-benchmarking = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 
 [features]
 default = ['std']
@@ -46,15 +38,6 @@ std = [
 	'totem-common/std',
     'totem-primitives/std',
 	'sp-std/std',
-	'sp-core/std',
-	'sp-runtime/std',
 	'frame-support/std',
 	'frame-system/std',
-	"frame-benchmarking/std",
-]
-
-runtime-benchmarks = [
-	"frame-benchmarking",
-	"frame-system/runtime-benchmarks",
-	"frame-support/runtime-benchmarks",
 ]
