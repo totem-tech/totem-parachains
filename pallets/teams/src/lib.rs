@@ -44,8 +44,10 @@ mod mock;
 #[cfg(test)]
 mod tests;
 mod benchmarking;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -61,6 +63,7 @@ mod pallet {
     use sp_std::prelude::*;
 
     use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
+	use crate::WeightInfo;
 
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -96,6 +99,8 @@ mod pallet {
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]

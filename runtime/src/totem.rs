@@ -51,6 +51,7 @@ impl pallet_prefunding::Config for Runtime {
 
 impl pallet_teams::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
+	type WeightInfo = pallet_teams::weights::TotemWeight<Runtime>;
 }
 
 impl pallet_timekeeping::Config for Runtime {
