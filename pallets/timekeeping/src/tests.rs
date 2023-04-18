@@ -1,30 +1,47 @@
 #![cfg(test)]
-
-use crate::{mock::*, Error};
-use frame_support::{assert_noop, assert_ok};
+use crate::{
+	mock::{new_test_ext, RuntimeOrigin, Timekeeping, Test, Teams}
+};
+use sp_runtime::{DispatchError, ModuleError};
+use frame_support::{assert_err, assert_ok};
 use sp_core::H256;
 
 #[test]
 fn it_works_for_default_value() {
     new_test_ext().execute_with(|| {
-        // Dispatch a signed extrinsic.
         assert_ok!(Timekeeping::invoice_time(
-            Origin::signed(1),
+            RuntimeOrigin::signed(1),
             H256([0; 32]),
             H256([0; 32]),
         ));
-        // Read pallet storage and assert an expected result.
-        //assert_eq!(Timekeeping::something(), Some(42));
     });
 }
 
 #[test]
-fn correct_error_for_none_value() {
-    new_test_ext().execute_with(|| {
-        // Ensure the expected error is thrown when no value is present.
-        //assert_noop!(
-        //    Timekeeping::cause_error(Origin::signed(1)),
-        //    Error::<Test>::NoneValue
-        //);
-    });
+fn notify_team_worker_successfully() {
+	new_test_ext().execute_with(|| {
+		let bytes = "totemteamforpolkadotpolkadotpolk".as_bytes();
+		let team_hash = H256::from_slice(&bytes);
+
+		Teams::add_new_team(RuntimeOrigin::signed(1), team_hash.into());
+
+		assert_ok!(Timekeeping::notify_team_worker(RuntimeOrigin::signed(1),2,team_hash));
+	});
+}
+
+#[test]
+fn notify_team_worker_should_fail_when_invalid_team_owner() {
+	new_test_ext().execute_with(|| {
+		let bytes = "totemteamforpolkadotpolkadotpolk".as_bytes();
+		let team_hash = H256::from_slice(&bytes);
+
+		assert_err!(
+			Timekeeping::notify_team_worker(RuntimeOrigin::signed(1),2,team_hash),
+			DispatchError::Module(ModuleError {
+				index: 1,
+				error: [4, 0, 0, 0],
+				message: Some("InvalidTeamOrOwner"),
+			})
+		);
+	});
 }

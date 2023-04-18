@@ -61,9 +61,9 @@ mod pallet {
 
     use frame_support::{
         dispatch::DispatchResultWithPostInfo,
-        pallet_prelude::*, 
+        pallet_prelude::*,
         sp_runtime::traits::{
-            Hash, 
+            Hash,
             BadOrigin,
         },
         traits::StorageVersion,
@@ -298,10 +298,19 @@ mod pallet {
 
             if who == worker {
                 // Adds team to list of teams assigned to worker address (in this case worker is team owner)
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 // The worker is also the team owner,
                 // directly store worker acceptance
@@ -314,17 +323,36 @@ mod pallet {
                 // Adds team to list of teams assigned to worker address
                 // Worker does not therefore need to be notified of new team assigned to them, as it will appear in
                 // a list of teams
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
                 // set initial status
                 WorkerTeamsBacklogStatus::<T>::insert(&status_tuple_key, accepted_status);
 
                 // add worker to team team invitations, pending acceptance.
-                TeamInvitesList::<T>::mutate_or_err(&team_hash, |team_invites_list| {
-                    team_invites_list.push(worker.clone())
-                })?;
+				TeamInvitesList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+					match teams {
+						Some(ref mut team_vec) => {
+							team_vec.push(worker.clone());
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![worker.clone()];
+							*teams = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
             }
 
             // issue event
