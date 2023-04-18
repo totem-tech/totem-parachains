@@ -39,7 +39,15 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+mod benchmarking;
+pub mod weights;
+
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -54,8 +62,8 @@ mod pallet {
 
     use sp_std::prelude::*;
 
-    use totem_common::StorageMapExt;
     use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
+	use crate::WeightInfo;
 
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -91,6 +99,8 @@ mod pallet {
     #[pallet::config]
     pub trait Config: frame_system::Config {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -127,6 +137,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(0)]
         pub fn add_new_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -151,9 +162,7 @@ mod pallet {
             // TODO limit nr of teams per Account.
             TeamHashStatus::<T>::insert(team_hash, &team_status);
             TeamHashOwner::<T>::insert(team_hash, &who);
-            OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+            OwnerTeamsList::<T>::insert(&who, vec![team_hash]);
 
             Self::deposit_event(Event::TeamRegistered(team_hash, who));
 
@@ -161,6 +170,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(1)]
         pub fn remove_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -195,9 +205,7 @@ mod pallet {
             };
 
             // retain all other teams except the one we want to delete
-            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
-                owner_teams_list.retain(|h| h != &team_hash)
-            })?;
+			Self::remove_team_from_owner_list(&team_owner, team_hash.clone())?;
 
             // remove team from owner
             TeamHashOwner::<T>::remove(team_hash);
@@ -206,9 +214,19 @@ mod pallet {
             TeamHashStatus::<T>::remove(team_hash);
 
             // record the fact of deletion by whom
-            DeletedTeams::<T>::mutate_or_err(team_hash, |deleted_team| {
-                deleted_team.push(deleted_team_struct)
-            })?;
+			DeletedTeams::<T>::try_mutate(team_hash, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_vec) => {
+						team_vec.push(deleted_team_struct);
+						Ok(())
+					},
+					None => {
+						let new_team_vec = vec![deleted_team_struct];
+						*teams = Some(new_team_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::TeamDeleted(
                 team_hash,
@@ -221,6 +239,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(2)]
         pub fn reassign_team(
             origin: OriginFor<T>,
             new_owner: T::AccountId,
@@ -246,15 +265,23 @@ mod pallet {
             ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned);
 
             // retain all other teams except the one we want to reassign
-            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
-                owner_teams_list.retain(|h| h != &team_hash)
-            })?;
+			Self::remove_team_from_owner_list(&team_owner, team_hash.clone())?;
 
-            // Set new owner for hash
+			// Set new owner for hash
             TeamHashOwner::<T>::insert(team_hash, &new_owner);
-            OwnerTeamsList::<T>::mutate_or_err(&new_owner, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+			OwnerTeamsList::<T>::try_mutate(&new_owner, |hashes| -> DispatchResult {
+				match hashes {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(team_hash);
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![team_hash];
+						*hashes = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::TeamReassigned(
                 team_hash,
@@ -266,6 +293,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(3)]
         pub fn close_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -298,6 +326,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(4)]
         pub fn reopen_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -305,6 +334,10 @@ mod pallet {
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
+			ensure!(
+                TeamHashStatus::<T>::contains_key(team_hash),
+                Error::<T>::TeamDoesNotExist
+            );
             // Can only reopen a team that is in status "closed"
             let changer = ensure_signed(origin)?;
             let team_status: TeamStatus = match Self::team_hash_status(team_hash) {
@@ -333,6 +366,7 @@ mod pallet {
         }
 
         #[pallet::weight(0/*TODO*/)]
+		#[pallet::call_index(5)]
         pub fn set_status_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -444,5 +478,19 @@ mod pallet {
             // check validity of team
             Self::is_team_valid(h) && Self::is_team_owner(o, h)
         }
-    }
+	}
+
+	impl<T: Config> Pallet<T> {
+		fn remove_team_from_owner_list(account_id: &T::AccountId, team_hash: T::Hash) -> DispatchResult {
+			let mut teams = <OwnerTeamsList<T>>::get(account_id).ok_or_else(|| Error::<T>::TeamDoesNotExist)?;
+
+			if let Some(index) = teams.iter().position(|h| h.as_ref() == team_hash.as_ref()) {
+				teams.remove(index);
+
+				<OwnerTeamsList<T>>::insert(account_id, teams);
+			}
+
+			Ok(())
+		}
+	}
 }
