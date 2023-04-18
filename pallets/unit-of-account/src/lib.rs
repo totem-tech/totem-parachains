@@ -371,8 +371,8 @@ pub mod pallet {
 			symbol: Assets,
 			issuance: u128,
 			price: u128,
-			price_threshold: (u128, u128),
-			issuance_threshold: (u128, u128)
+			// price_threshold: (u128, u128),
+			// issuance_threshold: (u128, u128)
 		) -> DispatchResultWithPostInfo {
 			// ------------- Checks ------------- //
 			if ensure_none(origin.clone()).is_ok() {
@@ -398,22 +398,22 @@ pub mod pallet {
 			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
 
 			// check that the price threshold is not zero
-			ensure!(price_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
+			// ensure!(price_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
 
-			ensure!(price_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
+			// ensure!(price_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
 
-			ensure!(price >= price_threshold.0, Error::<T>::PriceBelowMinimumThresholdRange);
+			// ensure!(price >= price_threshold.0, Error::<T>::PriceBelowMinimumThresholdRange);
 
-			ensure!(price <= price_threshold.1, Error::<T>::PriceAboveMinimumThresholdRange);
+			// ensure!(price <= price_threshold.1, Error::<T>::PriceAboveMinimumThresholdRange);
 
 			// check that the price threshold is not zero
-			ensure!(issuance_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
+			// ensure!(issuance_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
 
-			ensure!(issuance_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
+			// ensure!(issuance_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
 
-			ensure!(issuance >= issuance_threshold.0, Error::<T>::IssuanceBelowMinimumThresholdRange);
+			// ensure!(issuance >= issuance_threshold.0, Error::<T>::IssuanceBelowMinimumThresholdRange);
 
-			ensure!(issuance <= issuance_threshold.1, Error::<T>::IssuanceAboveMinimumThresholdRange);
+			// ensure!(issuance <= issuance_threshold.1, Error::<T>::IssuanceAboveMinimumThresholdRange);
 
 			// --------------- Processing ---------------- //
 			// Create an intermediate basket including new asset
@@ -421,8 +421,8 @@ pub mod pallet {
 				&symbol,
 				&issuance,
 				&price,
-				&price_threshold,
-				&issuance_threshold
+				// &price_threshold,
+				// &issuance_threshold
 			);
 
 			// get the total inverse issuance (f64)
@@ -521,13 +521,13 @@ pub mod pallet {
 
 			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
 
-			let asset_details = Self::find_and_return_asset(&symbol)?;
+			// let asset_details = Self::find_and_return_asset(&symbol)?;
 
-			ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
-			ensure!(asset_details.price_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
+			// ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
+			// ensure!(asset_details.price_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
 
-			ensure!(price >= asset_details.price_threshold.0 as u128, Error::<T>::PriceBelowMinimumThresholdRange);
-			ensure!(price <= asset_details.price_threshold.1 as u128, Error::<T>::PriceAboveMinimumThresholdRange);
+			// ensure!(price >= asset_details.price_threshold.0 as u128, Error::<T>::PriceBelowMinimumThresholdRange);
+			// ensure!(price <= asset_details.price_threshold.1 as u128, Error::<T>::PriceAboveMinimumThresholdRange);
 
 			let mut intermediate_basket = Self::update_asset_price_in_intermediate_basket(&symbol, price);
 			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
@@ -566,13 +566,13 @@ pub mod pallet {
 
 			ensure!(issuance != u128::MIN, Error::<T>::InvalidIssuanceValue);
 
-			let asset_details = Self::find_and_return_asset(&symbol)?;
+			// let asset_details = Self::find_and_return_asset(&symbol)?;
 
-			ensure!(asset_details.issuance_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
-			ensure!(asset_details.issuance_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
+			// ensure!(asset_details.issuance_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
+			// ensure!(asset_details.issuance_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
 
-			ensure!(issuance >= asset_details.issuance_threshold.0 as u128, Error::<T>::IssuanceBelowMinimumThresholdRange);
-			ensure!(issuance <= asset_details.issuance_threshold.1 as u128, Error::<T>::IssuanceAboveMinimumThresholdRange);
+			// ensure!(issuance >= asset_details.issuance_threshold.0 as u128, Error::<T>::IssuanceBelowMinimumThresholdRange);
+			// ensure!(issuance <= asset_details.issuance_threshold.1 as u128, Error::<T>::IssuanceAboveMinimumThresholdRange);
 
 			let mut intermediate_basket = Self::update_asset_issuance_in_intermediate_basket(&symbol, issuance);
 			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
@@ -677,19 +677,19 @@ impl<T: Config> Pallet<T> {
 		}
 	}
 
-	fn find_and_return_asset(
-		symbol: &Assets,
-	) -> Result<AssetDetails, DispatchError> {
-		let assets = AssetBasket::<T>::get();
-		let asset = assets.iter().find(|a| a.symbol == *symbol);
+	// fn find_and_return_asset(
+	// 	symbol: &Assets,
+	// ) -> Result<AssetDetails, DispatchError> {
+	// 	let assets = AssetBasket::<T>::get();
+	// 	let asset = assets.iter().find(|a| a.symbol == *symbol);
 
-		match asset {
-			Some(found_asset) => {
-				Ok(found_asset.clone())
-			}
-			None => Err(Error::<T>::AssetNotFound.into())
-		}
-	}
+	// 	match asset {
+	// 		Some(found_asset) => {
+	// 			Ok(found_asset.clone())
+	// 		}
+	// 		None => Err(Error::<T>::AssetNotFound.into())
+	// 	}
+	// }
 
 	fn invert_issuance(issuance: u128) -> Option<f64> {
 		let inverted_issuance = 1u128 as f64 / issuance as f64;
@@ -764,8 +764,8 @@ impl<T: Config> Pallet<T> {
 						Some(uoa) => Self::convert_float_to_storage(uoa)?,
 						None => 0 as LedgerBalance,
 					},
-					price_threshold: (asset.price_threshold.0 as LedgerBalance, asset.price_threshold.1 as LedgerBalance),
-					issuance_threshold: (asset.issuance_threshold.0 as LedgerBalance, asset.issuance_threshold.1 as LedgerBalance)
+					// price_threshold: (asset.price_threshold.0 as LedgerBalance, asset.price_threshold.1 as LedgerBalance),
+					// issuance_threshold: (asset.issuance_threshold.0 as LedgerBalance, asset.issuance_threshold.1 as LedgerBalance)
 				};
 				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxAssetsOutOfBounds)?;
 			}
@@ -777,8 +777,8 @@ impl<T: Config> Pallet<T> {
 		symbol: &Assets,
 		issuance: &u128,
 		price: &u128,
-		price_threshold: &(u128, u128),
-		issuance_threshold: &(u128, u128)
+		// price_threshold: &(u128, u128),
+		// issuance_threshold: &(u128, u128)
 	) -> Vec<AssetData<f64>> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
@@ -792,8 +792,8 @@ impl<T: Config> Pallet<T> {
 			weighting_per_asset: None,
 			weight_adjusted_price: None,
 			uoa_per_asset: None,
-			price_threshold: price_threshold.clone(),
-			issuance_threshold: issuance_threshold.clone()
+			// price_threshold: price_threshold.clone(),
+			// issuance_threshold: issuance_threshold.clone()
 		};
 		intermediate_basket.push(new_entry);
 
@@ -807,8 +807,8 @@ impl<T: Config> Pallet<T> {
 				weighting_per_asset: None,
 				weight_adjusted_price: None,
 				uoa_per_asset: None,
-				price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-				issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
+				// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
+				// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
 			};
 			intermediate_basket.push(existing_entry);
 		}
@@ -833,8 +833,8 @@ impl<T: Config> Pallet<T> {
 				weighting_per_asset: None,
 				weight_adjusted_price: None,
 				uoa_per_asset: None,
-				price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-				issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
+				// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
+				// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
 			};
 			intermediate_basket.push(existing_entry);
 		}
@@ -892,8 +892,8 @@ impl<T: Config> Pallet<T> {
 			weighting_per_asset: None,
 			weight_adjusted_price: None,
 			uoa_per_asset: None,
-			price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-			issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
+			// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
+			// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
 		};
 		asset_data
 	}

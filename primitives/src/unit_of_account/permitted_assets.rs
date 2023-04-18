@@ -694,7 +694,7 @@ pub enum COIN {
     ADA,
     /// Avalanche
     AVA,
-    /// Astra
+    /// Astar
     ASTR,
     /// Cosmos
     ATOM,
@@ -773,5 +773,234 @@ pub enum COIN {
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
 pub enum FIAT {
-
+    /// Chinese Yuan
+    CNY,
+    /// US Dollar
+    USD,
+    /// Euro
+    EUR,
+    /// Japanese Yen
+    JPY,
+    /// British Pound
+    GBP,
+    /// South Korean Won
+    KRW,
+    /// Indian Rupee
+    INR,
+    /// Hong Kong Dollar
+    HKD,
+    /// Canadian Dollar
+    CAD,
+    /// New Taiwan Dollar
+    TWD,
+    /// Australian Dollar
+    AUD,
+    /// Brazilian Real
+    BRL,
+    /// Swiss Franc
+    CHF,
+    /// Russian Ruble
+    RUB,
+    /// Thai Baht
+    THB,
+    /// Saudi Riyal
+    SAR,
+    /// United Arab Emirates Dirham
+    AED,
+    /// Singapore Dollar
+    SGD,
+    /// Malaysian Ringgit
+    MYR,
+    /// Mexican Peso
+    MXN,
+    /// Turkish Lira
+    TRY,
+    /// Vietnamese Dong
+    VND,
+    /// Swedish Krona
+    SEK,
+    /// Polish Zloty
+    PLN,
+    /// Indonesian Rupiah
+    IDR,
+    /// Israeli New Shekel
+    ILS,
+    /// Chilean Peso
+    CLP,
+    /// Egyptian Pound
+    EGP,
+    /// Philippine Peso
+    PHP,
+    /// Norwegian Krone
+    NOK,
+    /// Danish Krone
+    DKK,
+    /// South African Rand
+    ZAR,
+    /// New Zealand Dollar
+    NZD,
+    /// Czech Koruna
+    CZK,
+    /// Qatari Rial
+    QAR,
+    /// Colombian Peso
+    COP,
+    /// Pakistani Rupee
+    PKR,
+    /// Lebanese Pound
+    LBP,
+    /// Moroccan Dirham
+    MAD,
+    /// Kuwaiti Dinar
+    KWD,
+    /// Romanian Leu
+    RON,
+    /// Macanese Pataca
+    MOP,
+    /// Hungarian Forint
+    HUF,
+    /// Nigerian Naira
+    NGN,
+    /// Libyan Dinar
+    LYD,
+    /// Argentine Peso
+    ARS,
+    /// Peruvian Sol
+    PEN,
+    /// Bulgarian Lev
+    BGN,
+    /// Ukrainian Hryvnia
+    UAH,
+    /// Jordanian Dinar
+    JOD,
+    /// Kazakhstani Tenge
+    KZT,
+    /// Omani Rial
+    OMR,
+    /// Bahraini Dinar
+    BHD,
+    /// Sri Lankan Rupee
+    LKR,
+    /// Guatemalan Quetzal
+    GTQ,
+    /// Kenyan Shilling
+    KES,
+    /// West African CFA Franc
+    XOF,
+    /// Dominican Peso
+    DOP,
+    /// Bolivian Boliviano
+    BOB,
+    /// Serbian Dinar
+    RSD,
+    /// Costa Rican Col
+    CRC,
+    /// Angolan Kwanza
+    AOA,
+    /// Croatian Kuna
+    HRK,
+    /// Bangladeshi Taka
+    BDT,
+    /// Belarusian Ruble
+    BYN,
+    /// Azerbaijani Manat
+    AZN,
+    /// Honduran Lempira
+    HNL,
+    /// Mauritian Rupee
+    MUR,
+    /// Paraguayan Guarani
+    PYG,
+    /// Icelandic Kr
+    ISK,
+    /// Trinidad & Tobago Dollar
+    TTD,
+    /// Sudanese Pound
+    SDG,
+    /// Tanzanian Shilling
+    TZS,
+    /// Albanian Lek
+    ALL,
+    /// Iraqi Dinar
+    IQD,
+    /// Brunei Dollar
+    BND,
+    /// Laotian Kip
+    LAK,
+    /// Bahamian Dollar
+    BSD,
+    /// Uruguayan Peso
+    UYU,
+    /// Zambian Kwacha
+    ZMK,
+    /// Georgian Lari
+    GEL,
+    /// Mongolian Tugrik
+    MNT,
+    /// Bosnia-Herzegovina Convertible Mark
+    BAM,
+    /// Congolese Franc
+    CDF,
+    /// Ugandan Shilling
+    UGX,
+    /// Mozambican Metical
+    MZN,
+    /// Botswanan Pula
+    BWP,
+    /// Macedonian Denar
+    MKD,
+    /// Namibian Dollar
+    NAD,
+    /// CFP Franc
+    XPF,
+    /// Moldovan Leu
+    MDL,
+    /// Jamaican Dollar
+    JMD,
+    /// Nicaraguan C
+    NIO,
+    /// Armenian Dram
+    AMD,
+    /// Malagasy Ariary
+    MGA,
+    /// Guinean Franc
+    GNF,
+    /// Rwandan Franc
+    RWF,
+    /// Maldivian Rufiyaa
+    MVR,
+    /// Kyrgystani Som
+    KGS,
+    /// Guyanaese Dollar
+    GYD,
+    /// Cape Verdean Escudo
+    CVE,
+    /// Malawian Kwacha
+    MWK,
+    /// Central African CFA Franc
+    XAF,
+    /// Bhutanese Ngultrum
+    BTN,
+    /// Seychellois Rupee
+    SCR,
+    /// Burundian Franc
+    BIF,
+    /// Swazi Lilangeni
+    SZL,
+    /// Sierra Leonean Leone
+    SLL,
+    /// Gambian Dalasi
+    GMD,
+    /// Lesotho Loti
+    LSL,
+    /// Liberian Dollar
+    LRD,
+    /// Comorian Franc
+    KMF,
+    /// Tunisian Dinar
+    TND,
+    /// Tajikistani Somoni
+    TJS,
+    /// São Tomé and Príncipe Dobra 
+    STD,
 }
