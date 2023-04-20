@@ -347,8 +347,8 @@ mod pallet {
 							Ok(())
 						},
 						None => {
-							let new_hash_vec = vec![worker.clone()];
-							*teams = Some(new_hash_vec);
+							let new_team_vec = vec![worker.clone()];
+							*teams = Some(new_team_vec);
 							Ok(())
 						}
 					}
@@ -472,9 +472,7 @@ mod pallet {
             // let input_time_hash_2 = hex!("e4d673a76e8b32ca3989dbb9f444f71813c88d36120170b15151d58c7106cc83");
             // let default_hash: TimeHash = hex!("e4d673a76e8b32ca3989dbb9f444f71813c88d36120170b15151d58c7106cc83");
             // 0x6c9596f9ca96adf2334c4761bc161442a32ef16896427b6d43fc5e9353bbab63
-
-            let default_bytes = "Default hash";
-            let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+            let default_hash: T::Hash = Self::get_default_hash(); // default hash BlakeTwo256
 
             // set default lock and reason code and type default values (TODO should come from extrinsic in future)
             let initial_submit_reason = ReasonCodeStruct(0, 0);
@@ -505,16 +503,35 @@ mod pallet {
                     .using_encoded(<T as frame_system::Config>::Hashing::hash);
 
                 // Now update all time relevant records
-                WorkerTimeRecordsHashList::<T>::mutate_or_err(
-                    &who,
-                    |worker_time_records_hash_list| worker_time_records_hash_list.push(time_hash),
-                )?;
+				WorkerTimeRecordsHashList::<T>::try_mutate(&who, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 // Add time hash to team list
-                TeamTimeRecordsHashList::<T>::mutate_or_err(
-                    &team_hash,
-                    |team_time_hash_list| team_time_hash_list.push(time_hash),
-                )?;
+				TeamTimeRecordsHashList::<T>::try_mutate(&team_hash, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
+
 
                 TimeHashOwner::<T>::insert(time_hash, who.clone());
 
@@ -881,9 +898,19 @@ mod pallet {
             let status_tuple_key = (team_hash, who.clone());
 
             // add worker to team team
-            TeamWorkersList::<T>::mutate_or_err(&team_hash, |team_workers_list| {
-                team_workers_list.push(who.clone())
-            })?;
+			TeamWorkersList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_vec) => {
+						team_vec.push(who.clone());
+						Ok(())
+					},
+					None => {
+						let new_team_vec = vec![who.clone()];
+						*teams = Some(new_team_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             // Remove from notifications list
             TeamInvitesList::<T>::mutate(&team_hash, |team_invites_list| {
@@ -1105,6 +1132,13 @@ mod pallet {
 
             Ok(().into())
         }
+
+		pub fn get_default_hash() -> T::Hash {
+			let default_bytes = "Default hash";
+			let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+
+			default_hash
+		}
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {
