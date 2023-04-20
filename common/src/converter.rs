@@ -2,6 +2,7 @@ use crate::TryConvert;
 use core::convert::TryFrom;
 use sp_runtime::{traits::Convert, AccountId32};
 use sp_std::vec::Vec;
+use totem_primitives::{LedgerBalance, unit_of_account::STORAGE_MULTIPLIER};
 
 pub struct Converter;
 
@@ -35,6 +36,38 @@ impl Convert<[u8; 32], AccountId32> for Converter {
     }
 }
 
+impl Convert<[u8; 32], u64> for Converter {
+    fn convert(a: [u8; 32]) -> u64 {
+        let mut result: u64 = 0;
+        for i in 0..a.len() {
+            result = result << 8 | a[i] as u64;
+        }
+        result
+    }
+}
+
+impl Convert<u64, [u8; 32]> for Converter {
+    fn convert(a: u64) -> [u8; 32] {
+        let mut result: [u8; 32] = [0; 32];
+        for i in 0..result.len() {
+            result[31 - i] = (a >> (8 * i)) as u8;
+        }
+        result
+    }
+}
+
+impl Convert<LedgerBalance, f64> for Converter {
+	fn convert(x: LedgerBalance) -> f64 {
+		x as f64 / STORAGE_MULTIPLIER as f64
+	}
+}
+
+impl Convert<f64, LedgerBalance> for Converter {
+	fn convert(x: f64) -> LedgerBalance {
+		(x * STORAGE_MULTIPLIER as f64) as LedgerBalance
+	}
+}
+
 impl Convert<Vec<u8>, [u8; 8]> for Converter {
     fn convert(mut v: Vec<u8>) -> [u8; 8] {
         let mut a = [0; 8];
@@ -56,4 +89,10 @@ impl TryConvert<u128, i128> for Converter {
     fn try_convert(x: u128) -> Option<i128> {
         i128::try_from(x).ok()
     }
+}
+
+impl TryConvert<u64, i128> for Converter {
+	fn try_convert(x: u64) -> Option<i128> {
+		i128::try_from(x).ok()
+	}
 }
