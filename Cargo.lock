@@ -5769,8 +5769,10 @@ dependencies = [
 name = "pallet-timekeeping"
 version = "1.1.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "frame-system-benchmarking",
  "pallet-teams",
  "parity-scale-codec",
  "scale-info",

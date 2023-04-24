@@ -997,23 +997,49 @@ mod pallet {
             n: NumberOfBlocks,
         ) -> DispatchResultWithPostInfo {
             // Check that the existing values are greater that the new value to be subtracted else do nothing.
-            TotalBlocksPerTeam::<T>::mutate_or_err(&r, |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
+			TotalBlocksPerTeam::<T>::try_mutate(&r, |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
 
-            TotalBlocksPerAddress::<T>::mutate_or_err(&a, |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
 
-            TotalBlocksPerTeamPerAddress::<T>::mutate_or_err((&a, &r), |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
+			TotalBlocksPerAddress::<T>::try_mutate(&a, |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
+
+
+			TotalBlocksPerTeamPerAddress::<T>::try_mutate((&a, &r), |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::DecreaseTotalBlocks(a, r, n));
 
