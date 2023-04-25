@@ -93,7 +93,7 @@ benchmarks! {
 
 		TimeRecord::<T>::insert(time_hash.clone(), new_time_data);
 
-	}: _(RawOrigin::Signed(owner), team_hash, time_hash.into(), submit_status,
+	}: _(RawOrigin::Signed(worker), team_hash, time_hash.into(), submit_status,
 		reason_for_change, number_of_blocks, posting_period, start_block_number, end_block_number, break_counter)
 	verify {
 	}
@@ -109,7 +109,7 @@ benchmarks! {
 		let _ = Timekeeping::<T>::notify_team_worker(RawOrigin::Signed(owner.clone()).into(), worker.clone(), team_hash);
 		let _ = Timekeeping::<T>::worker_acceptance_team(RawOrigin::Signed(worker.clone()).into(), team_hash.clone(), true);
 
-		let submit_status = StatusOfTimeRecord::Draft;
+		let submit_status = StatusOfTimeRecord::Submitted;
 		let reason_code = 0u16;
 		let reason_code_type = 0u16;
 		let reason_for_change = ReasonCodeStruct(reason_code, reason_code_type);
