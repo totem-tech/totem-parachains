@@ -56,6 +56,7 @@ impl pallet_teams::Config for Runtime {
 impl pallet_timekeeping::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Teams = pallet_teams::Pallet<Self>;
+	type WeightInfo = pallet_timekeeping::weights::TotemWeight<Runtime>;
 }
 
 // impl pallet_transfer::Config for Runtime {

@@ -92,7 +92,7 @@ pub struct ReasonCodeStruct(pub ReasonCode, pub ReasonCodeType);
 
 /// Status of the code changes.
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, Default, TypeInfo)]
-pub struct BannedStruct(BanStatus, ReasonCodeStruct);
+pub struct BannedStruct(pub BanStatus, pub ReasonCodeStruct);
 
 /// The individual time record.
 #[derive(PartialEq, Eq, Copy, Clone, Debug, Encode, Decode, Default, TypeInfo)]

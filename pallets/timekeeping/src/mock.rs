@@ -58,6 +58,7 @@ frame_support::construct_runtime!(
     {
         System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
         Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>},
+		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>},
     }
 );
 
@@ -67,34 +68,40 @@ parameter_types! {
 }
 
 impl system::Config for Test {
-    type BaseCallFilter = ();
-    type BlockWeights = ();
-    type BlockLength = ();
-    type DbWeight = ();
-    type Origin = Origin;
-    type Call = Call;
-    type Index = u64;
-    type BlockNumber = u64;
-    type Hash = H256;
-    type Hashing = BlakeTwo256;
-    type AccountId = u64;
-    type Lookup = IdentityLookup<Self::AccountId>;
-    type Header = Header;
-    type Event = Event;
-    type BlockHashCount = BlockHashCount;
-    type Version = ();
-    type PalletInfo = PalletInfo;
-    type AccountData = ();
-    type OnNewAccount = ();
-    type OnKilledAccount = ();
-    type SystemWeightInfo = ();
-    type SS58Prefix = SS58Prefix;
-    type OnSetCode = ();
+	type AccountData = ();
+	type AccountId = u64;
+	type BaseCallFilter = frame_support::traits::Everything;
+	type BlockHashCount = BlockHashCount;
+	type BlockLength = ();
+	type BlockNumber = u64;
+	type BlockWeights = ();
+	type RuntimeCall = RuntimeCall;
+	type DbWeight = ();
+	type RuntimeEvent = RuntimeEvent;
+	type Hash = H256;
+	type Hashing = BlakeTwo256;
+	type Header = Header;
+	type Index = u64;
+	type Lookup = IdentityLookup<Self::AccountId>;
+	type MaxConsumers = frame_support::traits::ConstU32<16>;
+	type OnKilledAccount = ();
+	type OnNewAccount = ();
+	type OnSetCode = ();
+	type RuntimeOrigin = RuntimeOrigin;
+	type PalletInfo = PalletInfo;
+	type SS58Prefix = SS58Prefix;
+	type SystemWeightInfo = ();
+	type Version = ();
+}
+
+impl pallet_teams::Config for Test {
+	type RuntimeEvent = RuntimeEvent;
 }
 
 impl pallet_timekeeping::Config for Test {
-    type Event = Event;
-    type Projects = ();
+	type RuntimeEvent = RuntimeEvent;
+    type Teams = Teams;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.

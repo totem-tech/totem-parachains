@@ -50,20 +50,25 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub mod benchmarking;
-pub mod mock;
-pub mod tests;
+#![cfg_attr(not(feature = "std"), no_std)]
+mod benchmarking;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
 
     use frame_support::{
         dispatch::DispatchResultWithPostInfo,
-        pallet_prelude::*, 
+        pallet_prelude::*,
         sp_runtime::traits::{
-            Hash, 
+            Hash,
             BadOrigin,
         },
         traits::StorageVersion,
@@ -74,6 +79,7 @@ mod pallet {
 
     use totem_common::StorageMapExt;
     use totem_primitives::{teams::Validating as TeamValidating, timekeeping::*};
+	use crate::WeightInfo;
 
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -215,6 +221,9 @@ mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type Teams: TeamValidating<Self::AccountId, Self::Hash>;
+
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -269,7 +278,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Team owner invites worker/team member to team.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::notify_team_worker())]
         pub fn notify_team_worker(
             origin: OriginFor<T>,
             worker: T::AccountId,
@@ -298,10 +307,19 @@ mod pallet {
 
             if who == worker {
                 // Adds team to list of teams assigned to worker address (in this case worker is team owner)
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 // The worker is also the team owner,
                 // directly store worker acceptance
@@ -314,17 +332,36 @@ mod pallet {
                 // Adds team to list of teams assigned to worker address
                 // Worker does not therefore need to be notified of new team assigned to them, as it will appear in
                 // a list of teams
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
                 // set initial status
                 WorkerTeamsBacklogStatus::<T>::insert(&status_tuple_key, accepted_status);
 
                 // add worker to team team invitations, pending acceptance.
-                TeamInvitesList::<T>::mutate_or_err(&team_hash, |team_invites_list| {
-                    team_invites_list.push(worker.clone())
-                })?;
+				TeamInvitesList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+					match teams {
+						Some(ref mut team_vec) => {
+							team_vec.push(worker.clone());
+							Ok(())
+						},
+						None => {
+							let new_team_vec = vec![worker.clone()];
+							*teams = Some(new_team_vec);
+							Ok(())
+						}
+					}
+				})?;
             }
 
             // issue event
@@ -334,7 +371,7 @@ mod pallet {
         }
 
         /// Worker accepts to join the team.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::worker_acceptance_team())]
         pub fn worker_acceptance_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -402,7 +439,7 @@ mod pallet {
         }
 
         /// Worker submits/resubmits time record.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::submit_time())]
         pub fn submit_time(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -444,9 +481,7 @@ mod pallet {
             // let input_time_hash_2 = hex!("e4d673a76e8b32ca3989dbb9f444f71813c88d36120170b15151d58c7106cc83");
             // let default_hash: TimeHash = hex!("e4d673a76e8b32ca3989dbb9f444f71813c88d36120170b15151d58c7106cc83");
             // 0x6c9596f9ca96adf2334c4761bc161442a32ef16896427b6d43fc5e9353bbab63
-
-            let default_bytes = "Default hash";
-            let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+            let default_hash: T::Hash = Self::get_default_hash(); // default hash BlakeTwo256
 
             // set default lock and reason code and type default values (TODO should come from extrinsic in future)
             let initial_submit_reason = ReasonCodeStruct(0, 0);
@@ -477,16 +512,35 @@ mod pallet {
                     .using_encoded(<T as frame_system::Config>::Hashing::hash);
 
                 // Now update all time relevant records
-                WorkerTimeRecordsHashList::<T>::mutate_or_err(
-                    &who,
-                    |worker_time_records_hash_list| worker_time_records_hash_list.push(time_hash),
-                )?;
+				WorkerTimeRecordsHashList::<T>::try_mutate(&who, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 // Add time hash to team list
-                TeamTimeRecordsHashList::<T>::mutate_or_err(
-                    &team_hash,
-                    |team_time_hash_list| team_time_hash_list.push(time_hash),
-                )?;
+				TeamTimeRecordsHashList::<T>::try_mutate(&team_hash, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
+
 
                 TimeHashOwner::<T>::insert(time_hash, who.clone());
 
@@ -644,7 +698,7 @@ mod pallet {
         }
 
         /// Team owner sets authorisation status of time record.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::authorise_time())]
         pub fn authorise_time(
             origin: OriginFor<T>,
             _worker: T::AccountId,
@@ -853,9 +907,19 @@ mod pallet {
             let status_tuple_key = (team_hash, who.clone());
 
             // add worker to team team
-            TeamWorkersList::<T>::mutate_or_err(&team_hash, |team_workers_list| {
-                team_workers_list.push(who.clone())
-            })?;
+			TeamWorkersList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_vec) => {
+						team_vec.push(who.clone());
+						Ok(())
+					},
+					None => {
+						let new_team_vec = vec![who.clone()];
+						*teams = Some(new_team_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             // Remove from notifications list
             TeamInvitesList::<T>::mutate(&team_hash, |team_invites_list| {
@@ -942,23 +1006,49 @@ mod pallet {
             n: NumberOfBlocks,
         ) -> DispatchResultWithPostInfo {
             // Check that the existing values are greater that the new value to be subtracted else do nothing.
-            TotalBlocksPerTeam::<T>::mutate_or_err(&r, |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
+			TotalBlocksPerTeam::<T>::try_mutate(&r, |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
 
-            TotalBlocksPerAddress::<T>::mutate_or_err(&a, |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
 
-            TotalBlocksPerTeamPerAddress::<T>::mutate_or_err((&a, &r), |val| {
-                if *val >= n {
-                    *val -= n
-                }
-            })?;
+			TotalBlocksPerAddress::<T>::try_mutate(&a, |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
+
+
+			TotalBlocksPerTeamPerAddress::<T>::try_mutate((&a, &r), |val| -> DispatchResult {
+				match val {
+					Some(blocks_number) => {
+						if *blocks_number >= n {
+							*blocks_number -= n
+						}
+						Ok(())
+					},
+					None => {
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::DecreaseTotalBlocks(a, r, n));
 
@@ -1077,6 +1167,13 @@ mod pallet {
 
             Ok(().into())
         }
+
+		pub fn get_default_hash() -> T::Hash {
+			let default_bytes = "Default hash";
+			let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+
+			default_hash
+		}
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {
