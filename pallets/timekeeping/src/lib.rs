@@ -50,11 +50,16 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub mod benchmarking;
-pub mod mock;
-pub mod tests;
+#![cfg_attr(not(feature = "std"), no_std)]
+mod benchmarking;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -74,6 +79,7 @@ mod pallet {
 
     use totem_common::StorageMapExt;
     use totem_primitives::{teams::Validating as TeamValidating, timekeeping::*};
+	use crate::WeightInfo;
 
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
@@ -215,6 +221,9 @@ mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type Teams: TeamValidating<Self::AccountId, Self::Hash>;
+
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -269,7 +278,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Team owner invites worker/team member to team.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::notify_team_worker())]
         pub fn notify_team_worker(
             origin: OriginFor<T>,
             worker: T::AccountId,
@@ -362,7 +371,7 @@ mod pallet {
         }
 
         /// Worker accepts to join the team.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::worker_acceptance_team())]
         pub fn worker_acceptance_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -430,7 +439,7 @@ mod pallet {
         }
 
         /// Worker submits/resubmits time record.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::submit_time())]
         pub fn submit_time(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -689,7 +698,7 @@ mod pallet {
         }
 
         /// Team owner sets authorisation status of time record.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::authorise_time())]
         pub fn authorise_time(
             origin: OriginFor<T>,
             _worker: T::AccountId,

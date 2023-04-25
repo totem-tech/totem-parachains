@@ -101,6 +101,7 @@ impl pallet_teams::Config for Test {
 impl pallet_timekeeping::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
     type Teams = Teams;
+	type WeightInfo = ();
 }
 
 // Build genesis storage according to the mock runtime.
