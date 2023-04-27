@@ -66,6 +66,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -74,10 +79,10 @@ mod pallet {
     use frame_support::{
         dispatch::DispatchResultWithPostInfo,
         ensure,
-        pallet_prelude::*, 
+        pallet_prelude::*,
         traits::{Currency, StorageVersion},
         sp_runtime::traits::{
-            Convert, 
+            Convert,
             BadOrigin,
         },
     };
@@ -85,7 +90,7 @@ mod pallet {
     use frame_system::pallet_prelude::*;
 
     // use sp_runtime::traits::{
-    //     Convert, 
+    //     Convert,
     //     BadOrigin,
     // };
     use sp_std::{prelude::*, vec};
@@ -331,7 +336,7 @@ mod pallet {
                 //     return Err(Error::<T>::CannotBeBoth2.into());
                 // }
                 // The order may have a parent - by default the parent and the record_id are the same, but they may also be different
-                
+
                 if tx_keys_large.record_id == tx_keys_large.parent_id {
                     // This order has no parent therefore is a simple unfunded order with a known fulfiller
                     // TODO

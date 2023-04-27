@@ -6,7 +6,7 @@ description = 'Totem Purchase and Sales Order Pallet'
 license = 'GNU'
 homepage = 'https://totemaccounting.com'
 repository = 'https://gitlab.com/totem-tech/totem'
-edition = '2021' 
+edition = '2021'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -31,6 +31,17 @@ frame-support = { git = 'https://github.com/paritytech/substrate.git', version =
 frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
 
 [dev-dependencies]
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+pallet-bonsai = { default-features = false, path = '../bonsai' }
+pallet-accounting = { default-features = false, path = '../accounting' }
+pallet-prefunding = { default-features = false, path = '../prefunding' }
+pallet-balances-totem = { default-features = false, path = '../balances' }
+pallet-teams = { default-features = false, path = '../teams' }
+pallet-timekeeping = { default-features = false, path = '../timekeeping' }
+pallet-escrow = { default-features = false, path = '../escrow' }
+pallet-randomness = { package = 'pallet-randomness-collective-flip', git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 
 [features]
 default = ['std']
