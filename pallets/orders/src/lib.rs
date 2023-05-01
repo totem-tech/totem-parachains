@@ -86,6 +86,7 @@ mod pallet {
             BadOrigin,
         },
     };
+	use sp_std::prelude::*;
 
     use frame_system::pallet_prelude::*;
 
@@ -236,6 +237,8 @@ mod pallet {
         MarketOrder,
         /// The amount is invalid and cannot be handled safely.
         AmountOverflow,
+		/// Owner does not exist
+		OwnerDoesNotExist
     }
 
     #[pallet::hooks]
@@ -252,9 +255,6 @@ mod pallet {
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
-            if ensure_none(origin.clone()).is_ok() {
-                return Err(BadOrigin.into())
-            }
             let who = ensure_signed(origin)?;
             <T::Bonsai as Storing<T::Hash>>::start_tx(tx_keys_medium.tx_uid)?;
 
@@ -265,16 +265,9 @@ mod pallet {
                     let approver: T::AccountId = order.approver;
                     let order_status: u16 = order.order_status;
                     if (&approver, order_status) == (&who, 0_u16) {
-                        Owner::<T>::mutate_or_err(&order.commander, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
-                        Beneficiary::<T>::mutate_or_err(&order.fulfiller, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
-                        // <Approver<T>>::mutate(&approver, |owner| {
-                        Approver::<T>::mutate_or_err(approver, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
+						Self::remove_hash_of_owner_from_storage(&order.commander, tx_keys_medium.record_id.clone());
+						Self::remove_hash_of_beneficiary_from_storage(&order.fulfiller, tx_keys_medium.record_id.clone());
+						Self::remove_hash_of_approver_from_storage(&approver, tx_keys_medium.record_id.clone());
                         Postulate::<T>::remove(&tx_keys_medium.record_id);
                         Orders::<T>::remove(&tx_keys_medium.record_id);
                         OrderItems::<T>::remove(&tx_keys_medium.record_id);
@@ -357,9 +350,20 @@ mod pallet {
                         // This is NOT an error but requires further processing by the approver.
                         // As this is a proposal against a parent order then associate the child with the parent
                         // This does not happen when it is a simple order
-                        Postulate::<T>::mutate_or_err(&tx_keys_large.parent_id, |v| {
-                            v.push(tx_keys_large.record_id)
-                        })?;
+
+						Postulate::<T>::try_mutate(&&tx_keys_large.parent_id, |tx_list| -> DispatchResult {
+							match tx_list {
+								Some(ref mut hash_vec) => {
+									hash_vec.push(tx_keys_large.record_id.clone());
+									Ok(())
+								},
+								None => {
+									let new_hash_vec = vec![tx_keys_large.record_id.clone()];
+									*tx_list = Some(new_hash_vec);
+									Ok(())
+								}
+							}
+						})?;
                         // <TxList<T>>::mutate(list_key, |tx_list| tx_list.push(u));
                     }
                 }
@@ -700,12 +704,36 @@ mod pallet {
             i: Vec<OrderItem<T::Hash>>,
         ) -> DispatchResultWithPostInfo {
             // Set hash for commander
-            Owner::<T>::mutate_or_err(&c, |owner| owner.push(o.clone()))?;
+			Owner::<T>::try_mutate(&c, |hashes| -> DispatchResult {
+				match hashes {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(o);
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![o];
+						*hashes = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
             // This will be a market order if the fulfiller is the same as the commander
             // In this case do not set the beneficiary storage
             if c != f {
                 // Set hash for fulfiller
-                Beneficiary::<T>::mutate_or_err(&f, |beneficiary| beneficiary.push(o.clone()))?;
+				Beneficiary::<T>::try_mutate(&f, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(o);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![o];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
             }
             // Set details of Order
             Orders::<T>::insert(&o, h);
@@ -980,6 +1008,42 @@ mod pallet {
             // return Err("TODO")
             Ok(().into())
         }
+
+		fn remove_hash_of_owner_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Owner<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Owner<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
+
+		fn remove_hash_of_beneficiary_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Beneficiary<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Beneficiary<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
+
+		fn remove_hash_of_approver_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Approver<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Approver<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {

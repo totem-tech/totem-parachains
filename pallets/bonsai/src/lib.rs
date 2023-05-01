@@ -86,6 +86,7 @@ mod pallet {
 
     use sp_runtime::traits::{Convert, Hash};
     use sp_std::prelude::*;
+	use sp_std::vec;
 
     use totem_common::StorageMapExt;
     use totem_primitives::{
@@ -95,7 +96,7 @@ mod pallet {
     };
 
     /// The current storage version.
-    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);    
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
@@ -268,9 +269,21 @@ mod pallet {
             let current_block = frame_system::Pallet::<T>::block_number();
             let default_bytes = b"nobody can save fiat currency now";
             let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
-            TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
+			TxList::<T>::try_mutate(&list_key, |tx_list| -> DispatchResult {
+				match tx_list {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(u.clone());
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![u.clone()];
+						*tx_list = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
             IsStarted::<T>::insert(u, current_block);
-            
+
             // if IsSuccessful::<T>::contains_key(&u) {
             //     // Throw an error because the transaction already completed.
             //     return Err(Error::<T>::TransactionCompleted);
@@ -288,7 +301,7 @@ mod pallet {
 
             Ok(().into())
         }
-        
+
         fn end_uuid(u: T::Hash) -> DispatchResultWithPostInfo {
             ensure!(!IsSuccessful::<T>::contains_key(&u), Error::<T>::TransactionCompleted);
             // The transaction is now completed successfully update the state change
