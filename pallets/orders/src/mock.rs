@@ -211,7 +211,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(10000));
 	ext*/
-	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
+	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(10000000));
+	ext
 }
 
 pub fn run_to_block(n: u64) {

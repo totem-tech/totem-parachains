@@ -63,14 +63,14 @@ mod pallet {
         traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion, Randomness},
         sp_runtime::traits::{
             Convert,
-            Hash, 
+            Hash,
             BadOrigin,
         },
     };
     use frame_system::pallet_prelude::*;
 
     // use sp_runtime::traits::{Convert, Hash};
-    use sp_std::prelude::*;
+	use sp_std::{prelude::*, vec};
 
     use totem_common::{StorageMapExt, TryConvert};
     use totem_primitives::{
@@ -465,7 +465,7 @@ mod pallet {
             // if Self::reference_valid(h) == false {
                 //     return Err(Error::<T>::HashDoesNotExist.into());
                 // }
-                
+
             ensure!(Self::check_ref_beneficiary(o.clone(), h), Error::<T>::NotOwner);
             // if Self::check_ref_beneficiary(o.clone(), h) == false {
             //     return Err(Error::<T>::NotOwner.into());
@@ -564,7 +564,7 @@ mod pallet {
             // 48 hours is the minimum deadline. This is the minimum amountof time before the money can be reclaimed
             let minimum_deadline: T::BlockNumber = current_block
                 + <T::PrefundingConverter as Convert<u32, T::BlockNumber>>::convert(11520_u32);
-            
+
             ensure!(deadline >= minimum_deadline, Error::<T>::ShortDeadline);
             // if deadline < minimum_deadline {
             //     return Err(Error::<T>::ShortDeadline.into());
@@ -622,9 +622,19 @@ mod pallet {
             Prefunding::<T>::insert(&prefunding_hash, prefunded);
 
             // Add reference hash to list of hashes
-            OwnerPrefundingHashList::<T>::mutate_or_err(&who, |owner_prefunding_hash_list| {
-                owner_prefunding_hash_list.push(prefunding_hash)
-            })?;
+			OwnerPrefundingHashList::<T>::try_mutate(&who, |owner_prefunding_hash_list| -> DispatchResult {
+				match owner_prefunding_hash_list {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(prefunding_hash.clone());
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![prefunding_hash.clone()];
+						*owner_prefunding_hash_list = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             // Submitted, Locked by sender.
             if let Err(_) = Self::set_ref_status(prefunding_hash, 1) {
@@ -660,7 +670,7 @@ mod pallet {
             // As amount will always be positive, convert for use in accounting
             let current_block = frame_system::Pallet::<T>::block_number();
             let current_block_dupe = frame_system::Pallet::<T>::block_number();
-            
+
             // Keys for posting
             let keys = [
                 // Seller
@@ -774,7 +784,7 @@ mod pallet {
                         Self::increase_decrease_amounts(prefunded_amount)?;
                     let current_block = frame_system::Pallet::<T>::block_number();
                     let current_block_dupe = frame_system::Pallet::<T>::block_number();
-                    
+
                     // Keys for posting
                     let keys = [
                         // Buyer
@@ -990,7 +1000,7 @@ mod pallet {
             // if Self::reference_valid(ref_hash) == false {
             //     return Err(Error::<T>::HashDoesNotExist3.into());
             // }
-            ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);    
+            ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);
             // if Self::check_ref_owner(who.clone(), ref_hash) == false {
             //     return Err(Error::<T>::NotOwner2.into());
             // }

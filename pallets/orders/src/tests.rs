@@ -34,7 +34,7 @@
 
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
-use crate::{mock::{new_test_ext, RuntimeOrigin, Orders, Test}, Orders as OrderStorage};
+use crate::{mock::{new_test_ext, RuntimeOrigin, Orders, Test, Balances}, Orders as OrderStorage};
 use sp_runtime::{DispatchError, ModuleError};
 use frame_support::{assert_err, assert_ok};
 use sp_core::H256;
@@ -579,5 +579,69 @@ fn should_delete_order_should_fail_with_hash_exists_3() {
 				message: Some("HashExists3"),
 			})
 		);
+	});
+}
+
+#[test]
+fn should_create_spfso_successfully_if_who_is_not_fulfiller() {
+	new_test_ext().execute_with(|| {
+		let product_hash = H256::from_slice("01234567890123456789012345678901".as_bytes());
+
+		let order_item  = OrderItem {
+			product: product_hash,
+			unit_price: 1000,
+			quantity: 12,
+			unit_of_measure: 5
+		};
+
+		let record_id = H256::from_slice("01234567890123456789012345678901".as_bytes());
+		let parent_id = H256::from_slice("01234567890123456789012345678902".as_bytes());
+		let bonsai_token = H256::from_slice("01234567890123456789012345678901".as_bytes());
+		let tx_uid = H256::from_slice("01234567890123456789012345678901".as_bytes());
+
+		let approver = 2;
+		let fulfiller = 3;
+		let buy_or_sell = 1;
+		let total_amount = 1;
+		let market_order = false;
+		let order_type = 1;
+		let deadline = 0;
+		let due_date = 0;
+
+		let res = Orders::create_spfso(RuntimeOrigin::signed(1), approver, fulfiller, buy_or_sell, total_amount, market_order, order_type, deadline, due_date, order_item, bonsai_token, tx_uid );
+		assert_ok!(res);
+	});
+}
+
+#[test]
+fn should_create_spfso_successfully_if_who_is_fulfiller() {
+	new_test_ext().execute_with(|| {
+		let product_hash = H256::from_slice("01234567890123456789012345678901".as_bytes());
+
+		let order_item  = OrderItem {
+			product: product_hash,
+			unit_price: 1000,
+			quantity: 12,
+			unit_of_measure: 5
+		};
+
+		let record_id = H256::from_slice("01234567890123456789012345678901".as_bytes());
+		let parent_id = H256::from_slice("01234567890123456789012345678902".as_bytes());
+		let bonsai_token = H256::from_slice("01234567890123456789012345678901".as_bytes());
+		let tx_uid = H256::from_slice("01234567890123456789012345678901".as_bytes());
+
+		let approver = 2;
+		let fulfiller = 3;
+		let buy_or_sell = 1;
+		let total_amount = 1;
+		let market_order = false;
+		let order_type = 1;
+		let deadline = 20011520;
+		let due_date = 0;
+
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 1000000000, 1000000000));
+
+		let res = Orders::create_spfso(RuntimeOrigin::signed(1), 1, fulfiller, buy_or_sell, total_amount, market_order, order_type, deadline, due_date, order_item, bonsai_token, tx_uid );
+		assert_ok!(res);
 	});
 }

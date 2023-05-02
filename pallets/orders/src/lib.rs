@@ -86,8 +86,6 @@ mod pallet {
             BadOrigin,
         },
     };
-	use sp_std::prelude::*;
-
     use frame_system::pallet_prelude::*;
 
     // use sp_runtime::traits::{
@@ -423,7 +421,6 @@ mod pallet {
             let order_hash =
                 <T as Config>::Accounting::get_pseudo_random_hash(who.clone(), approver.clone());
             ensure!(!Orders::<T>::contains_key(&order_hash), Error::<T>::HashExists);
-
             // if Orders::<T>::contains_key(&order_hash) {
             //     return Err(Error::<T>::HashExists.into());
             // }
