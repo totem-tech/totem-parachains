@@ -236,7 +236,9 @@ mod pallet {
         /// The amount is invalid and cannot be handled safely.
         AmountOverflow,
 		/// Owner does not exist
-		OwnerDoesNotExist
+		OwnerDoesNotExist,
+		/// Order does not exist
+		OrderDoesNotExist
     }
 
     #[pallet::hooks]
@@ -340,7 +342,7 @@ mod pallet {
                     //     return Err(Error::<T>::HashExists2.into());
                     // };
                     // if the approver is also the initiator of the order then automatically approve the order
-                    if Self::check_approver(who.clone(), approver, tx_keys_large.record_id) {
+                    if Self::check_approver(who.clone(), approver, tx_keys_large.record_id)? {
                         // the order is approved because the approver is the commander.
                         approval_status = ApprovalStatus::Accepted;
                     } else {
@@ -349,7 +351,7 @@ mod pallet {
                         // As this is a proposal against a parent order then associate the child with the parent
                         // This does not happen when it is a simple order
 
-						Postulate::<T>::try_mutate(&&tx_keys_large.parent_id, |tx_list| -> DispatchResult {
+						Postulate::<T>::try_mutate(&tx_keys_large.parent_id, |tx_list| -> DispatchResult {
 							match tx_list {
 								Some(ref mut hash_vec) => {
 									hash_vec.push(tx_keys_large.record_id.clone());
@@ -574,15 +576,27 @@ mod pallet {
         /// The approver should be able to set the status, and once approved the process should continue further
         /// pending_approval (0), approved(1), rejected(2) are the tree states to be set
         /// If the status is 2 the commander may edit and resubmit
-        fn check_approver(c: T::AccountId, a: T::AccountId, h: T::Hash) -> bool {
+        fn check_approver(c: T::AccountId, a: T::AccountId, h: T::Hash) -> Result<bool, DispatchError> {
             // If the approver is the same as the commander then it is approved by default & update accordingly
             // If the approver is not the commander, then update but also set the status to pending approval.
             // You should gracefully exit after this function call in this case.
             let approved = c == a;
 
-            let _ = Approver::<T>::mutate_or_err(&a, |approver| approver.push(h));
+			Approver::<T>::try_mutate(&a, |approver| -> DispatchResult {
+				match approver {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(h.clone());
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![h.clone()];
+						*approver = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
-            approved
+            Ok(approved)
         }
 
         /// API Open an order for a specific AccountId and prefund it. This is equivalent to an encumbrance.
@@ -622,7 +636,7 @@ mod pallet {
             };
 
             // check or set the approver status
-            if Self::check_approver(commander.clone(), approver.clone(), order_hash) {
+            if Self::check_approver(commander.clone(), approver.clone(), order_hash)? {
                 // the order is approved.
                 let approval_status = ApprovalStatus::Accepted;
                 let deadline_converted = T::OrdersConverter::convert(deadline);
@@ -668,6 +682,27 @@ mod pallet {
                 // the order is not yet approved.
                 // This is NOT an error but requires further processing by the approver. Exiting gracefully.
                 Self::deposit_event(Event::OrderCreatedForApproval(uid));
+				let order_header: OrderHeader<T::AccountId> = OrderHeader {
+					commander: commander.clone(),
+					fulfiller: fulfiller_override,
+					approver,
+					order_status,
+					approval_status: ApprovalStatus::Submitted,
+					buy_or_sell,
+					amount,
+					market_order,
+					order_type,
+					deadline,
+					due_date,
+				};
+				let vec_order_items = vec![order_item];
+				Self::set_order(
+					commander,
+					fulfiller,
+					order_hash,
+					order_header,
+					vec_order_items,
+				)?;
             }
 
             // claim hash in Bonsai
@@ -747,7 +782,7 @@ mod pallet {
             b: T::Hash,
         ) -> DispatchResultWithPostInfo {
             // is the supplied account the approver of the hash supplied?
-            let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&h).ok_or("some error")?;
+            let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&h).ok_or_else(|| Error::<T>::OrderDoesNotExist)?;
             if a == order_hdr.approver && order_hdr.order_status == 0 {
                 match order_hdr.order_status {
                     0 | 2 => {
@@ -793,8 +828,7 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             // Check that the hash exist
             // let order_hdr: OrderHeader<T::AccountId> = Self:order_header(&reference).ok_or("some error")?;
-            let order_hdr: OrderHeader<T::AccountId> =
-                Self::orders(&reference).ok_or("some error")?;
+			let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&reference).ok_or_else(|| Error::<T>::OrderDoesNotExist)?;
             // check that the Order state is 0 or 2 (submitted or rejected)
             // check that the approval is 0 or 2 pending approval or rejected
             match order_hdr.order_status {
@@ -986,7 +1020,6 @@ mod pallet {
                 _ => return Err(Error::<T>::StatusNotAllowed5.into()),
             }
             // Update the status in this module
-
             Orders::<T>::insert(
                 &h,
                 OrderHeader {

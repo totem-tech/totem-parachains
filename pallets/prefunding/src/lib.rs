@@ -248,6 +248,8 @@ mod pallet {
         OnlyForInvoicedStatus,
         /// Beneficiary must be another account
         BeneficiaryError,
+		/// Release State Error
+		ReleaseStateError,
     }
 
     #[pallet::hooks]
@@ -423,10 +425,10 @@ mod pallet {
 
         /// Gets the state of the locked funds.
         /// The hash needs to be prequalified before passing in as no checks performed here.
-        fn get_release_state(h: T::Hash) -> (LockStatus, LockStatus) {
-            let owners = Self::prefunding_hash_owner(&h).unwrap(); //TODO
+        fn get_release_state(h: T::Hash) -> Result<(LockStatus, LockStatus), DispatchError> {
+            let owners = Self::prefunding_hash_owner(&h).ok_or(Error::<T>::HashDoesNotExist)?; //TODO
 
-            (owners.1, owners.3)
+            Ok((owners.1, owners.3))
         }
 
         /// Cancels lock for owner.
@@ -472,7 +474,7 @@ mod pallet {
             // }
 
             // TODO this should return the details otherwise there is second read later in the process
-            match Self::get_release_state(h) {
+            match Self::get_release_state(h)? {
                 // submitted, but not yet accepted
                 (Locked, Unlocked) => return Err(Error::<T>::NotApproved.into()),
                 (Locked, Locked) => return Err(Error::<T>::FundsInPlay.into()),
@@ -763,7 +765,7 @@ mod pallet {
             // release state must be 11
             // sender must be owner
             // accounts updated before payment, because if there is an error then the accounting can be rolled back
-            let (payer, beneficiary) = match Self::get_release_state(ref_hash) {
+            let (payer, beneficiary) = match Self::get_release_state(ref_hash)? {
                 // submitted, but not yet accepted
                 (Locked, Unlocked) => return Err(Error::<T>::NotApproved2.into()),
                 (Locked, Locked) => {
@@ -872,7 +874,8 @@ mod pallet {
                 (Unlocked, Locked) => return Err(Error::<T>::NotAllowed4.into()),
                 // Owner has been given permission by beneficiary to release funds
                 (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed5.into()),
-            };
+				_ => return Err(Error::<T>::ReleaseStateError.into()),
+			};
 
             // Set release lock "buyer who has approved invoice"
             // this may have been set independently, but is required for next step
@@ -1005,7 +1008,7 @@ mod pallet {
             //     return Err(Error::<T>::NotOwner2.into());
             // }
 
-            match Self::get_release_state(ref_hash) {
+            match Self::get_release_state(ref_hash)? {
                 // submitted, but not yet accepted
                 // Check if the dealine has passed. If not funds cannot be release
                 (Locked, Unlocked) => {
