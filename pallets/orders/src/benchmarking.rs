@@ -287,7 +287,7 @@ benchmarks! {
 		let buy_or_sell = 1;
 		let total_amount = 1;
 		let market_order = false;
-		let order_type = 1;
+		let order_type = 5;
 		let deadline = 20011520;
 		let due_date = 0;
 
@@ -327,21 +327,6 @@ benchmarks! {
 		pallet_balances_totem::Pallet::<T>::set_balance(RawOrigin::Root.into(), escrow_lookup, 1000000000u32.into(), 1000000000u32.into());
 
 		let tx_uid = T::Hashing::hash("01234567890123456789012345678902".as_bytes());
-
-		let order_header = OrderHeader {
-			commander: commander.clone(),
-			fulfiller: fulfiller.clone(),
-			approver: approver.clone(),
-			order_status: 0u16,
-			approval_status: ApprovalStatus::Submitted,
-			buy_or_sell,
-			amount: total_amount,
-			market_order,
-			order_type,
-			deadline,
-			due_date,
-		};
-		Orders::<T>::insert(&order_hash, order_header);
 
 	}: _(RawOrigin::Signed(commander.clone()), order_hash, 6, tx_uid)
 	verify {
