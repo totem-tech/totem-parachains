@@ -38,6 +38,7 @@ impl pallet_orders::Config for Runtime {
     type Currency = pallet_balances_totem::Pallet<Self>;
     type Bonsai = pallet_bonsai::Pallet<Self>;
     type OrdersConverter = Converter;
+	type WeightInfo = pallet_orders::weights::TotemWeight<Runtime>;
 }
 
 impl pallet_prefunding::Config for Runtime {

@@ -150,6 +150,7 @@ impl pallet_orders::Config for Test {
 	type Prefunding = Prefunding;
 	type Bonsai = Bonsai;
 	type Currency = Balances;
+	type WeightInfo = ();
 }
 
 impl pallet_teams::Config for Test {
@@ -198,19 +199,6 @@ parameter_types! {
 // This function basically just builds a genesis storage key/value store according to
 // our desired mockup.
 pub fn new_test_ext() -> sp_io::TestExternalities {
-	/*let mut endowed_accounts = vec![];
-
-	endowed_accounts.push(1);
-	endowed_accounts.push(2);
-
-	let mut t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
-	pallet_balances_totem::GenesisConfig::<Test> { balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect() }
-		.assimilate_storage(&mut t)
-		.unwrap();
-
-	let mut ext = sp_io::TestExternalities::new(t);
-	ext.execute_with(|| System::set_block_number(10000));
-	ext*/
 	let t = system::GenesisConfig::default().build_storage::<Test>().unwrap().into();
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(10000000));

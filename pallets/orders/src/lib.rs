@@ -71,8 +71,10 @@ mod mock;
 #[cfg(test)]
 mod tests;
 mod benchmarking;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -104,6 +106,7 @@ mod pallet {
         },
         prefunding::{Encumbrance, LockStatus},
     };
+	use crate::WeightInfo;
 
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -164,6 +167,8 @@ mod pallet {
             Self::BlockNumber,
             CurrencyBalanceOf<Self>,
         >;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -248,7 +253,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Only the owner of an order can delete it provided no work has been done on it.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::delete_order())]
         pub fn delete_order(
             origin: OriginFor<T>,
             tx_keys_medium: TxKeysM<T::Hash>,
@@ -286,7 +291,7 @@ mod pallet {
 
         /// Creates either a sales order or a purchase order with multi-line items and a parent order.
         /// Will be used for the marketplace in order to set up open orders.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::create_order())]
         pub fn create_order(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -400,7 +405,7 @@ mod pallet {
 
         /// Create Simple Prefunded Service Order.
         /// Can specify an approver. If the approver is the same as the sender then the order is considered approved by default.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::create_spfso())]
         pub fn create_spfso(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -452,7 +457,7 @@ mod pallet {
         /// Change Simple Prefunded Service Order.
         /// Can only be changed by the original ordering party,
         /// and only before it is accepted and the deadline or due date is not passed.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::change_spfso())]
         pub fn change_spfso(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -491,7 +496,7 @@ mod pallet {
 
         /// Sets the approval status of an order.
         /// Can only be used by the nominated approver (must be known to the ordering party).
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::change_approval())]
         pub fn change_approval(
             origin: OriginFor<T>,
             h: T::Hash,
@@ -514,7 +519,7 @@ mod pallet {
         /// Can be used by buyer or seller.
         /// Buyer - Used by the buyer to accept or reject (TODO) the invoice that was raised by the seller.
         /// Seller - Used to accept, reject or invoice the order.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::handle_spfso())]
         pub fn handle_spfso(
             origin: OriginFor<T>,
             h: T::Hash,
