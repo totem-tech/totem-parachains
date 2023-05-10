@@ -66,7 +66,15 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+mod benchmarking;
+pub mod weights;
+
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -74,18 +82,17 @@ mod pallet {
     use frame_support::{
         dispatch::DispatchResultWithPostInfo,
         ensure,
-        pallet_prelude::*, 
+        pallet_prelude::*,
         traits::{Currency, StorageVersion},
         sp_runtime::traits::{
-            Convert, 
+            Convert,
             BadOrigin,
         },
     };
-
     use frame_system::pallet_prelude::*;
 
     // use sp_runtime::traits::{
-    //     Convert, 
+    //     Convert,
     //     BadOrigin,
     // };
     use sp_std::{prelude::*, vec};
@@ -99,6 +106,7 @@ mod pallet {
         },
         prefunding::{Encumbrance, LockStatus},
     };
+	use crate::WeightInfo;
 
     type CurrencyBalanceOf<T> =
         <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
@@ -159,6 +167,8 @@ mod pallet {
             Self::BlockNumber,
             CurrencyBalanceOf<Self>,
         >;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -231,6 +241,10 @@ mod pallet {
         MarketOrder,
         /// The amount is invalid and cannot be handled safely.
         AmountOverflow,
+		/// Owner does not exist
+		OwnerDoesNotExist,
+		/// Order does not exist
+		OrderDoesNotExist
     }
 
     #[pallet::hooks]
@@ -239,14 +253,11 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Only the owner of an order can delete it provided no work has been done on it.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::delete_order())]
         pub fn delete_order(
             origin: OriginFor<T>,
             tx_keys_medium: TxKeysM<T::Hash>,
         ) -> DispatchResultWithPostInfo {
-            if ensure_none(origin.clone()).is_ok() {
-                return Err(BadOrigin.into())
-            }
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
@@ -260,16 +271,9 @@ mod pallet {
                     let approver: T::AccountId = order.approver;
                     let order_status: u16 = order.order_status;
                     if (&approver, order_status) == (&who, 0_u16) {
-                        Owner::<T>::mutate_or_err(&order.commander, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
-                        Beneficiary::<T>::mutate_or_err(&order.fulfiller, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
-                        // <Approver<T>>::mutate(&approver, |owner| {
-                        Approver::<T>::mutate_or_err(approver, |owner| {
-                            owner.retain(|v| v != &tx_keys_medium.record_id)
-                        })?;
+						Self::remove_hash_of_owner_from_storage(&order.commander, tx_keys_medium.record_id.clone());
+						Self::remove_hash_of_beneficiary_from_storage(&order.fulfiller, tx_keys_medium.record_id.clone());
+						Self::remove_hash_of_approver_from_storage(&approver, tx_keys_medium.record_id.clone());
                         Postulate::<T>::remove(&tx_keys_medium.record_id);
                         Orders::<T>::remove(&tx_keys_medium.record_id);
                         OrderItems::<T>::remove(&tx_keys_medium.record_id);
@@ -287,7 +291,7 @@ mod pallet {
 
         /// Creates either a sales order or a purchase order with multi-line items and a parent order.
         /// Will be used for the marketplace in order to set up open orders.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::create_order())]
         pub fn create_order(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -331,7 +335,7 @@ mod pallet {
                 //     return Err(Error::<T>::CannotBeBoth2.into());
                 // }
                 // The order may have a parent - by default the parent and the record_id are the same, but they may also be different
-                
+
                 if tx_keys_large.record_id == tx_keys_large.parent_id {
                     // This order has no parent therefore is a simple unfunded order with a known fulfiller
                     // TODO
@@ -344,7 +348,7 @@ mod pallet {
                     //     return Err(Error::<T>::HashExists2.into());
                     // };
                     // if the approver is also the initiator of the order then automatically approve the order
-                    if Self::check_approver(who.clone(), approver, tx_keys_large.record_id) {
+                    if Self::check_approver(who.clone(), approver, tx_keys_large.record_id)? {
                         // the order is approved because the approver is the commander.
                         approval_status = ApprovalStatus::Accepted;
                     } else {
@@ -352,9 +356,20 @@ mod pallet {
                         // This is NOT an error but requires further processing by the approver.
                         // As this is a proposal against a parent order then associate the child with the parent
                         // This does not happen when it is a simple order
-                        Postulate::<T>::mutate_or_err(&tx_keys_large.parent_id, |v| {
-                            v.push(tx_keys_large.record_id)
-                        })?;
+
+						Postulate::<T>::try_mutate(&tx_keys_large.parent_id, |tx_list| -> DispatchResult {
+							match tx_list {
+								Some(ref mut hash_vec) => {
+									hash_vec.push(tx_keys_large.record_id.clone());
+									Ok(())
+								},
+								None => {
+									let new_hash_vec = vec![tx_keys_large.record_id.clone()];
+									*tx_list = Some(new_hash_vec);
+									Ok(())
+								}
+							}
+						})?;
                         // <TxList<T>>::mutate(list_key, |tx_list| tx_list.push(u));
                     }
                 }
@@ -390,7 +405,7 @@ mod pallet {
 
         /// Create Simple Prefunded Service Order.
         /// Can specify an approver. If the approver is the same as the sender then the order is considered approved by default.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::create_spfso())]
         pub fn create_spfso(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -414,7 +429,6 @@ mod pallet {
             let order_hash =
                 <T as Config>::Accounting::get_pseudo_random_hash(who.clone(), approver.clone());
             ensure!(!Orders::<T>::contains_key(&order_hash), Error::<T>::HashExists);
-
             // if Orders::<T>::contains_key(&order_hash) {
             //     return Err(Error::<T>::HashExists.into());
             // }
@@ -443,7 +457,7 @@ mod pallet {
         /// Change Simple Prefunded Service Order.
         /// Can only be changed by the original ordering party,
         /// and only before it is accepted and the deadline or due date is not passed.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::change_spfso())]
         pub fn change_spfso(
             origin: OriginFor<T>,
             approver: T::AccountId,
@@ -482,7 +496,7 @@ mod pallet {
 
         /// Sets the approval status of an order.
         /// Can only be used by the nominated approver (must be known to the ordering party).
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::change_approval())]
         pub fn change_approval(
             origin: OriginFor<T>,
             h: T::Hash,
@@ -505,7 +519,7 @@ mod pallet {
         /// Can be used by buyer or seller.
         /// Buyer - Used by the buyer to accept or reject (TODO) the invoice that was raised by the seller.
         /// Seller - Used to accept, reject or invoice the order.
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::handle_spfso())]
         pub fn handle_spfso(
             origin: OriginFor<T>,
             h: T::Hash,
@@ -568,15 +582,27 @@ mod pallet {
         /// The approver should be able to set the status, and once approved the process should continue further
         /// pending_approval (0), approved(1), rejected(2) are the tree states to be set
         /// If the status is 2 the commander may edit and resubmit
-        fn check_approver(c: T::AccountId, a: T::AccountId, h: T::Hash) -> bool {
+        fn check_approver(c: T::AccountId, a: T::AccountId, h: T::Hash) -> Result<bool, DispatchError> {
             // If the approver is the same as the commander then it is approved by default & update accordingly
             // If the approver is not the commander, then update but also set the status to pending approval.
             // You should gracefully exit after this function call in this case.
             let approved = c == a;
 
-            let _ = Approver::<T>::mutate_or_err(&a, |approver| approver.push(h));
+			Approver::<T>::try_mutate(&a, |approver| -> DispatchResult {
+				match approver {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(h.clone());
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![h.clone()];
+						*approver = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
-            approved
+            Ok(approved)
         }
 
         /// API Open an order for a specific AccountId and prefund it. This is equivalent to an encumbrance.
@@ -616,7 +642,7 @@ mod pallet {
             };
 
             // check or set the approver status
-            if Self::check_approver(commander.clone(), approver.clone(), order_hash) {
+            if Self::check_approver(commander.clone(), approver.clone(), order_hash)? {
                 // the order is approved.
                 let approval_status = ApprovalStatus::Accepted;
                 let deadline_converted = T::OrdersConverter::convert(deadline);
@@ -662,6 +688,27 @@ mod pallet {
                 // the order is not yet approved.
                 // This is NOT an error but requires further processing by the approver. Exiting gracefully.
                 Self::deposit_event(Event::OrderCreatedForApproval(uid));
+				let order_header: OrderHeader<T::AccountId> = OrderHeader {
+					commander: commander.clone(),
+					fulfiller: fulfiller_override,
+					approver,
+					order_status,
+					approval_status: ApprovalStatus::Submitted,
+					buy_or_sell,
+					amount,
+					market_order,
+					order_type,
+					deadline,
+					due_date,
+				};
+				let vec_order_items = vec![order_item];
+				Self::set_order(
+					commander,
+					fulfiller,
+					order_hash,
+					order_header,
+					vec_order_items,
+				)?;
             }
 
             // claim hash in Bonsai
@@ -695,12 +742,36 @@ mod pallet {
             i: Vec<OrderItem<T::Hash>>,
         ) -> DispatchResultWithPostInfo {
             // Set hash for commander
-            Owner::<T>::mutate_or_err(&c, |owner| owner.push(o.clone()))?;
+			Owner::<T>::try_mutate(&c, |hashes| -> DispatchResult {
+				match hashes {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(o);
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![o];
+						*hashes = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
             // This will be a market order if the fulfiller is the same as the commander
             // In this case do not set the beneficiary storage
             if c != f {
                 // Set hash for fulfiller
-                Beneficiary::<T>::mutate_or_err(&f, |beneficiary| beneficiary.push(o.clone()))?;
+				Beneficiary::<T>::try_mutate(&f, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(o);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![o];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
             }
             // Set details of Order
             Orders::<T>::insert(&o, h);
@@ -717,7 +788,7 @@ mod pallet {
             b: T::Hash,
         ) -> DispatchResultWithPostInfo {
             // is the supplied account the approver of the hash supplied?
-            let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&h).ok_or("some error")?;
+            let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&h).ok_or_else(|| Error::<T>::OrderDoesNotExist)?;
             if a == order_hdr.approver && order_hdr.order_status == 0 {
                 match order_hdr.order_status {
                     0 | 2 => {
@@ -763,8 +834,7 @@ mod pallet {
         ) -> DispatchResultWithPostInfo {
             // Check that the hash exist
             // let order_hdr: OrderHeader<T::AccountId> = Self:order_header(&reference).ok_or("some error")?;
-            let order_hdr: OrderHeader<T::AccountId> =
-                Self::orders(&reference).ok_or("some error")?;
+			let mut order_hdr: OrderHeader<T::AccountId> = Self::orders(&reference).ok_or_else(|| Error::<T>::OrderDoesNotExist)?;
             // check that the Order state is 0 or 2 (submitted or rejected)
             // check that the approval is 0 or 2 pending approval or rejected
             match order_hdr.order_status {
@@ -956,7 +1026,6 @@ mod pallet {
                 _ => return Err(Error::<T>::StatusNotAllowed5.into()),
             }
             // Update the status in this module
-
             Orders::<T>::insert(
                 &h,
                 OrderHeader {
@@ -975,6 +1044,42 @@ mod pallet {
             // return Err("TODO")
             Ok(().into())
         }
+
+		fn remove_hash_of_owner_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Owner<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Owner<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
+
+		fn remove_hash_of_beneficiary_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Beneficiary<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Beneficiary<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
+
+		fn remove_hash_of_approver_from_storage(account_id: &T::AccountId, hash: T::Hash) -> DispatchResult {
+			let mut hashes = <Approver<T>>::get(account_id).ok_or_else(|| Error::<T>::OwnerDoesNotExist)?;
+
+			if let Some(index) = hashes.iter().position(|h| h.as_ref() == hash.as_ref()) {
+				hashes.remove(index);
+
+				<Approver<T>>::insert(account_id, hashes);
+			}
+
+			Ok(())
+		}
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {

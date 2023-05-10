@@ -6,7 +6,7 @@ description = 'Totem Purchase and Sales Order Pallet'
 license = 'GNU'
 homepage = 'https://totemaccounting.com'
 repository = 'https://gitlab.com/totem-tech/totem'
-edition = '2021' 
+edition = '2021'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']
@@ -29,8 +29,22 @@ sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkad
 # frame
 frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", branch = 'polkadot-v0.9.36', default-features = false }
 frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+frame-system-benchmarking = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36", optional = true }
+frame-benchmarking = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36", optional = true }
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+pallet-balances-totem = { default-features = false, path = '../balances' }
+pallet-prefunding = { default-features = false, path = '../prefunding' }
+pallet-escrow = { default-features = false, path = '../escrow' }
 
 [dev-dependencies]
+sp-core = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
+pallet-bonsai = { default-features = false, path = '../bonsai' }
+pallet-accounting = { default-features = false, path = '../accounting' }
+pallet-teams = { default-features = false, path = '../teams' }
+pallet-timekeeping = { default-features = false, path = '../timekeeping' }
+pallet-randomness = { package = 'pallet-randomness-collective-flip', git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+pallet-timestamp = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 
 [features]
 default = ['std']
@@ -38,8 +52,18 @@ std = [
     'codec/std',
     'totem-common/std',
     'totem-primitives/std',
+	'pallet-balances-totem/std',
+	'pallet-prefunding/std',
+	'pallet-escrow/std',
     'sp-runtime/std',
     'sp-std/std',
     'frame-support/std',
     'frame-system/std',
+	"frame-benchmarking/std",
+]
+
+runtime-benchmarks = [
+	"frame-benchmarking",
+	"frame-system/runtime-benchmarks",
+	"frame-support/runtime-benchmarks",
 ]

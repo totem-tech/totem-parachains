@@ -63,14 +63,14 @@ mod pallet {
         traits::{Currency, ExistenceRequirement, LockIdentifier, StorageVersion, Randomness},
         sp_runtime::traits::{
             Convert,
-            Hash, 
+            Hash,
             BadOrigin,
         },
     };
     use frame_system::pallet_prelude::*;
 
     // use sp_runtime::traits::{Convert, Hash};
-    use sp_std::prelude::*;
+	use sp_std::{prelude::*, vec};
 
     use totem_common::{StorageMapExt, TryConvert};
     use totem_primitives::{
@@ -248,6 +248,8 @@ mod pallet {
         OnlyForInvoicedStatus,
         /// Beneficiary must be another account
         BeneficiaryError,
+		/// Release State Error
+		ReleaseStateError,
     }
 
     #[pallet::hooks]
@@ -423,10 +425,10 @@ mod pallet {
 
         /// Gets the state of the locked funds.
         /// The hash needs to be prequalified before passing in as no checks performed here.
-        fn get_release_state(h: T::Hash) -> (LockStatus, LockStatus) {
-            let owners = Self::prefunding_hash_owner(&h).unwrap(); //TODO
+        fn get_release_state(h: T::Hash) -> Result<(LockStatus, LockStatus), DispatchError> {
+            let owners = Self::prefunding_hash_owner(&h).ok_or(Error::<T>::HashDoesNotExist)?; //TODO
 
-            (owners.1, owners.3)
+            Ok((owners.1, owners.3))
         }
 
         /// Cancels lock for owner.
@@ -465,14 +467,14 @@ mod pallet {
             // if Self::reference_valid(h) == false {
                 //     return Err(Error::<T>::HashDoesNotExist.into());
                 // }
-                
+
             ensure!(Self::check_ref_beneficiary(o.clone(), h), Error::<T>::NotOwner);
             // if Self::check_ref_beneficiary(o.clone(), h) == false {
             //     return Err(Error::<T>::NotOwner.into());
             // }
 
             // TODO this should return the details otherwise there is second read later in the process
-            match Self::get_release_state(h) {
+            match Self::get_release_state(h)? {
                 // submitted, but not yet accepted
                 (Locked, Unlocked) => return Err(Error::<T>::NotApproved.into()),
                 (Locked, Locked) => return Err(Error::<T>::FundsInPlay.into()),
@@ -564,7 +566,7 @@ mod pallet {
             // 48 hours is the minimum deadline. This is the minimum amountof time before the money can be reclaimed
             let minimum_deadline: T::BlockNumber = current_block
                 + <T::PrefundingConverter as Convert<u32, T::BlockNumber>>::convert(11520_u32);
-            
+
             ensure!(deadline >= minimum_deadline, Error::<T>::ShortDeadline);
             // if deadline < minimum_deadline {
             //     return Err(Error::<T>::ShortDeadline.into());
@@ -622,9 +624,19 @@ mod pallet {
             Prefunding::<T>::insert(&prefunding_hash, prefunded);
 
             // Add reference hash to list of hashes
-            OwnerPrefundingHashList::<T>::mutate_or_err(&who, |owner_prefunding_hash_list| {
-                owner_prefunding_hash_list.push(prefunding_hash)
-            })?;
+			OwnerPrefundingHashList::<T>::try_mutate(&who, |owner_prefunding_hash_list| -> DispatchResult {
+				match owner_prefunding_hash_list {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(prefunding_hash.clone());
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![prefunding_hash.clone()];
+						*owner_prefunding_hash_list = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
             // Submitted, Locked by sender.
             if let Err(_) = Self::set_ref_status(prefunding_hash, 1) {
@@ -660,7 +672,7 @@ mod pallet {
             // As amount will always be positive, convert for use in accounting
             let current_block = frame_system::Pallet::<T>::block_number();
             let current_block_dupe = frame_system::Pallet::<T>::block_number();
-            
+
             // Keys for posting
             let keys = [
                 // Seller
@@ -753,7 +765,7 @@ mod pallet {
             // release state must be 11
             // sender must be owner
             // accounts updated before payment, because if there is an error then the accounting can be rolled back
-            let (payer, beneficiary) = match Self::get_release_state(ref_hash) {
+            let (payer, beneficiary) = match Self::get_release_state(ref_hash)? {
                 // submitted, but not yet accepted
                 (Locked, Unlocked) => return Err(Error::<T>::NotApproved2.into()),
                 (Locked, Locked) => {
@@ -774,7 +786,7 @@ mod pallet {
                         Self::increase_decrease_amounts(prefunded_amount)?;
                     let current_block = frame_system::Pallet::<T>::block_number();
                     let current_block_dupe = frame_system::Pallet::<T>::block_number();
-                    
+
                     // Keys for posting
                     let keys = [
                         // Buyer
@@ -862,7 +874,8 @@ mod pallet {
                 (Unlocked, Locked) => return Err(Error::<T>::NotAllowed4.into()),
                 // Owner has been given permission by beneficiary to release funds
                 (Unlocked, Unlocked) => return Err(Error::<T>::NotAllowed5.into()),
-            };
+				_ => return Err(Error::<T>::ReleaseStateError.into()),
+			};
 
             // Set release lock "buyer who has approved invoice"
             // this may have been set independently, but is required for next step
@@ -990,12 +1003,12 @@ mod pallet {
             // if Self::reference_valid(ref_hash) == false {
             //     return Err(Error::<T>::HashDoesNotExist3.into());
             // }
-            ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);    
+            ensure!(Self::check_ref_owner(who.clone(), ref_hash), Error::<T>::NotOwner2);
             // if Self::check_ref_owner(who.clone(), ref_hash) == false {
             //     return Err(Error::<T>::NotOwner2.into());
             // }
 
-            match Self::get_release_state(ref_hash) {
+            match Self::get_release_state(ref_hash)? {
                 // submitted, but not yet accepted
                 // Check if the dealine has passed. If not funds cannot be release
                 (Locked, Unlocked) => {
