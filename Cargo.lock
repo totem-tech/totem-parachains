@@ -5483,8 +5483,10 @@ dependencies = [
 name = "pallet-orders"
 version = "1.1.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "frame-system-benchmarking",
  "pallet-accounting",
  "pallet-balances-totem",
  "pallet-bonsai",
