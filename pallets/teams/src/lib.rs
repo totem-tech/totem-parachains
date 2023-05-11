@@ -51,8 +51,7 @@ mod pallet {
         sp_runtime::traits::BadOrigin,
     };
     use frame_system::pallet_prelude::*;
-
-    use sp_std::prelude::*;
+    use sp_std::{vec, prelude::*};
 
     use totem_common::StorageMapExt;
     use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
@@ -151,9 +150,19 @@ mod pallet {
             // TODO limit nr of teams per Account.
             TeamHashStatus::<T>::insert(team_hash, &team_status);
             TeamHashOwner::<T>::insert(team_hash, &who);
-            OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+			OwnerTeamsList::<T>::try_mutate(&who, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_hashes) => {
+						team_hashes.push(team_hash);
+						Ok(())
+					},
+					None => {
+						let new_team_hash = vec![team_hash];
+						*teams = Some(new_team_hash);
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::TeamRegistered(team_hash, who));
 
@@ -246,17 +255,27 @@ mod pallet {
             ensure!(team_owner == changer, Error::<T>::CannotReassignNotOwned);
 
             // retain all other teams except the one we want to reassign
-            OwnerTeamsList::<T>::mutate_or_err(&team_owner, |owner_teams_list| {
-                owner_teams_list.retain(|h| h != &team_hash)
-            })?;
+			Self::remove_team_from_owner_list(&team_owner, team_hash.clone())?;
 
-            // Set new owner for hash
+
+			// Set new owner for hash
             TeamHashOwner::<T>::insert(team_hash, &new_owner);
-            OwnerTeamsList::<T>::mutate_or_err(&new_owner, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+			OwnerTeamsList::<T>::try_mutate(&new_owner, |hashes| -> DispatchResult {
+				match hashes {
+					Some(ref mut hash_vec) => {
+						hash_vec.push(team_hash);
+						Ok(())
+					},
+					None => {
+						let new_hash_vec = vec![team_hash];
+						*hashes = Some(new_hash_vec);
+						Ok(())
+					}
+				}
+			})?;
 
-            Self::deposit_event(Event::TeamReassigned(
+
+			Self::deposit_event(Event::TeamReassigned(
                 team_hash,
                 new_owner,
                 changed_by,
@@ -445,4 +464,18 @@ mod pallet {
             Self::is_team_valid(h) && Self::is_team_owner(o, h)
         }
     }
+
+	impl<T: Config> Pallet<T> {
+		fn remove_team_from_owner_list(account_id: &T::AccountId, team_hash: T::Hash) -> DispatchResult {
+			let mut teams = <OwnerTeamsList<T>>::get(account_id).ok_or_else(|| Error::<T>::TeamDoesNotExist)?;
+
+			if let Some(index) = teams.iter().position(|h| h.as_ref() == team_hash.as_ref()) {
+				teams.remove(index);
+
+				<OwnerTeamsList<T>>::insert(account_id, teams);
+			}
+
+			Ok(())
+		}
+	}
 }

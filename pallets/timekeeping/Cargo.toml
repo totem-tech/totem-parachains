@@ -6,7 +6,7 @@ description = 'Timekeeping Pallet'
 license = 'GNU'
 homepage = 'https://totemaccounting.com'
 repository = 'https://gitlab.com/totem-tech/totem'
-edition = '2021' 
+edition = '2021'
 
 [package.metadata.docs.rs]
 targets = ['x86_64-unknown-linux-gnu']

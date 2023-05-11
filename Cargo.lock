@@ -4862,8 +4862,17 @@ dependencies = [
 name = "pallet-archive"
 version = "1.1.0"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
+ "frame-system-benchmarking",
+ "pallet-accounting",
+ "pallet-balances-totem",
+ "pallet-bonsai",
+ "pallet-randomness-collective-flip",
+ "pallet-teams",
+ "pallet-timekeeping",
+ "pallet-timestamp",
  "parity-scale-codec",
  "scale-info",
  "sp-core",

@@ -61,16 +61,15 @@ mod pallet {
 
     use frame_support::{
         dispatch::DispatchResultWithPostInfo,
-        pallet_prelude::*, 
+        pallet_prelude::*,
         sp_runtime::traits::{
-            Hash, 
+            Hash,
             BadOrigin,
         },
         traits::StorageVersion,
     };
     use frame_system::pallet_prelude::*;
-
-    use sp_std::prelude::*;
+	use sp_std::{vec, prelude::*};
 
     use totem_common::StorageMapExt;
     use totem_primitives::{teams::Validating as TeamValidating, timekeeping::*};
@@ -298,10 +297,19 @@ mod pallet {
 
             if who == worker {
                 // Adds team to list of teams assigned to worker address (in this case worker is team owner)
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 // The worker is also the team owner,
                 // directly store worker acceptance
@@ -314,17 +322,36 @@ mod pallet {
                 // Adds team to list of teams assigned to worker address
                 // Worker does not therefore need to be notified of new team assigned to them, as it will appear in
                 // a list of teams
-                WorkerTeamsBacklogList::<T>::mutate_or_err(
-                    &worker,
-                    |worker_teams_backlog_list| worker_teams_backlog_list.push(team_hash),
-                )?;
+				WorkerTeamsBacklogList::<T>::try_mutate(&worker, |hashes| -> DispatchResult {
+					match hashes {
+						Some(ref mut hash_vec) => {
+							hash_vec.push(team_hash);
+							Ok(())
+						},
+						None => {
+							let new_hash_vec = vec![team_hash];
+							*hashes = Some(new_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
                 // set initial status
                 WorkerTeamsBacklogStatus::<T>::insert(&status_tuple_key, accepted_status);
 
                 // add worker to team team invitations, pending acceptance.
-                TeamInvitesList::<T>::mutate_or_err(&team_hash, |team_invites_list| {
-                    team_invites_list.push(worker.clone())
-                })?;
+				TeamInvitesList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+					match teams {
+						Some(ref mut team_vec) => {
+							team_vec.push(worker.clone());
+							Ok(())
+						},
+						None => {
+							let new_team_vec = vec![worker.clone()];
+							*teams = Some(new_team_vec);
+							Ok(())
+						}
+					}
+				})?;
             }
 
             // issue event
@@ -445,8 +472,7 @@ mod pallet {
             // let default_hash: TimeHash = hex!("e4d673a76e8b32ca3989dbb9f444f71813c88d36120170b15151d58c7106cc83");
             // 0x6c9596f9ca96adf2334c4761bc161442a32ef16896427b6d43fc5e9353bbab63
 
-            let default_bytes = "Default hash";
-            let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+            let default_hash = Self::get_default_hash(); // default hash BlakeTwo256
 
             // set default lock and reason code and type default values (TODO should come from extrinsic in future)
             let initial_submit_reason = ReasonCodeStruct(0, 0);
@@ -477,16 +503,34 @@ mod pallet {
                     .using_encoded(<T as frame_system::Config>::Hashing::hash);
 
                 // Now update all time relevant records
-                WorkerTimeRecordsHashList::<T>::mutate_or_err(
-                    &who,
-                    |worker_time_records_hash_list| worker_time_records_hash_list.push(time_hash),
-                )?;
+				WorkerTimeRecordsHashList::<T>::try_mutate(&who, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
-                // Add time hash to team list
-                TeamTimeRecordsHashList::<T>::mutate_or_err(
-                    &team_hash,
-                    |team_time_hash_list| team_time_hash_list.push(time_hash),
-                )?;
+				// Add time hash to team list
+				TeamTimeRecordsHashList::<T>::try_mutate(&team_hash, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
 
                 TimeHashOwner::<T>::insert(time_hash, who.clone());
 
@@ -853,11 +897,21 @@ mod pallet {
             let status_tuple_key = (team_hash, who.clone());
 
             // add worker to team team
-            TeamWorkersList::<T>::mutate_or_err(&team_hash, |team_workers_list| {
-                team_workers_list.push(who.clone())
-            })?;
+			TeamWorkersList::<T>::try_mutate(&team_hash, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_vec) => {
+						team_vec.push(who.clone());
+						Ok(())
+					},
+					None => {
+						let new_team_vec = vec![who.clone()];
+						*teams = Some(new_team_vec);
+						Ok(())
+					}
+				}
+			})?;
 
-            // Remove from notifications list
+			// Remove from notifications list
             TeamInvitesList::<T>::mutate(&team_hash, |team_invites_list| {
                 Some(team_invites_list.as_mut()?.retain(|h| h != &who))
             });
@@ -1037,12 +1091,19 @@ mod pallet {
                     // .ok_or("This record has either been archived already or does not exist!")?;
                 // TODO Implement lock on record, then in other sections check the lock status.
                 // Push to archive
-                WorkerTimeRecordsHashListArchive::<T>::mutate_or_err(
-                    &owner,
-                    |worker_time_records_hash_list_archive| {
-                        worker_time_records_hash_list_archive.push(time_hash)
-                    },
-                )?;
+				WorkerTimeRecordsHashListArchive::<T>::try_mutate(&owner, |time_hashes| -> DispatchResult {
+					match time_hashes {
+						Some(ref mut time_hash_vec) => {
+							time_hash_vec.push(time_hash.clone());
+							Ok(())
+						},
+						None => {
+							let new_time_hash_vec = vec![time_hash.clone()];
+							*time_hashes = Some(new_time_hash_vec);
+							Ok(())
+						}
+					}
+				})?;
                 // Retain all others except
                 WorkerTimeRecordsHashList::<T>::mutate_or_err(
                     &owner,
@@ -1077,6 +1138,13 @@ mod pallet {
 
             Ok(().into())
         }
+
+		pub fn get_default_hash() -> T::Hash {
+			let default_bytes = "Default hash";
+			let default_hash: T::Hash = T::Hashing::hash(&default_bytes.encode().as_slice()); // default hash BlakeTwo256
+
+			default_hash
+		}
     }
 
     impl<T: Config> Validating<T::AccountId, T::Hash> for Pallet<T> {
@@ -1091,7 +1159,7 @@ mod pallet {
             match Self::time_record(h) {
                 Some(old_time_record) => {
                     // Check the owner of the time record. If so process archive.
-                    who == old_time_record.worker
+					who == old_time_record.worker
                     && Self::set_worker_time_archive(who.clone(), h, a).is_ok()
                     // Attempt match on team owner to archive their own record.
                     && T::Teams::is_team_owner(who.clone(), old_time_record.team_hash)
