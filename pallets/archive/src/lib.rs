@@ -40,8 +40,10 @@
 pub mod benchmarking;
 pub mod mock;
 pub mod tests;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -51,6 +53,7 @@ mod pallet {
         pallet_prelude::*,
         traits::StorageVersion,
     };
+	use crate::WeightInfo;
     use frame_system::pallet_prelude::*;
 
     use sp_std::prelude::*;
@@ -72,6 +75,8 @@ mod pallet {
         type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type Timekeeping: TimeValidating<Self::AccountId, Self::Hash>;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -95,7 +100,7 @@ mod pallet {
         /// 7000
         /// 8000
         /// 9000
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::archive_record())]
         pub fn archive_record(
             origin: OriginFor<T>,
             record_type: RecordType,

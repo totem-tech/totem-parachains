@@ -107,6 +107,7 @@ impl system::Config for Test {
 impl pallet_archive::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Timekeeping = Timekeeping;
+	type WeightInfo = ();
 }
 
 

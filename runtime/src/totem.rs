@@ -11,6 +11,7 @@ impl pallet_accounting::Config for Runtime {
 impl pallet_archive::Config for Runtime {
     type RuntimeEvent = RuntimeEvent;
     type Timekeeping = pallet_timekeeping::Pallet<Self>;
+	type WeightInfo = pallet_archive::weights::TotemWeight<Runtime>;
 }
 
 impl pallet_bonsai::Config for Runtime {
