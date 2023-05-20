@@ -51,8 +51,7 @@ mod pallet {
         sp_runtime::traits::BadOrigin,
     };
     use frame_system::pallet_prelude::*;
-
-    use sp_std::prelude::*;
+	use sp_std::{vec, prelude::*};
 
     use totem_common::StorageMapExt;
     use totem_primitives::teams::{DeletedTeam, TeamStatus, Validating};
@@ -151,9 +150,19 @@ mod pallet {
             // TODO limit nr of teams per Account.
             TeamHashStatus::<T>::insert(team_hash, &team_status);
             TeamHashOwner::<T>::insert(team_hash, &who);
-            OwnerTeamsList::<T>::mutate_or_err(&who, |owner_teams_list| {
-                owner_teams_list.push(team_hash)
-            })?;
+            OwnerTeamsList::<T>::try_mutate(&who, |teams| -> DispatchResult {
+				match teams {
+					Some(ref mut team_hashes) => {
+						team_hashes.push(team_hash);
+						Ok(())
+					},
+					None => {
+						let new_team_hash = vec![team_hash];
+						*teams = Some(new_team_hash);
+						Ok(())
+					}
+				}
+			})?;
 
             Self::deposit_event(Event::TeamRegistered(team_hash, who));
 

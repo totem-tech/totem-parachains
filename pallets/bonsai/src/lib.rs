@@ -72,6 +72,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+
 pub use pallet::*;
 
 #[frame_support::pallet]
@@ -95,7 +100,7 @@ mod pallet {
     };
 
     /// The current storage version.
-    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);    
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
@@ -270,7 +275,7 @@ mod pallet {
             let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
             TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
             IsStarted::<T>::insert(u, current_block);
-            
+
             // if IsSuccessful::<T>::contains_key(&u) {
             //     // Throw an error because the transaction already completed.
             //     return Err(Error::<T>::TransactionCompleted);
@@ -288,7 +293,7 @@ mod pallet {
 
             Ok(().into())
         }
-        
+
         fn end_uuid(u: T::Hash) -> DispatchResultWithPostInfo {
             ensure!(!IsSuccessful::<T>::contains_key(&u), Error::<T>::TransactionCompleted);
             // The transaction is now completed successfully update the state change
