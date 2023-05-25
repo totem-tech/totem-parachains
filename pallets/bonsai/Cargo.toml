@@ -36,12 +36,12 @@ frame-benchmarking = { default-features = false, git = "https://github.com/parit
 pallet-balances-totem = { default-features = false, path = '../balances' }
 pallet-prefunding = { default-features = false, path = '../prefunding' }
 pallet-escrow = { default-features = false, path = '../escrow' }
+pallet-teams = { default-features = false, path = '../teams' }
 
 [dev-dependencies]
 sp-io = { default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.36" }
 pallet-bonsai = { default-features = false, path = '../bonsai' }
 pallet-accounting = { default-features = false, path = '../accounting' }
-pallet-teams = { default-features = false, path = '../teams' }
 pallet-orders = { default-features = false, path = '../orders' }
 pallet-timekeeping = { default-features = false, path = '../timekeeping' }
 pallet-randomness = { package = 'pallet-randomness-collective-flip', git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }

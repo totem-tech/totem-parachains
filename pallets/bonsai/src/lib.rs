@@ -76,6 +76,7 @@
 mod mock;
 #[cfg(test)]
 mod tests;
+mod benchmarking;
 
 pub use pallet::*;
 
