@@ -141,6 +141,7 @@ impl pallet_bonsai::Config for Test {
 	type Teams = Teams;
 	type Orders = Orders;
 	type BonsaiConverter = Converter;
+	type WeightInfo = ();
 }
 
 impl pallet_orders::Config for Test {

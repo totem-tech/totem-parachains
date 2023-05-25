@@ -19,6 +19,7 @@ impl pallet_bonsai::Config for Runtime {
     type Teams = pallet_teams::Pallet<Self>;
     type Timekeeping = pallet_timekeeping::Pallet<Self>;
     type BonsaiConverter = Converter;
+	type WeightInfo = pallet_bonsai::weights::TotemWeight<Runtime>;
 }
 
 impl pallet_escrow::Config for Runtime {
