@@ -23,7 +23,6 @@ benchmarks! {
 		where T: pallet_teams::Config
 	}
 	update_record {
-		let s in 0 .. 100;
 		let caller: T::AccountId = whitelisted_caller();
 
 		let bonsai_token: T::Hash = T::Hashing::hash("01234567890123456789012345678901".as_bytes());
