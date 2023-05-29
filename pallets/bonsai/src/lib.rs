@@ -72,7 +72,15 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
+mod benchmarking;
+pub mod weights;
+
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -82,6 +90,7 @@ mod pallet {
         traits::StorageVersion,
         ensure,
     };
+	use crate::WeightInfo;
     use frame_system::pallet_prelude::*;
 
     use sp_runtime::traits::{Convert, Hash};
@@ -94,8 +103,8 @@ mod pallet {
         RecordType,
     };
 
-    /// The current storage version.
-    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);    
+	/// The current storage version.
+    const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
 
     #[pallet::pallet]
     #[pallet::without_storage_info]
@@ -133,6 +142,8 @@ mod pallet {
         type Teams: TeamsValidating<Self::AccountId, Self::Hash>;
         type Orders: OrderValidating<Self::AccountId, Self::Hash>;
         type BonsaiConverter: Convert<Self::BlockNumber, u32> + Convert<u32, Self::BlockNumber>;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]
@@ -157,7 +168,7 @@ mod pallet {
         /// * 4000 Timekeeping
         /// * 5000 Orders
         ///
-        #[pallet::weight(0/*TODO*/)]
+		#[pallet::weight(T::WeightInfo::update_record())]
         pub fn update_record(
             origin: OriginFor<T>,
             record_type: RecordType,
@@ -270,7 +281,7 @@ mod pallet {
             let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
             TxList::<T>::mutate_or_err(list_key, |tx_list| tx_list.push(u))?;
             IsStarted::<T>::insert(u, current_block);
-            
+
             // if IsSuccessful::<T>::contains_key(&u) {
             //     // Throw an error because the transaction already completed.
             //     return Err(Error::<T>::TransactionCompleted);
@@ -288,7 +299,7 @@ mod pallet {
 
             Ok(().into())
         }
-        
+
         fn end_uuid(u: T::Hash) -> DispatchResultWithPostInfo {
             ensure!(!IsSuccessful::<T>::contains_key(&u), Error::<T>::TransactionCompleted);
             // The transaction is now completed successfully update the state change
