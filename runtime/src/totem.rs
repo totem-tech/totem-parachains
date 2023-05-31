@@ -47,6 +47,7 @@ impl pallet_prefunding::Config for Runtime {
     type Accounting = pallet_accounting::Pallet<Self>;
     type Escrowable = pallet_escrow::Pallet<Self>;
     type RandomThing = RandomnessCollectiveFlip;
+	type WeightInfo = pallet_prefunding::weights::TotemWeight<Runtime>;
 }
 
 impl pallet_teams::Config for Runtime {

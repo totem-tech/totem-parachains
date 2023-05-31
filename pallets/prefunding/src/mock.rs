@@ -147,6 +147,7 @@ impl pallet_prefunding::Config for Test {
 	type PrefundingConverter = Converter;
 	type Accounting = Accounting;
 	type RandomThing = RandomnessCollectiveFlip;
+	type WeightInfo = ();
 }
 
 impl pallet_timestamp::Config for Test {

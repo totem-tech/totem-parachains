@@ -55,8 +55,10 @@ mod mock;
 #[cfg(test)]
 mod tests;
 mod benchmarking;
+pub mod weights;
 
 pub use pallet::*;
+pub use weights::WeightInfo;
 
 #[frame_support::pallet]
 mod pallet {
@@ -73,6 +75,7 @@ mod pallet {
         },
     };
     use frame_system::pallet_prelude::*;
+	use crate::WeightInfo;
 
     // use sp_runtime::traits::{Convert, Hash};
 	use sp_std::{prelude::*, vec};
@@ -149,6 +152,8 @@ mod pallet {
             CurrencyBalanceOf<Self>,
         >;
         type RandomThing: Randomness<Self::Hash, Self::BlockNumber>;
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
     }
 
     #[pallet::error]

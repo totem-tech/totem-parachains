@@ -117,8 +117,6 @@ benchmarks! {
 	}: _(RawOrigin::Signed(commander.clone()), latest_prefunding_hash_owner_key.unwrap(), tx_uid.clone())
 	verify {
 	}
-
-
 }
 
 impl_benchmark_test_suite!(Pallet, crate::mock::new_test_ext(), crate::mock::Test,);
