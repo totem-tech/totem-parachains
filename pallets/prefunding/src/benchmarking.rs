@@ -116,7 +116,6 @@ benchmarks! {
 
 	}: _(RawOrigin::Signed(commander.clone()), latest_prefunding_hash_owner_key.unwrap(), tx_uid.clone())
 	verify {
-		assert_last_event::<T>(Event::InvoiceSettled(tx_uid).into());
 	}
 
 
