@@ -564,7 +564,7 @@ extern crate frame_benchmarking;
 mod benches {
 	define_benchmarks!(
 		[frame_system, SystemBench::<Runtime>]
-		[pallet_balances_totem, Balances],
+		[pallet_balances_totem, Balances]
 		[pallet_prefunding, Prefunding]
 		[pallet_session, SessionBench::<Runtime>]
 		[pallet_timestamp, Timestamp]
