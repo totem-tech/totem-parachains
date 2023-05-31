@@ -486,7 +486,6 @@ mod pallet {
                 (Unlocked, Locked) => {
                     match ReferenceStatus::<T>::get(&h) {
                         Some(400) => {
-							dbg!("400 status");
                             // get details of lock
                             let details =
                                 // Self::prefunding_hash_owner(&h).ok_or("Error fetching details")?;
@@ -915,7 +914,6 @@ mod pallet {
 
             match Self::prefunding_hash_owner(&ref_hash) {
                 Some(state_lock) => {
-					dbg!(&state_lock);
                     let locks = (state_lock.1, state_lock.3);
                     change.0 = state_lock.0.clone();
                     change.2 = state_lock.2.clone();
