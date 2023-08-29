@@ -181,7 +181,7 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		_from: AccountId,
 		_to: AccountId,
 		_amount: CoinAmount,
-	) -> Result {
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
@@ -236,10 +236,6 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 	}
 
 	fn get_pseudo_random_hash(_s: AccountId, _r: AccountId) -> Hash {
-		unimplemented!("Used as a mock, shouldn't be called")
-	}
-
-	fn combined_sanity_checks(_o: &AccountId, _e: &AdjustmentDetail<Coin>) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
