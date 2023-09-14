@@ -72,6 +72,7 @@ impl Posting for Test {
     fn handle_multiposting_amounts(
         // keys: Vec<Record<AccountId, Hash, BlockNumber, Self::Account, Self::LedgerBalance>>,
         keys: Vec<Record<AccountId, Ledger, Self::LedgerBalance, Indicator, Hash, BlockNumber>>,
+        index: Option<PostingIndex>,
     ) -> DispatchResult {
         unimplemented!()
     }

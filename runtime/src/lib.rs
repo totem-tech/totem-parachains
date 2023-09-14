@@ -212,6 +212,7 @@ pub const THOUSAND: Balance = 1_000;
 
 // Totem does not want users to lose funds accidentally. This will cause rounding errors.
 pub const EXISTENTIAL_DEPOSIT: Balance = 1;
+pub const WHITELIST_DEPOSIT: Balance = 1_000_000_000_000_000;
 
 /// We assume that ~5% of the block weight is consumed by `on_initialize` handlers. This is
 /// used to limit the maximal weight of a single extrinsic.
@@ -496,11 +497,6 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-// /// Configure the pallet template in pallets/template.
-// impl pallet_template::Config for Runtime {
-// 	type RuntimeEvent = RuntimeEvent;
-// }
-
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -553,6 +549,7 @@ construct_runtime!(
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
+
 	}
 );
 
@@ -569,6 +566,7 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
+		[pallet_unit_of_account, UnitOfAccount]
 	);
 }
 

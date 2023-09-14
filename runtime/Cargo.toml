@@ -36,6 +36,7 @@ pallet-teams = { default-features = false, path = '../pallets/teams' }
 pallet-timekeeping = { default-features = false, path = '../pallets/timekeeping' }
 pallet-transaction-payment = { default-features = false, path = '../pallets/transaction-payment', package = 'pallet-transaction-payment-totem' }
 # pallet-transfer = { default-features = false, path = '../pallets/transfer' }
+pallet-unit-of-account = { default-features = false, path = '../pallets/unit-of-account', package = 'pallet-unit-of-account' }
 
 ## Substrate FRAME Dependencies
 frame-benchmarking = { git = "https://github.com/paritytech/substrate", default-features = false, optional = true, branch = "polkadot-v0.9.36" }
@@ -83,7 +84,7 @@ xcm-builder = { git = "https://github.com/paritytech/polkadot", default-features
 xcm-executor = { git = "https://github.com/paritytech/polkadot", default-features = false, branch = "release-v0.9.36" }
 
 # Cumulus Dependencies
-cumulus-pallet-aura-ext = { git = 'https://github.com/paritytech/cumulus', default-features = false , branch = 'polkadot-v0.9.36'} 
+cumulus-pallet-aura-ext = { git = 'https://github.com/paritytech/cumulus', default-features = false , branch = 'polkadot-v0.9.36'}
 cumulus-pallet-dmp-queue = { git = 'https://github.com/paritytech/cumulus', default-features = false, branch = 'polkadot-v0.9.36' }
 cumulus-pallet-parachain-system = { git = 'https://github.com/paritytech/cumulus', default-features = false, branch = 'polkadot-v0.9.36' }
 cumulus-pallet-session-benchmarking = { git = "https://github.com/paritytech/cumulus", default-features = false, version = "3.0.0", branch = "polkadot-v0.9.36"}
@@ -155,6 +156,7 @@ runtime-benchmarks = [
 	"frame-system-benchmarking/runtime-benchmarks",
 	"frame-system/runtime-benchmarks",
 	"pallet-balances-totem/runtime-benchmarks",
+	"pallet-unit-of-account/runtime-benchmarks",
 	"pallet-collator-selection/runtime-benchmarks",
 	"pallet-timestamp/runtime-benchmarks",
 	"pallet-xcm/runtime-benchmarks",
