@@ -59,8 +59,9 @@
 //! The Unit-Of-Account Pallet in Totem is designed to provide an exchange rate to the functional currency of the accounting engine.
 //!
 //! The purpose is that during the update of the accounts from another asset, the record will contain both the value of the asset
-//! and the value in the functional currency, so that translation to the presentation currency can be done at the time of reporting.
-//!
+//! and the value in the functional currency
+//! This enables the option of using the presentation currency mechanism in the front-end, but will also allow the display of values at the times of the transaction.
+//! 
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
