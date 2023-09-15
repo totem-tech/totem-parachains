@@ -157,6 +157,7 @@ mod pallet {
         /// * 4000 Timekeeping
         /// * 5000 Orders
         ///
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn update_record(
             origin: OriginFor<T>,
@@ -172,6 +173,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(1)]
         #[pallet::weight(0/*TODO*/)]
         pub fn on_finalize_example(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
             let _who = ensure_signed(origin)?;
@@ -223,7 +225,7 @@ mod pallet {
         fn check_remote_ownership(
             o: T::AccountId,
             k: T::Hash,
-            t: T::Hash,
+            _t: T::Hash,
             e: RecordType,
         ) -> DispatchResultWithPostInfo {
             // check which type of record

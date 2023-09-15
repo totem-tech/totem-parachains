@@ -82,6 +82,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Transfers funds!
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn transfer(
             origin: OriginFor<T>,

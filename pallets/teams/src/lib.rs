@@ -126,6 +126,7 @@ mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn add_new_team(
             origin: OriginFor<T>,
@@ -160,6 +161,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(1)]
         #[pallet::weight(0/*TODO*/)]
         pub fn remove_team(
             origin: OriginFor<T>,
@@ -220,6 +222,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(2)]
         #[pallet::weight(0/*TODO*/)]
         pub fn reassign_team(
             origin: OriginFor<T>,
@@ -265,6 +268,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(3)]
         #[pallet::weight(0/*TODO*/)]
         pub fn close_team(
             origin: OriginFor<T>,
@@ -297,6 +301,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(4)]
         #[pallet::weight(0/*TODO*/)]
         pub fn reopen_team(
             origin: OriginFor<T>,
@@ -332,6 +337,7 @@ mod pallet {
             Ok(().into())
         }
 
+        #[pallet::call_index(5)]
         #[pallet::weight(0/*TODO*/)]
         pub fn set_status_team(
             origin: OriginFor<T>,

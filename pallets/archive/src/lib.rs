@@ -95,6 +95,7 @@ mod pallet {
         /// 7000
         /// 8000
         /// 9000
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn archive_record(
             origin: OriginFor<T>,

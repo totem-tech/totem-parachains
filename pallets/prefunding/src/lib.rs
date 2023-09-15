@@ -259,6 +259,7 @@ mod pallet {
         /// Quantity is not relevant.
         /// The prefunded amount remains as an asset of the buyer until the order is accepted.
         /// Updates only the accounts of the buyer.
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn prefund_someone(
             origin: OriginFor<T>,
@@ -283,6 +284,7 @@ mod pallet {
         /// Creates a single line simple invoice without taxes, tariffs or commissions.
         /// This invoice is associated with a prefunded order - therefore needs to provide the hash reference of the order.
         /// Updates the accounting for the vendor and the customer.
+        #[pallet::call_index(1)]
         #[pallet::weight(0/*TODO*/)]
         pub fn invoice_prefunded_order(
             origin: OriginFor<T>,
@@ -301,6 +303,7 @@ mod pallet {
 
         /// Buyer pays a prefunded order. Needs to supply the correct hash reference.
         /// Updates bother the buyer and the vendor accounts.
+        #[pallet::call_index(2)]
         #[pallet::weight(0/*TODO*/)]
         pub fn pay_prefunded_invoice(
             origin: OriginFor<T>,
@@ -316,6 +319,7 @@ mod pallet {
         }
 
         /// Is used by the buyer to recover funds if the vendor does not accept the order by the deadline.
+        #[pallet::call_index(3)]
         #[pallet::weight(0/*TODO*/)]
         pub fn cancel_prefunded_closed_order(
             origin: OriginFor<T>,
@@ -613,7 +617,7 @@ mod pallet {
                 },
             ];
 
-            if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
+            if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys, None) {
                 return Err(Error::<T>::InAccounting1.into());
             }
 
@@ -727,7 +731,7 @@ mod pallet {
                 },
             ];
 
-            if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
+            if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys, None) {
                 return Err(Error::<T>::InAccounting2.into());
             }
 
@@ -851,7 +855,7 @@ mod pallet {
                         },
                     ];
 
-                    if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys) {
+                    if let Err(_) = T::Accounting::handle_multiposting_amounts(&keys, None) {
                         return Err(Error::<T>::InAccounting3.into());
                     }
 

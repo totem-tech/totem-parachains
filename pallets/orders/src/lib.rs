@@ -239,6 +239,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Only the owner of an order can delete it provided no work has been done on it.
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn delete_order(
             origin: OriginFor<T>,
@@ -287,6 +288,7 @@ mod pallet {
 
         /// Creates either a sales order or a purchase order with multi-line items and a parent order.
         /// Will be used for the marketplace in order to set up open orders.
+        #[pallet::call_index(1)]
         #[pallet::weight(0/*TODO*/)]
         pub fn create_order(
             origin: OriginFor<T>,
@@ -390,6 +392,7 @@ mod pallet {
 
         /// Create Simple Prefunded Service Order.
         /// Can specify an approver. If the approver is the same as the sender then the order is considered approved by default.
+        #[pallet::call_index(2)]
         #[pallet::weight(0/*TODO*/)]
         pub fn create_spfso(
             origin: OriginFor<T>,
@@ -443,6 +446,7 @@ mod pallet {
         /// Change Simple Prefunded Service Order.
         /// Can only be changed by the original ordering party,
         /// and only before it is accepted and the deadline or due date is not passed.
+        #[pallet::call_index(3)]
         #[pallet::weight(0/*TODO*/)]
         pub fn change_spfso(
             origin: OriginFor<T>,
@@ -482,6 +486,7 @@ mod pallet {
 
         /// Sets the approval status of an order.
         /// Can only be used by the nominated approver (must be known to the ordering party).
+        #[pallet::call_index(4)]
         #[pallet::weight(0/*TODO*/)]
         pub fn change_approval(
             origin: OriginFor<T>,
@@ -505,6 +510,7 @@ mod pallet {
         /// Can be used by buyer or seller.
         /// Buyer - Used by the buyer to accept or reject (TODO) the invoice that was raised by the seller.
         /// Seller - Used to accept, reject or invoice the order.
+        #[pallet::call_index(5)]
         #[pallet::weight(0/*TODO*/)]
         pub fn handle_spfso(
             origin: OriginFor<T>,

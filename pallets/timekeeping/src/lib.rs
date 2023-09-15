@@ -269,6 +269,7 @@ mod pallet {
     #[pallet::call]
     impl<T: Config> Pallet<T> {
         /// Team owner invites worker/team member to team.
+        #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
         pub fn notify_team_worker(
             origin: OriginFor<T>,
@@ -334,7 +335,8 @@ mod pallet {
         }
 
         /// Worker accepts to join the team.
-        #[pallet::weight(0/*TODO*/)]
+        #[pallet::call_index(1)]
+        #[pallet::weight(0/*TODO*/)] 
         pub fn worker_acceptance_team(
             origin: OriginFor<T>,
             team_hash: T::Hash,
@@ -402,6 +404,7 @@ mod pallet {
         }
 
         /// Worker submits/resubmits time record.
+        #[pallet::call_index(2)]
         #[pallet::weight(0/*TODO*/)]
         pub fn submit_time(
             origin: OriginFor<T>,
@@ -644,6 +647,7 @@ mod pallet {
         }
 
         /// Team owner sets authorisation status of time record.
+        #[pallet::call_index(3)]
         #[pallet::weight(0/*TODO*/)]
         pub fn authorise_time(
             origin: OriginFor<T>,
@@ -722,6 +726,7 @@ mod pallet {
         }
 
         /// Worker invoices the time record.
+        #[pallet::call_index(4)]
         #[pallet::weight(0/*TODO*/)]
         pub fn invoice_time(
             origin: OriginFor<T>,
@@ -744,6 +749,7 @@ mod pallet {
         }
 
         /// Team owner pays invoice.
+        #[pallet::call_index(5)]
         #[pallet::weight(0/*TODO*/)]
         pub fn pay_time(
             origin: OriginFor<T>,
@@ -763,6 +769,7 @@ mod pallet {
         }
 
         /// Full payment triggers locked record.
+        #[pallet::call_index(6)]
         #[pallet::weight(0/*TODO*/)]
         pub fn lock_time_record(
             _origin: OriginFor<T>,
@@ -778,6 +785,7 @@ mod pallet {
         }
 
         /// In case of error unlock record.
+        #[pallet::call_index(7)]
         #[pallet::weight(0/*TODO*/)]
         pub fn unlock_time_record(
             _origin: OriginFor<T>,
@@ -793,6 +801,7 @@ mod pallet {
         }
 
         /// Worker or team member is banned from submitting time against this team.
+        #[pallet::call_index(8)]
         #[pallet::weight(0/*TODO*/)]
         pub fn ban_worker(
             _origin: OriginFor<T>,
@@ -809,6 +818,7 @@ mod pallet {
         }
 
         /// Worker or team member is released from ban from submitting time against this team.
+        #[pallet::call_index(9)]
         #[pallet::weight(0/*TODO*/)]
         pub fn unban_worker(
             _origin: OriginFor<T>,
