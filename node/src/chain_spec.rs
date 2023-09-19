@@ -79,7 +79,7 @@ pub fn kapex_config() -> Result<DummyChainSpec, String> {
 }
 
 pub fn stagex_config() -> Result<DummyChainSpec, String> {
-	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/stagex/stagex-parachain-raw.json")[..])
+	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/stagex/stagex-parachain-raw-fix.json")[..])
 }
 
 pub fn development_config() -> ChainSpec {
