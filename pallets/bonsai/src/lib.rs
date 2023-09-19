@@ -84,7 +84,7 @@ mod pallet {
     };
     use frame_system::pallet_prelude::*;
 
-    use sp_runtime::traits::{Convert, Hash};
+    use sp_runtime::traits::{Convert, Hash, BadOrigin};
     use sp_std::prelude::*;
 
     use totem_common::StorageMapExt;
@@ -165,6 +165,9 @@ mod pallet {
             key: T::Hash,
             bonsai_token: T::Hash,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             // check transaction signed
             let who = ensure_signed(origin)?;
             Self::check_remote_ownership(who, key.clone(), bonsai_token.clone(), record_type)?;
@@ -176,6 +179,9 @@ mod pallet {
         #[pallet::call_index(1)]
         #[pallet::weight(0/*TODO*/)]
         pub fn on_finalize_example(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             let _who = ensure_signed(origin)?;
             let current_block: T::BlockNumber = frame_system::Pallet::<T>::block_number();
             let current: u32 = T::BonsaiConverter::convert(current_block);

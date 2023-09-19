@@ -11057,7 +11057,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-node"
-version = "1.4.3"
+version = "1.5.0"
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -11117,7 +11117,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-runtime"
-version = "1.4.3"
+version = "1.5.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -11146,6 +11146,7 @@ dependencies = [
  "pallet-collator-selection",
  "pallet-escrow",
  "pallet-indices",
+ "pallet-multisig",
  "pallet-orders",
  "pallet-prefunding",
  "pallet-randomness-collective-flip",
@@ -11158,6 +11159,7 @@ dependencies = [
  "pallet-transaction-payment-totem",
  "pallet-unit-of-account",
  "pallet-utility",
+ "pallet-vesting",
  "pallet-xcm",
  "parachain-info",
  "parity-scale-codec",

@@ -1,6 +1,6 @@
 [package]
 name = "totem-parachain-node"
-version = "1.4.3"
+version = "1.5.0"
 authors = ['Totem Accounting <support@totemaccounting.com>']
 description = 'Totem Parachain Node'
 license = 'GNU'

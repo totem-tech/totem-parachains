@@ -50,6 +50,7 @@ mod pallet {
         dispatch::DispatchResultWithPostInfo,
         pallet_prelude::*,
         traits::StorageVersion,
+        sp_runtime::traits::BadOrigin,
     };
     use frame_system::pallet_prelude::*;
 
@@ -103,6 +104,9 @@ mod pallet {
             bonsai_token: T::Hash,
             archive: bool,
         ) -> DispatchResultWithPostInfo {
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
+            }
             // check signed
             let who = ensure_signed(origin)?;
             // check which type of record
