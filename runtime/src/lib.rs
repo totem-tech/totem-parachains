@@ -16,7 +16,7 @@ use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, IdentifyAccount, Verify},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
 };
@@ -30,7 +30,7 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{ConstU32, ConstU64, ConstU8, Everything},
+	traits::{ConstU32, ConstU64, ConstU8, Everything, WithdrawReasons},
 	weights::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
@@ -174,11 +174,11 @@ impl_opaque_keys! {
 
 #[sp_version::runtime_version]
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("kapex-parachain"),
-	impl_name: create_runtime_str!("kapex-parachain"),
+	spec_name: create_runtime_str!("totem-parachain"),
+	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
-	spec_version: 4,
-	impl_version: 4,
+	spec_version: 5,
+	impl_version: 0,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
@@ -207,11 +207,16 @@ pub const MILLIUNIT: Balance = 1_000_000_000;
 pub const MICROUNIT: Balance = 1_000_000;
 pub const THOUSAND: Balance = 1_000;
 
+pub const fn deposit(items: u32, bytes: u32) -> Balance {
+	items as Balance * 15 * THOUSAND + (bytes as Balance) * 6 * THOUSAND
+}
+
 /// The existential deposit. Set to 1/10 of the Connected Relay Chain.
 // pub const EXISTENTIAL_DEPOSIT: Balance = MILLIUNIT;
 
 // Totem does not want users to lose funds accidentally. This will cause rounding errors.
 pub const EXISTENTIAL_DEPOSIT: Balance = 1;
+pub const WHITELIST_DEPOSIT: Balance = 1_000_000_000_000_000;
 
 /// We assume that ~5% of the block weight is consumed by `on_initialize` handlers. This is
 /// used to limit the maximal weight of a single extrinsic.
@@ -400,6 +405,41 @@ impl pallet_utility::Config for Runtime {
 }
 
 parameter_types! {
+	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
+	pub const DepositBase: Balance = deposit(1, 88);
+	// Additional storage item size of 32 bytes.
+	pub const DepositFactor: Balance = deposit(0, 32);
+}
+
+impl pallet_multisig::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = Balances;
+	type DepositBase = DepositBase;
+	type DepositFactor = DepositFactor;
+	type MaxSignatories = ConstU32<100>;
+	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
+}
+
+parameter_types! {
+	pub const MinVestedTransfer: Balance = THOUSAND;
+	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
+}
+
+impl pallet_vesting::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type Currency = Balances;
+	type BlockNumberToBalance = ConvertInto;
+	type MinVestedTransfer = MinVestedTransfer;
+	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
+	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
+	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
+	// highest number of schedules that encodes less than 2^10.
+	const MAX_VESTING_SCHEDULES: u32 = 28;
+}
+
+parameter_types! {
 	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 }
@@ -496,11 +536,6 @@ impl pallet_sudo::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 }
 
-// /// Configure the pallet template in pallets/template.
-// impl pallet_template::Config for Runtime {
-// 	type RuntimeEvent = RuntimeEvent;
-// }
-
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -518,6 +553,8 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
 		Utility: pallet_utility = 6,
+		Multisig: pallet_multisig::{Pallet, Call, Event<T>} = 7,
+		Vesting: pallet_vesting::{Pallet, Call, Event<T>} = 8,
 
 		// Monetary stuff.
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
@@ -537,22 +574,21 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 
-		// Template
-		// TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
-
 		// Totem
 		Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
-		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
-		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
-		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
+		Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
+		Bonsai: pallet_bonsai::{Pallet, Call, Storage} = 42, // Event<T> temporarily removed. Commented out in pallet_bonsai/src/lib.rs
+		Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
 		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
-		// Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
-		// Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
-		// Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
-		// Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
+		Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
+		Prefunding: pallet_prefunding::{Pallet, Call, Storage, Event<T>} = 46,
+		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
+		Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
+		UnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>} = 50,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
+
 	}
 );
 
@@ -569,6 +605,7 @@ mod benches {
 		[pallet_timestamp, Timestamp]
 		[pallet_collator_selection, CollatorSelection]
 		[cumulus_pallet_xcmp_queue, XcmpQueue]
+		[pallet_unit_of_account, UnitOfAccount]
 	);
 }
 

@@ -1,0 +1,43 @@
+[package]
+name = 'pallet-transfer'
+version = '1.1.0'
+authors = ['Totem Accounting <support@totemaccounting.com>']
+description = 'Funds Transfer Wrapper Pallet (replaces Balances Transfer)'
+license = 'GNU'
+homepage = 'https://totemaccounting.com'
+repository = 'https://gitlab.com/totem-tech/totem'
+edition = '2021' 
+
+[package.metadata.docs.rs]
+targets = ['x86_64-unknown-linux-gnu']
+
+[dependencies]
+# external dependencies
+# codec = { package = "parity-scale-codec", version = "2.2.0", default-features = false, features = [
+# 	"derive",
+# 	"max-encoded-len",
+# ] }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = [
+	"derive"
+] }
+scale-info = { version = "2.0.1", default-features = false, features = ["derive"] }
+totem-primitives = { path = '../../primitives', default-features = false }
+# primitives
+sp-runtime = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+sp-std = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+# frame
+frame-support = { git = 'https://github.com/paritytech/substrate.git', version = "4.0.0-dev", branch = 'polkadot-v0.9.36', default-features = false }
+frame-system = { git = 'https://github.com/paritytech/substrate.git', branch = 'polkadot-v0.9.36', default-features = false }
+
+[dev-dependencies]
+
+[features]
+default = ['std']
+std = [
+    'codec/std',
+    'totem-primitives/std',
+    'sp-runtime/std',
+    'sp-std/std',
+    'frame-support/std',
+    'frame-system/std',
+]

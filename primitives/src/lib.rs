@@ -47,6 +47,7 @@ pub mod prefunding;
 pub mod teams;
 pub mod timekeeping;
 pub mod transfer;
+pub mod unit_of_account;
 
 use frame_support::{dispatch::{ EncodeLike, TypeInfo }, pallet_prelude::*};
 // use scale_info::TypeInfo;

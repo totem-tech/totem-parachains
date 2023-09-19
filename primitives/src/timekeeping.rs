@@ -108,7 +108,7 @@ pub struct Timekeeper<
     NumberOfBreaks,
 > {
     pub worker: AccountId,
-    pub project_hash: ReferenceHash,
+    pub team_hash: ReferenceHash,
     pub total_blocks: NumberOfBlocks,
     pub locked_status: LockStatus,
     pub locked_reason: ReasonCodeStruct,
