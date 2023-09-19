@@ -248,9 +248,6 @@ mod pallet {
             if ensure_none(origin.clone()).is_ok() {
                 return Err(BadOrigin.into())
             }
-            if ensure_none(origin.clone()).is_ok() {
-                return Err(BadOrigin.into())
-            }
             let who = ensure_signed(origin)?;
             <T::Bonsai as Storing<T::Hash>>::start_tx(tx_keys_medium.tx_uid)?;
 

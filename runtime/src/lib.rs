@@ -533,13 +533,10 @@ construct_runtime!(
 		CumulusXcm: cumulus_pallet_xcm::{Pallet, Event<T>, Origin} = 32,
 		DmpQueue: cumulus_pallet_dmp_queue::{Pallet, Call, Storage, Event<T>} = 33,
 
-		// Template
-		// TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
-
 		// Totem
 		Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
 		Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
-		Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
+		Bonsai: pallet_bonsai::{Pallet, Call, Storage} = 42, // Event<T> temporarily removed. Commented out in pallet_bonsai/src/lib.rs
 		Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
 		// Funding: pallet_funding::{Pallet, Call, Storage, Event<T>, Config<T>} = 44,
 		Orders: pallet_orders::{Pallet, Call, Storage, Event<T>} = 45,
@@ -547,7 +544,7 @@ construct_runtime!(
 		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
 		Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
-		UOA: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>} = 50,
+		UnitOfAccount: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>} = 50,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
 

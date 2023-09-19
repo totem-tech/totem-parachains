@@ -127,7 +127,7 @@ mod pallet {
 
     #[pallet::config]
     pub trait Config: frame_system::Config {
-        type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+        // type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
         type Timekeeping: TimeValidating<Self::AccountId, Self::Hash>;
         type Teams: TeamsValidating<Self::AccountId, Self::Hash>;
@@ -212,14 +212,14 @@ mod pallet {
         }
     }
 
-    #[pallet::event]
-    #[pallet::generate_deposit(pub(super) fn deposit_event)]
-    pub enum Event<T: Config> {
-        /// You are not the owner of this Record.
-        ErrorRecordOwner(T::Hash),
-        /// This is an unknown record type.
-        ErrorUnknownType(T::Hash),
-    }
+    // #[pallet::event]
+    // #[pallet::generate_deposit(pub(super) fn deposit_event)]
+    // pub enum Event<T: Config> {
+    //     /// You are not the owner of this Record.
+    //     ErrorRecordOwner(T::Hash),
+    //     /// This is an unknown record type.
+    //     ErrorUnknownType(T::Hash),
+    // }
 
     impl<T: Config> Pallet<T> {
         fn check_remote_ownership(
@@ -233,24 +233,12 @@ mod pallet {
             match e {
                 RecordType::Teams => {
                     ensure!(T::Teams::is_team_owner(o, k), Error::<T>::NotTransactionOwner);
-                    // if false == T::Teams::is_team_owner(o, k) {
-                        // Self::deposit_event(Event::ErrorRecordOwner(t));
-                        // return Err("You cannot add a record you do not own");
-                        // }
                 }
                 RecordType::Timekeeping => {
                     ensure!(T::Timekeeping::is_time_record_owner(o, k), Error::<T>::NotTransactionOwner);
-                    // if false == T::Timekeeping::is_time_record_owner(o, k) {
-                        // Self::deposit_event(Event::ErrorRecordOwner(t));
-                        // return Err("You cannot add a record you do not own");
-                        // }
                 }
                     RecordType::Orders => {
                     ensure!(T::Orders::is_order_party(o, k), Error::<T>::NotTransactionOwner);
-                    // if false == T::Orders::is_order_party(o, k) {
-                    //     Self::deposit_event(Event::ErrorRecordOwner(t));
-                    //     return Err("You cannot add a record you do not own");
-                    // }
                 }
             }
 

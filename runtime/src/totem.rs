@@ -38,7 +38,7 @@ impl pallet_archive::Config for Runtime {
 }
 
 impl pallet_bonsai::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
+    // type RuntimeEvent = RuntimeEvent; // Event<T> temporarily removed and commented out in pallet_bonsai
     type Orders = pallet_orders::Pallet<Self>;
     type Teams = pallet_teams::Pallet<Self>;
     type Timekeeping = pallet_timekeeping::Pallet<Self>;

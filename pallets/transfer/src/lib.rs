@@ -54,6 +54,7 @@ mod pallet {
         traits::{Currency, ExistenceRequirement, StorageVersion},
     };
     use frame_system::pallet_prelude::*;
+    use sp_runtime::traits::{BadOrigin};
     use totem_primitives::bonsai::Storing;
 
     // Other trait types
@@ -81,6 +82,8 @@ mod pallet {
 
     #[pallet::call]
     impl<T: Config> Pallet<T> {
+        // TODO Totem should also ask for the accounting entries for both parties or include some form of reference 
+        // to execute accounting recipes.
         /// Transfers funds!
         #[pallet::call_index(0)]
         #[pallet::weight(0/*TODO*/)]
@@ -90,20 +93,22 @@ mod pallet {
             #[pallet::compact] payment_amount: CurrencyBalanceOf<T>,
             tx_uid: T::Hash,
         ) -> DispatchResultWithPostInfo {
-            let from = ensure_signed(origin)?;
-            T::Bonsai::start_tx(tx_uid)?;
-            // Convert incoming amount to currency for transfer
-            //let amount: CurrencyBalanceOf<T> = T::TransferConverter::convert(payment_amount);
-            let amount = payment_amount;
-
-            if let Err(_) =
-                T::Currency::transfer(&from, &to, amount, ExistenceRequirement::KeepAlive)
-            {
-                return Err(Error::<T>::ErrorDuringTransfer);
+            if ensure_none(origin.clone()).is_ok() {
+                return Err(BadOrigin.into())
             }
-
-            T::Bonsai::end_tx(tx_uid)?;
-
+            let from = ensure_signed(origin)?;
+            match T::Bonsai::start_tx(tx_uid) {
+                Ok(_) => (),
+                Err(_) => return Err(Error::<T>::ErrorSettingStartTx.into()),
+            };
+            let amount = payment_amount;
+            if let Err(_) = T::Currency::transfer(&from, &to, amount, ExistenceRequirement::KeepAlive) {
+                return Err(Error::<T>::ErrorDuringTransfer.into());
+            }
+            match T::Bonsai::end_tx(tx_uid) {
+                Ok(_) => (),
+                Err(_) => return Err(Error::<T>::ErrorSettingEndTx.into()),
+            };
             Ok(().into())
         }
     }
@@ -112,6 +117,10 @@ mod pallet {
     pub enum Error<T> {
         /// There was an error calling the transfer function in balances.
         ErrorDuringTransfer,
+        /// There was an error calling the start_tx function in bonsai.
+        ErrorSettingStartTx,
+        /// There was an error calling the end_tx function in bonsai.
+        ErrorSettingEndTx,
     }
 
     #[pallet::event]
