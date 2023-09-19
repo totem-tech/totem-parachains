@@ -547,6 +547,7 @@ construct_runtime!(
 		Teams: pallet_teams::{Pallet, Call, Storage, Event<T>} = 47,
 		Timekeeping: pallet_timekeeping::{Pallet, Call, Storage, Event<T>} = 48,
 		// Transfer: pallet_transfer::{Pallet, Call, Storage, Event<T>} = 49,
+		UOA: pallet_unit_of_account::{Pallet, Call, Storage, Event<T>} = 50,
 
 		// Spambot: cumulus_ping::{Pallet, Call, Storage, Event<T>} = 99,
 
