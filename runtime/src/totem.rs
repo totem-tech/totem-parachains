@@ -27,9 +27,8 @@ impl pallet_unit_of_account::Config for Runtime {
     type MaxWhitelistedAccounts = MaxWhitelistedAccounts;
     type MaxAssetsInBasket = MaxAssetsInBasket;
     type MaxAssetsInput = MaxAssetsInput;
-    type SymbolMaxChars = SymbolMaxChars;
     type AccountBytes = AccountBytes;
-    type BytesToAccountId = Converter;
+    type UnitOfAccountConverter = Converter;
     type WhitelistDeposit = WhitelistDeposit;
 }
 
