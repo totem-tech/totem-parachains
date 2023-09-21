@@ -7,9 +7,9 @@ use frame_support::{
 		TypeInfo
 	},
 };
-
-pub const DIVISOR_UNIT: LedgerBalance = 100_000;
-pub const STORAGE_MULTIPLIER: LedgerBalance = 100_000_000_000_000_000_000;
+// Used for converting floats 1.08 to 1_080_000_000_000 for correct storage as a LedgerBalance.
+// The front end will apply 12 decimals when reading to return the value to 1.08
+pub const STORAGE_MULTIPLIER: LedgerBalance = 1_000_000_000_000;
 
 /// Holds the details for each asset for storage
 #[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug, PartialEq)]

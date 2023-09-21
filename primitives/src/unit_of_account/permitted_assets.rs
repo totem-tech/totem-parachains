@@ -34,9 +34,16 @@
 // You should have received a copy of the GNU General Public License
 // along with Totem.  If not, see <http://www.gnu.org/licenses/>.
 
+
+//! !!!!!!!!!!!!!!!!   This file should not be edited. !!!!!!!!!!!!!!!!!!!!!!!!!
+
+//! The tickers in here are structured so that there can be some enhancement and new
+//! Tickers added, but this should only be by governance and community approval.
+
+
 use codec::{Decode, Encode, MaxEncodedLen};
 use frame_support::{dispatch::TypeInfo};
-/// Asset Main Groupings
+/// Asset Ticker Main Groupings
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
@@ -61,7 +68,6 @@ pub enum Sector {
     Energy(NRG),
     Telecommunications(TELCOM),
     RealEstate(RELE),
-    // AccountingAudit(AUDIT), 
 }
 
 /// HealthCare
@@ -116,6 +122,7 @@ pub enum FINS {
     Banks(BANK),
     Insurance(INSUR),
     InvestmentBankingAndBrokerage(INVBAN),
+    // AccountingAudit(AUDIT), // TODO 
 }
 
 /// Consumer Goods
@@ -680,7 +687,7 @@ pub enum TOKN {
     /// USD Circle
     USDC,
     /// Binance Token
-    BNB,
+    BUSD,
 }
 
 /// Cryptocurrency
@@ -704,6 +711,8 @@ pub enum COIN {
     BAJU,
     /// Bitcoin Cash
     BCH,
+    /// Binance Coin
+    BNB,
     /// Bifrost
     BNC,
     /// Bitcoin
