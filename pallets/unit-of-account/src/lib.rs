@@ -16,10 +16,9 @@
 //                        É@@@@@@@@@@@@@@@@Ñ¶
 //                             Næ§@@@ÑÉ©
 
-// Copyright 2020 Chris D'Costa
+// Copyright 2023 Chris D'Costa
 // This file is part of Totem Live Accounting.
 // Authors:
-// - Damilare Akinlose      email: dami@totemaccounting.com
 // - Chris D'Costa          email: chris.dcosta@totemaccounting.com
 
 // Totem is free software: you can redistribute it and/or modify
@@ -58,10 +57,15 @@
 //!
 //! The Unit-Of-Account Pallet in Totem is designed to provide an exchange rate to the functional currency of the accounting engine.
 //!
-//! The purpose is that during the update of the accounts from another asset, the record will contain both the value of the asset
-//! and the value in the functional currency
-//! This enables the option of using the presentation currency mechanism in the front-end, but will also allow the display of values at the times of the transaction.
-//! 
+//! The purpose is that during the update of the accounting record only the functional currency is important.
+//! A transactional currency is noted in the record by its exchange rate from the functional currency, and to do this a lookup is performed 
+//! to obtain the exchange rate for the `applicable_period_blocknumber` that the transaction occured.
+//! In most cases this will be the current block, but in the case of retrospective updates to the accounting record this may be in the 
+//! past.
+//! This enables the option of using the presentation currency mechanism in the front-end, but will also allow the display of values 
+//! for each accounting record at the time of the transaction.
+//! The main goal therefore is to keep a continuous record of the exchange rate for the functional currency per block.
+//! The changes are likely to be very small so that the functional currency remains a stable unit of account.
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
@@ -99,9 +103,9 @@ use sp_std::{
 use totem_primitives::{
 	LedgerBalance,
 	unit_of_account::{
-		AssetDetails,
-		AssetData,
-		Assets
+		TickerDetails,
+		TickerData,
+		Tickers
 	},
 };
 
@@ -113,7 +117,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
-	use totem_primitives::unit_of_account::Assets;
+	use totem_primitives::unit_of_account::Tickers;
 
 	#[pallet::config]
 	/// The module configuration trait.
@@ -130,11 +134,11 @@ pub mod pallet {
 
 		/// The max number of assets allowed in the basket
 		#[pallet::constant]
-		type MaxAssetsInBasket: Get<u32>;
+		type MaxTickersInBasket: Get<u32>;
 
 		/// The max number of assets allowed to be updated in one extrinsic
 		#[pallet::constant]
-		type MaxAssetsInput: Get<u32>;
+		type MaxTickersInput: Get<u32>;
 
 		/// The whitelisting deposit ammount
 		#[pallet::constant]
@@ -188,7 +192,7 @@ pub mod pallet {
 	#[pallet::getter(fn asset_basket)]
 	pub type AssetBasket<T: Config> = StorageValue<
 	_,
-	BoundedVec<AssetDetails, T::MaxAssetsInBasket>,
+	BoundedVec<TickerDetails, T::MaxTickersInBasket>,
 	ValueQuery,
 	>;
 
@@ -197,9 +201,9 @@ pub mod pallet {
 	/// without having to read the asset details
 	#[pallet::storage]
 	#[pallet::getter(fn asset_symbol)]
-	pub type AssetSymbol<T: Config> = StorageValue<
+	pub type AssetTickerSymbol<T: Config> = StorageValue<
 	_,
-	BoundedVec<Assets, T::MaxAssetsInBasket>,
+	BoundedVec<Tickers, T::MaxTickersInBasket>,
 	ValueQuery,
 	>;
 
@@ -357,7 +361,6 @@ pub mod pallet {
 
 		/// Adds a single new asset to the basket of assets
 		///
-		///
 		/// Parameters:
 		/// - `origin`: A whitelisted callet origin
 		/// - `symbol:` The asset symbol
@@ -368,7 +371,7 @@ pub mod pallet {
 		#[pallet::call_index(2)]
 		pub fn add_new_asset(
 			origin: OriginFor<T>,
-			symbol: Assets,
+			symbol: Tickers,
 			issuance: u128,
 			price: u128,
 			// price_threshold: (u128, u128),
@@ -385,8 +388,8 @@ pub mod pallet {
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
 
 			// Ensure that the total number of assets is not greater than the maximum allowed
-			let mut assets = AssetSymbol::<T>::get();
-			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::AssetCannotBeAddedToBasket)?;
+			let mut assets = AssetTickerSymbol::<T>::get();
+			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::TickerCannotBeAddedToBasket)?;
 
 			// Check that the symbol is not already in use.
 			ensure!(!Self::asset_in_array(&symbol), Error::<T>::SymbolAlreadyExists);
@@ -442,7 +445,7 @@ pub mod pallet {
 
 			// -------------- Update Storage ---------------- //
 			// Add the symbol to the array of symbols in Storage
-			AssetSymbol::<T>::set(assets);
+			AssetTickerSymbol::<T>::set(assets);
 
 			// Update the Unit of Account Value in Storage
 			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
@@ -471,7 +474,7 @@ pub mod pallet {
 		#[pallet::call_index(3)]
 		pub fn remove_asset(
 			origin: OriginFor<T>,
-			symbol: Assets,
+			symbol: Tickers,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
@@ -490,7 +493,7 @@ pub mod pallet {
 			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
 			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
 
-			AssetSymbol::<T>::set(assets);
+			AssetTickerSymbol::<T>::set(assets);
 			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
 			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
 			AssetBasket::<T>::set(new_basket);
@@ -511,7 +514,7 @@ pub mod pallet {
 		#[pallet::call_index(4)]
 		pub fn update_asset_price(
 			origin: OriginFor<T>,
-			symbol: Assets,
+			symbol: Tickers,
 			price: u128,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
@@ -551,12 +554,12 @@ pub mod pallet {
 		/// Parameters:
 		/// - `origin`: A whitelisted call	er origin
 		/// - `symbol:` The asset symbol to remove
-		/// - `price:` The asset price
+		/// - `issuance:` The total issuance of an asset
 		#[pallet::weight(T::WeightInfo::update_asset_issuance())]
 		#[pallet::call_index(5)]
 		pub fn update_asset_issuance(
 			origin: OriginFor<T>,
-			symbol: Assets,
+			symbol: Tickers,
 			issuance: u128,
 		) -> DispatchResultWithPostInfo {
 			if ensure_none(origin.clone()).is_ok() {
@@ -598,13 +601,13 @@ pub mod pallet {
 		/// Account removed from whitelisted accounts
 		AccountRemoved(T::AccountId),
 		/// Asset added to the basket
-		AssetAddedToBasket(Assets),
+		AssetAddedToBasket(Tickers),
 		/// Asset removed from the basket
-		AssetRemoved(Assets),
+		AssetRemoved(Tickers),
 		/// Asset price updated in the basket
-		AssetPriceUpdated(Assets),
+		AssetPriceUpdated(Tickers),
 		/// Asset issuance updated in the basket
-		AssetIssuanceUpdated(Assets),
+		AssetIssuanceUpdated(Tickers),
 	}
 
 	#[pallet::error]
@@ -618,13 +621,13 @@ pub mod pallet {
 		/// Not a whitelisted account
 		NotWhitelistedAccount,
 		/// Max assets exceeded
-		MaxAssetsOutOfBounds,
+		MaxTickersOutOfBounds,
 		/// Asset Symbol already exists
 		SymbolAlreadyExists,
 		/// Asset cannot be added to the basket
-		AssetCannotBeAddedToBasket,
+		TickerCannotBeAddedToBasket,
 		/// Asset not found during removal
-		AssetNotFound,
+		TickerNotFound,
 		/// Invalid Issuance Value
 		InvalidIssuanceValue,
 		/// Invalid Price Value
@@ -656,8 +659,8 @@ pub mod pallet {
 
 
 impl<T: Config> Pallet<T> {
-	fn asset_in_array(symbol: &Assets) -> bool {
-		let asset_symbol = <AssetSymbol<T>>::get();
+	fn asset_in_array(symbol: &Tickers) -> bool {
+		let asset_symbol = <AssetTickerSymbol<T>>::get();
 		match asset_symbol.iter().any(|s| s == symbol) {
 			true => true,
 			false => false,
@@ -665,21 +668,21 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn find_and_remove_asset(
-		symbol: &Assets,
-	) -> Result<BoundedVec<Assets, T::MaxAssetsInBasket>, DispatchError> {
-		let mut assets = AssetSymbol::<T>::get();
+		symbol: &Tickers,
+	) -> Result<BoundedVec<Tickers, T::MaxTickersInBasket>, DispatchError> {
+		let mut assets = AssetTickerSymbol::<T>::get();
 		match assets.iter().position(|s| s == symbol) {
 			Some(idx) => {
 				assets.remove(idx);
 				Ok(assets)
 			},
-			None => Err(Error::<T>::AssetNotFound.into())
+			None => Err(Error::<T>::TickerNotFound.into())
 		}
 	}
 
 	// fn find_and_return_asset(
 	// 	symbol: &Assets,
-	// ) -> Result<AssetDetails, DispatchError> {
+	// ) -> Result<TickerDetails, DispatchError> {
 	// 	let assets = AssetBasket::<T>::get();
 	// 	let asset = assets.iter().find(|a| a.symbol == *symbol);
 
@@ -696,7 +699,7 @@ impl<T: Config> Pallet<T> {
 		return Some(inverted_issuance)
 	}
 
-	fn get_total_inverse_issuance(basket: &Vec<AssetData<f64>>) -> f64 {
+	fn get_total_inverse_issuance(basket: &Vec<TickerData<f64>>) -> f64 {
 		let total_inverse_in_asset_basket = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.inverse_issuance {
@@ -706,7 +709,7 @@ impl<T: Config> Pallet<T> {
 		return total_inverse_in_asset_basket
 	}
 
-	fn partial_recalculation_of_basket(basket: &mut Vec<AssetData<f64>>, tiv: f64) -> &mut Vec<AssetData<f64>> {
+	fn partial_recalculation_of_basket(basket: &mut Vec<TickerData<f64>>, tiv: f64) -> &mut Vec<TickerData<f64>> {
 		for asset in &mut *basket {
 			asset.weighting_per_asset = match asset.inverse_issuance.clone() {
 				Some(i) => Some(i / tiv.clone()),
@@ -721,7 +724,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 
-	fn final_recalculation_of_basket(basket: &mut Vec<AssetData<f64>>, uoa: f64) -> &mut Vec<AssetData<f64>> {
+	fn final_recalculation_of_basket(basket: &mut Vec<TickerData<f64>>, uoa: f64) -> &mut Vec<TickerData<f64>> {
 		for asset in &mut *basket {
 			asset.uoa_per_asset = match asset.weight_adjusted_price.clone() {
 				Some(u) => Some(u / uoa.clone()),
@@ -732,7 +735,7 @@ impl<T: Config> Pallet<T> {
 		return basket
 	}
 
-	fn calculate_unit_of_account(basket: &Vec<AssetData<f64>>) -> f64 {
+	fn calculate_unit_of_account(basket: &Vec<TickerData<f64>>) -> f64 {
 		let unit_of_account = basket
 		.iter()
 		.fold(0.0f64, |acc, asset| acc + match asset.weight_adjusted_price {
@@ -744,11 +747,11 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn conversion_of_basket_to_storage(
-		basket: Vec<AssetData<f64>>,
-	) -> Result<BoundedVec::<AssetDetails, T::MaxAssetsInBasket>, DispatchError> {
-		let mut new_basket: BoundedVec::<AssetDetails, T::MaxAssetsInBasket> = Default::default();
+		basket: Vec<TickerData<f64>>,
+	) -> Result<BoundedVec::<TickerDetails, T::MaxTickersInBasket>, DispatchError> {
+		let mut new_basket: BoundedVec::<TickerDetails, T::MaxTickersInBasket> = Default::default();
 			for asset in basket {
-				let converted_entry = AssetDetails {
+				let converted_entry = TickerDetails {
 					symbol: asset.symbol.clone(),
 					issuance: asset.issuance as LedgerBalance,
 					price: asset.price as LedgerBalance,
@@ -767,24 +770,24 @@ impl<T: Config> Pallet<T> {
 					// price_threshold: (asset.price_threshold.0 as LedgerBalance, asset.price_threshold.1 as LedgerBalance),
 					// issuance_threshold: (asset.issuance_threshold.0 as LedgerBalance, asset.issuance_threshold.1 as LedgerBalance)
 				};
-				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxAssetsOutOfBounds)?;
+				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxTickersOutOfBounds)?;
 			}
 
 		Ok(new_basket)
 	}
 
 	fn combined_intermediate_basket(
-		symbol: &Assets,
+		symbol: &Tickers,
 		issuance: &u128,
 		price: &u128,
 		// price_threshold: &(u128, u128),
 		// issuance_threshold: &(u128, u128)
-	) -> Vec<AssetData<f64>> {
+	) -> Vec<TickerData<f64>> {
 
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 
-		let new_entry = AssetData {
+		let new_entry = TickerData {
 			symbol: symbol.clone(),
 			issuance: issuance.clone(),
 			inverse_issuance: Self::invert_issuance(issuance.clone()),
@@ -799,7 +802,7 @@ impl<T: Config> Pallet<T> {
 
 		// Move data to new array erasing values that are to be recalculated
 		for asset in current_asset_basket {
-			let existing_entry = AssetData {
+			let existing_entry = TickerData {
 				symbol: asset.symbol.clone(),
 				issuance: asset.issuance.clone() as u128,
 				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
@@ -816,8 +819,8 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn reduced_intermediate_basket(
-		symbol: &Assets,
-	) -> Vec<AssetData<f64>> {
+		symbol: &Tickers,
+	) -> Vec<TickerData<f64>> {
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		// Move data to new array erasing values that are to be recalculated
@@ -825,7 +828,7 @@ impl<T: Config> Pallet<T> {
 			if asset.symbol == *symbol {
 				continue
 			}
-			let existing_entry = AssetData {
+			let existing_entry = TickerData {
 				symbol: asset.symbol.clone(),
 				issuance: asset.issuance.clone() as u128,
 				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
@@ -842,9 +845,9 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn update_asset_price_in_intermediate_basket(
-		symbol: &Assets,
+		symbol: &Tickers,
 		price: u128
-	) -> Vec<AssetData<f64>> {
+	) -> Vec<TickerData<f64>> {
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		// Move data to new array erasing values that are to be recalculated
@@ -861,9 +864,9 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn update_asset_issuance_in_intermediate_basket(
-		symbol: &Assets,
+		symbol: &Tickers,
 		issuance: u128
-	) -> Vec<AssetData<f64>> {
+	) -> Vec<TickerData<f64>> {
 		let current_asset_basket = AssetBasket::<T>::get();
 		let mut intermediate_basket = Vec::new();
 		// Move data to new array erasing values that are to be recalculated
@@ -880,11 +883,11 @@ impl<T: Config> Pallet<T> {
 	}
 
 	fn update_asset_data(
-		asset: &AssetDetails,
+		asset: &TickerDetails,
 		price: u128,
 		issuance: u128
-	) -> AssetData<f64> {
-		let asset_data = AssetData {
+	) -> TickerData<f64> {
+		let asset_data = TickerData {
 			symbol: asset.symbol.clone(),
 			issuance,
 			inverse_issuance: Self::invert_issuance(issuance as u128),

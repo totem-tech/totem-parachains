@@ -145,7 +145,7 @@ fn should_add_new_asset_successfully() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -156,7 +156,7 @@ fn should_add_new_asset_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -167,7 +167,7 @@ fn should_add_new_asset_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -192,7 +192,7 @@ fn should_add_new_asset_successfully() {
 fn add_currency_should_fail_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -219,7 +219,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -230,7 +230,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -241,7 +241,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -252,7 +252,7 @@ fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_4 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let currency_symbol_4 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_4,
@@ -278,7 +278,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -289,7 +289,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -300,7 +300,7 @@ fn add_asset_should_fail_when_asset_symbol_already_exists() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -326,7 +326,7 @@ fn add_asset_should_fail_with_invalid_issuance_value() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -352,7 +352,7 @@ fn add_asset_should_fail_with_invalid_price_value() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -379,7 +379,7 @@ fn should_remove_asset_successfully() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -390,7 +390,7 @@ fn should_remove_asset_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -401,7 +401,7 @@ fn should_remove_asset_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -448,7 +448,7 @@ fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 
 		let res = PalletUnitOfAccount::remove_asset(RuntimeOrigin::root(), currency_symbol);
 		assert_err!(
@@ -467,7 +467,7 @@ fn should_update_asset_price_successfully() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -478,7 +478,7 @@ fn should_update_asset_price_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -489,7 +489,7 @@ fn should_update_asset_price_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -532,7 +532,7 @@ fn update_asset_price_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -543,7 +543,7 @@ fn update_asset_price_should_fail_when_asset_is_not_in_basket() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -554,7 +554,7 @@ fn update_asset_price_should_fail_when_asset_is_not_in_basket() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
 		let res =
 			PalletUnitOfAccount::update_asset_price(
 				RuntimeOrigin::signed(1), 
@@ -577,7 +577,7 @@ fn update_asset_price_should_fail_when_asset_price_is_below_price_threshold() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -588,7 +588,7 @@ fn update_asset_price_should_fail_when_asset_price_is_below_price_threshold() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -599,7 +599,7 @@ fn update_asset_price_should_fail_when_asset_price_is_below_price_threshold() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -631,7 +631,7 @@ fn update_asset_price_should_fail_when_asset_price_is_above_price_threshold() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -642,7 +642,7 @@ fn update_asset_price_should_fail_when_asset_price_is_above_price_threshold() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -653,7 +653,7 @@ fn update_asset_price_should_fail_when_asset_price_is_above_price_threshold() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -685,7 +685,7 @@ fn should_update_asset_issuance_successfully() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -696,7 +696,7 @@ fn should_update_asset_issuance_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -707,7 +707,7 @@ fn should_update_asset_issuance_successfully() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -748,7 +748,7 @@ fn update_asset_issuance_should_fail_when_asset_is_not_in_basket() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -759,7 +759,7 @@ fn update_asset_issuance_should_fail_when_asset_is_not_in_basket() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -770,7 +770,7 @@ fn update_asset_issuance_should_fail_when_asset_is_not_in_basket() {
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::AVA));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
 		let res = PalletUnitOfAccount::update_asset_issuance(
 			RuntimeOrigin::signed(1), 
 			currency_symbol_3, 
@@ -792,7 +792,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_below_issuance_thres
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -803,7 +803,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_below_issuance_thres
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -814,7 +814,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_below_issuance_thres
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,
@@ -846,7 +846,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_above_price_threshol
 	new_test_ext().execute_with(|| {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 
-		let currency_symbol_1 = Assets::Crypto(CoinType::Coin(COIN::ACA));
+		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_1,
@@ -857,7 +857,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_above_price_threshol
 		);
 		assert_ok!(res);
 
-		let currency_symbol_2 = Assets::Crypto(CoinType::Coin(COIN::ADA));
+		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_2,
@@ -868,7 +868,7 @@ fn update_asset_issuance_should_fail_when_asset_issuance_is_above_price_threshol
 		);
 		assert_ok!(res);
 
-		let currency_symbol_3 = Assets::Crypto(CoinType::Coin(COIN::ASTR));
+		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let res = PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1),
 			currency_symbol_3,

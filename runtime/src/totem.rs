@@ -13,8 +13,8 @@ impl pallet_accounting::Config for Runtime {
 
 parameter_types! {
     pub const MaxWhitelistedAccounts: u32 = 50;
-    pub const MaxAssetsInBasket: u32 = 1000;
-    pub const MaxAssetsInput: u32 = 100;
+    pub const MaxTickersInBasket: u32 = 1000;
+    pub const MaxTickersInput: u32 = 100;
     pub const SymbolMaxChars: u32 = 7;
     pub const WhitelistDeposit: Balance = WHITELIST_DEPOSIT;
     pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
@@ -25,8 +25,8 @@ impl pallet_unit_of_account::Config for Runtime {
     type Currency = pallet_balances_totem::Pallet<Runtime>;
     type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;
     type MaxWhitelistedAccounts = MaxWhitelistedAccounts;
-    type MaxAssetsInBasket = MaxAssetsInBasket;
-    type MaxAssetsInput = MaxAssetsInput;
+    type MaxTickersInBasket = MaxTickersInBasket;
+    type MaxTickersInput = MaxTickersInput;
     type AccountBytes = AccountBytes;
     type UnitOfAccountConverter = Converter;
     type WhitelistDeposit = WhitelistDeposit;

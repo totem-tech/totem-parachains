@@ -141,7 +141,7 @@ pub struct AdjustmentDetail<Balance> {
 	pub debit_credit: Indicator,
 	pub amount: Balance,
 	// to be added after UoA is completed, as this determines the exchange rate to be used.
-	// pub asset: Assets,
+	// pub asset: Tickers,
 }
 
 // allows PostingDetail to be queried by the index of the posting and the account id

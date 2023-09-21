@@ -4844,6 +4844,7 @@ dependencies = [
 name = "pallet-accounting"
 version = "1.4.1"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-randomness-collective-flip",

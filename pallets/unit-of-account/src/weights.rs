@@ -76,7 +76,7 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 			.saturating_add(T::DbWeight::get().writes(14))
 	}
 	// Storage: UnitOfAccount WhitelistedAccounts (r:1 w:0)
-	// Storage: UnitOfAccount AssetSymbol (r:1 w:1)
+	// Storage: UnitOfAccount Tickersymbol (r:1 w:1)
 	// Storage: UnitOfAccount AssetBasket (r:1 w:1)
 	// Storage: UnitOfAccount TotalInverseIssuance (r:0 w:1)
 	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)
@@ -86,7 +86,7 @@ impl<T: frame_system::Config> WeightInfo for TotemWeight<T> {
 			.saturating_add(T::DbWeight::get().reads(3))
 			.saturating_add(T::DbWeight::get().writes(4))
 	}
-	// Storage: UnitOfAccount AssetSymbol (r:1 w:1)
+	// Storage: UnitOfAccount Tickersymbol (r:1 w:1)
 	// Storage: UnitOfAccount AssetBasket (r:1 w:1)
 	// Storage: UnitOfAccount TotalInverseIssuance (r:0 w:1)
 	// Storage: UnitOfAccount UnitOfAccount (r:0 w:1)

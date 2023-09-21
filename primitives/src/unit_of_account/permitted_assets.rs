@@ -40,7 +40,7 @@ use frame_support::{dispatch::TypeInfo};
 #[allow(non_camel_case_types)]
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub enum Assets {
+pub enum Tickers {
     Stocks(Sector),
     Forex(FIAT),
     Crypto(CoinType),

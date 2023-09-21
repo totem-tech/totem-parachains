@@ -105,6 +105,10 @@ mod pallet {
     /// The current storage version.
     const STORAGE_VERSION: StorageVersion = StorageVersion::new(1);
     
+    /// The new storage version.
+	// const STORAGE_VERSION: frame_support::traits::StorageVersion =
+    // frame_support::traits::StorageVersion::new(2);
+    
     #[pallet::pallet]
     #[pallet::generate_store(pub(super) trait Store)]
     #[pallet::storage_version(STORAGE_VERSION)]
@@ -358,19 +362,19 @@ mod pallet {
             let minimum_reference_date = current_block.clone() + 446_400u32.into();
             let maximum_block_number = current_block + 5_256_000u32.into();
             
-            // // check that the block number is in the future. This also confirms that it is not zero 
-            // // There should be a minimum of 62 Days in the future from the current block (446,400). 
-            // // This allows for the current month or anoy month in progress
+            // check that the block number is in the future. This also confirms that it is not zero 
+            // There should be a minimum of 62 Days in the future from the current block (446,400). 
+            // This allows for the current month or any month in progress
             ensure!(block_number > minimum_reference_date, Error::<T>::AccountingRefDateTooSoon);
             
-            // // check that the block number is not too far in the future.
-            // // Maximum period is two years from now (5,256,000)
+            // check that the block number is not too far in the future.
+            // Maximum period is two years from now (5,256,000)
             ensure!(block_number < maximum_block_number, Error::<T>::AccountingRefDateTooLate);
             
-            // // set the block number
+            // set the block number
             <AccountingRefDate<T>>::insert(who.clone(), block_number.clone());
             
-            // // emit event
+            // emit event
             Self::deposit_event(Event::<T>::AccountingRefDateSet { who, at_blocknumber: block_number });
             
             Ok(().into())
@@ -417,7 +421,7 @@ mod pallet {
                     .into_iter()
                 })
                 .min()
-                .unwrap();
+                .unwrap_or(block_number);
             
             // Since all checks have passed, update the storage with the new opening balance entries. This requires building a vec of entries record and sending to multiposting, but the status is also updated here for optimisation.
             let reference_hash = T::Acc::get_pseudo_random_hash(who.clone(), who.clone());
