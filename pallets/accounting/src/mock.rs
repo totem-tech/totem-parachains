@@ -135,7 +135,7 @@ impl system::Config for Test {
 parameter_types! {
     pub BlockWeights: frame_system::limits::BlockWeights =
         frame_system::limits::BlockWeights::simple_max(1024);
-    pub static ExistentialDeposit: u64 = 0;
+    pub static ExistentialDeposit: u64 = 1;
 }
 
 parameter_types! {
