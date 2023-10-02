@@ -459,9 +459,11 @@ mod pallet {
         }
         
         /// This function is intended for advanced book-keepers and accountants. 
-        /// It does not check the logical corrrectness of the entries but allows a limited number entries to be made.
-        /// It is used to make minor adjustments but cannot be used to make standalone journal postings as it requires an existing posting index.
-        /// There is a check for debit and credit correctness and the debits and credits are checked against the account type to determine increase or decrease in values.
+        /// It does not check the logical corrrectness of the entries but allows a limited number of entries to be made.
+        /// It is used to make minor adjustments but cannot be used to make standalone journal postings as it requires an existing 
+        /// posting index.
+        /// Debit and credit correctness / balancing is checked and the debits and credits are checked against the account type to 
+        /// determine increase or decrease in values.
         /// It is not intended for monetary movements so entries relating to those ledgers will be prevented.
         /// The number of entries should be bounded to 10 as it is not expected that a large number of corrections should be made at once.
         #[pallet::call_index(2)]
@@ -579,13 +581,14 @@ mod pallet {
         /// Basic posting function (warning! can cause imbalance if not called with corresponding debit or credit entries)
         /// The reason why this is a simple function is that one debit posting may or may not correspond with one or many credit
         /// postings and vice-versa. For example a debit to Accounts Receivable is the gross invoice amount, which could correspond with
-        /// a credit to liabilities for the sales tax amount and a credit to revenue for the net invoice amount. The sum of both credits being
-        /// equal to the single debit in accounts receivable, but only one posting needs to be made to that account, and two posting for the others.
+        /// a credit to liabilities for the sales tax amount and a credit to revenue for the net invoice amount. The sum of both 
+        /// credits being equal to the single debit in accounts receivable, but only one posting needs to be made to that account, 
+        /// and two posting for the others.
         /// The Totem Accounting Recipes are constructed using this simple function.
-        /// The applicable_period_blocknumber is for re-targeting the entry in the accounts, i.e. for adjustments prior to or after the current period (generally accruals).
-        /// It is also used for reporting purposes. 
-        /// The changed_on_blocknumber is used to facilitate audit, but is not technically needed as a full archive node could also provide this information from the state
-        /// changes apparent in every block.
+        /// The applicable_period_blocknumber is for re-targeting the entry in the accounts, i.e. for adjustments prior to or 
+        /// after the current period (generally accruals). It is also used for reporting purposes. 
+        /// The changed_on_blocknumber is used to facilitate audit, but is not technically needed as a full archive node could also 
+        /// provide this information from the state changes apparent in every block.
         fn post_amounts(
             key: Record<T::AccountId, T::Hash, T::BlockNumber>,
             posting_index: PostingIndex,
@@ -725,7 +728,9 @@ mod pallet {
 
         //     Ok(())
         // }
-                                                                                                            
+        
+        
+        /// This function performs the accounting equation and debit and credit balancing checks
         fn combined_sanity_checks(
             who : &T::AccountId,
             entries: &Vec<AdjustmentDetail<CurrencyBalanceOf<T>>>,

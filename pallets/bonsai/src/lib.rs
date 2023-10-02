@@ -176,46 +176,51 @@ mod pallet {
             Ok(().into())
         }
 
-        #[pallet::call_index(1)]
-        #[pallet::weight(0/*TODO*/)]
-        pub fn on_finalize_example(origin: OriginFor<T>) -> DispatchResultWithPostInfo {
-            if ensure_none(origin.clone()).is_ok() {
-                return Err(BadOrigin.into())
-            }
-            let _who = ensure_signed(origin)?;
-            let current_block: T::BlockNumber = frame_system::Pallet::<T>::block_number();
-            let current: u32 = T::BonsaiConverter::convert(current_block);
-            // Get all hashes
-            let default_bytes = b"nobody can save fiat currency now";
-            let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
-            if let Some(hashes) = Self::tx_list(&list_key) {
-                // check which storage the hashes come from and hashes that are old
-                for key in hashes {
-                    match Self::is_started(&key) {
-                        Some(block) => {
-                            let target_block = T::BonsaiConverter::convert(block) + 172800_u32;
-                            // let mut target_deletion_block: T::BlockNumber = <T::BonsaiConverter as Convert<u32, T::BlockNumber>>::convert(target_block);
-                            // cleanup 30 Days from when the transaction started, but did not complete
-                            // It's possible this comparison is not working
-                            if current >= target_block {
-                                IsStarted::<T>::remove(key);
-                            }
-                        }
-                        None => {
-                            if let Some(block) = Self::is_successful(&key) {
-                                let target_block = T::BonsaiConverter::convert(block);
-                                if current >= target_block {
-                                    IsSuccessful::<T>::remove(key);
-                                }
-                            }
-                        }
-                    }
-                    TxList::<T>::mutate_or_err(&list_key, |tx_list| tx_list.retain(|v| v != &key))?;
-                }
-            }
+        // /// This function intends to clean up storage of hashes that are no longer needed.
+        // /// Hashses are used during transaction processing to allow the front-end to doscover if a transaction failed
+        // /// after became disconnected. The front-end can then query the blockchain to discover the status of the transaction.
+        // #[pallet::call_index(1)]
+        // #[pallet::weight(0/*TODO*/)]
+        // pub fn on_finalize_example(origin: OriginFor<T>
+        // ) -> DispatchResultWithPostInfo {
+        //     if ensure_none(origin.clone()).is_ok() {
+        //         return Err(BadOrigin.into())
+        //     }
+        //     let _who = ensure_signed(origin)?;
+        //     let current_block: T::BlockNumber = frame_system::Pallet::<T>::block_number();
+        //     let current: u32 = T::BonsaiConverter::convert(current_block);
+        //     // Get all hashes
+        //     let default_bytes = b"nobody can save fiat currency now";
+        //     let list_key: T::Hash = T::Hashing::hash(default_bytes.encode().as_slice());
+        //     if let Some(hashes) = Self::tx_list(&list_key) {
+        //         // check which storage the hashes come from and hashes that are old
+        //         for key in hashes {
+        //             match Self::is_started(&key) {
+        //                 Some(block) => {
+        //                     let target_block = T::BonsaiConverter::convert(block) + 172800_u32;
+        //                     // let mut target_deletion_block: T::BlockNumber = <T::BonsaiConverter as Convert<u32, T::BlockNumber>>::convert(target_block);
+        //                     // cleanup 30 Days from when the transaction started, but did not complete
+        //                     // It's possible this comparison is not working
+        //                     if current >= target_block {
+        //                         IsStarted::<T>::remove(key);
+        //                     }
+        //                 }
+        //                 None => {
+        //                     if let Some(block) = Self::is_successful(&key) {
+        //                         let target_block = T::BonsaiConverter::convert(block);
+        //                         if current >= target_block {
+        //                             IsSuccessful::<T>::remove(key);
+        //                         }
+        //                     }
+        //                 }
+        //             }
+        //             TxList::<T>::mutate_or_err(&list_key, |tx_list| tx_list.retain(|v| v != &key))?;
+        //         }
+        //     }
 
-            Ok(().into())
-        }
+        //     Ok(().into())
+        // }
+
     }
 
     // #[pallet::event]
