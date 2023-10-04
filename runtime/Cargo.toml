@@ -57,6 +57,9 @@ pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/parityt
 pallet-indices = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36"}
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.36" }
 pallet-utility = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36"}
+pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
+# pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
+pallet-vesting = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 
 # Substrate Dependencies
 ## Substrate Primitive Dependencies
