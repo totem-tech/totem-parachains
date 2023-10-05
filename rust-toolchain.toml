@@ -1,0 +1,5 @@
+[toolchain]
+# channel = "nightly-2023-04-10"
+channel = "nightly-2023-05-22"
+#components = [ "rustfmt", "rustc-dev" ]
+targets = [ "wasm32-unknown-unknown" ]
