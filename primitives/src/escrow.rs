@@ -37,62 +37,62 @@
 
 use codec::MaxEncodedLen;
 use frame_support::{
-    pallet_prelude::*,
-    traits::{Currency, LockIdentifier},
+	pallet_prelude::*,
+	traits::{Currency, LockIdentifier},
 };
 use scale_info::TypeInfo;
 
 #[derive(Encode, Decode, Clone, PartialEq, Eq, Debug, MaxEncodedLen, TypeInfo)]
 pub enum Reason {
-    Escrowing,
+	Escrowing,
 }
 
 /// A currency whose accounts can have liquidity restrictions.
 pub trait EscrowableCurrency<AccountId> {
-    /// The quantity used to denote time; usually just a `BlockNumber`.
-    type Moment;
+	/// The quantity used to denote time; usually just a `BlockNumber`.
+	type Moment;
 
-    /// The maximum number of locks a user should have on their account.
-    type Currency: Currency<AccountId>;
+	/// The maximum number of locks a user should have on their account.
+	type Currency: Currency<AccountId>;
 
-    /// This function simply returns the Totem escrow account address.
-    fn escrow_account() -> AccountId;
+	/// This function simply returns the Totem escrow account address.
+	fn escrow_account() -> AccountId;
 
-    /// Create a new balance lock on account `who`.
-    ///
-    /// If the new lock is valid (i.e. not already expired), it will push the struct to
-    /// the `Locks` vec in storage.
-    fn set_lock(
-        id: LockIdentifier,
-        who: &AccountId,
-        amount: <Self::Currency as Currency<AccountId>>::Balance,
-        until: Self::Moment,
-        reason: Reason,
-    ) -> Result<(), TotemLocksError>;
+	/// Create a new balance lock on account `who`.
+	///
+	/// If the new lock is valid (i.e. not already expired), it will push the struct to
+	/// the `Locks` vec in storage.
+	fn set_lock(
+		id: LockIdentifier,
+		who: &AccountId,
+		amount: <Self::Currency as Currency<AccountId>>::Balance,
+		until: Self::Moment,
+		reason: Reason,
+	) -> Result<(), TotemLocksError>;
 
-    /// Remove an existing lock.
-    fn remove_lock(id: LockIdentifier, who: &AccountId) -> Result<(), TotemLocksError>;
+	/// Remove an existing lock.
+	fn remove_lock(id: LockIdentifier, who: &AccountId) -> Result<(), TotemLocksError>;
 }
 
 pub enum TotemLocksError {
-    /// There is no enough place remaining to add a lock for this account.
-    NoPlaceRemaining,
-    /// The amount to be locked is zero.
-    ZeroAmount,
-    /// The ID already exists, thus the locks already exists.
-    IdAlreadyExists,
-    /// There is no escrowed value at this ID.
-    IdDoesNotExist,
-    /// The deadline must be in the future.
-    InvalidDeadline,
-    /// The fund cannot be tranfered to the escrow.
-    CannotTransferToTheEscrow(DispatchError),
+	/// There is no enough place remaining to add a lock for this account.
+	NoPlaceRemaining,
+	/// The amount to be locked is zero.
+	ZeroAmount,
+	/// The ID already exists, thus the locks already exists.
+	IdAlreadyExists,
+	/// There is no escrowed value at this ID.
+	IdDoesNotExist,
+	/// The deadline must be in the future.
+	InvalidDeadline,
+	/// The fund cannot be tranfered to the escrow.
+	CannotTransferToTheEscrow(DispatchError),
 }
 
 // Implementations
 
 impl From<DispatchError> for TotemLocksError {
-    fn from(e: DispatchError) -> TotemLocksError {
-        TotemLocksError::CannotTransferToTheEscrow(e)
-    }
+	fn from(e: DispatchError) -> TotemLocksError {
+		TotemLocksError::CannotTransferToTheEscrow(e)
+	}
 }

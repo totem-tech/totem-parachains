@@ -2,10 +2,10 @@ use super::*;
 use totem_common::converter::Converter;
 
 impl pallet_accounting::Config for Runtime {
-    type RuntimeEvent = RuntimeEvent;
-    type AccountingConverter = Converter;
-    type Currency = Balances;
-    type RandomThing = RandomnessCollectiveFlip;
+	type RuntimeEvent = RuntimeEvent;
+	type AccountingConverter = Converter;
+	type Currency = Balances;
+	type RandomThing = RandomnessCollectiveFlip;
 }
 
 // impl pallet_archive::Config for Runtime {
