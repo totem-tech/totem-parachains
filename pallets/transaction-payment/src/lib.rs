@@ -57,7 +57,8 @@ use sp_runtime::{
 		Saturating, SignedExtension, Zero,
 	},
 	transaction_validity::{
-		TransactionPriority, TransactionValidity, TransactionValidityError, ValidTransaction, InvalidTransaction,
+		InvalidTransaction, TransactionPriority, TransactionValidity, TransactionValidityError,
+		ValidTransaction,
 	},
 	FixedPointNumber, 
 	FixedPointOperand, 
@@ -71,7 +72,7 @@ use frame_support::{
 	dispatch::{
 		DispatchClass, DispatchInfo, DispatchResult, GetDispatchInfo, Pays, PostDispatchInfo,
 	},
-	traits::{EstimateCallFee, Get, Currency},
+	traits::{Currency, EstimateCallFee, Get},
 	weights::{Weight, WeightToFee},
 };
 
@@ -851,15 +852,16 @@ where
 	) -> Result<(), TransactionValidityError> {
 		if let Some((tip, who, imbalance)) = maybe_pre {
 			let actual_fee = Pallet::<T>::compute_actual_fee(len as u32, info, post_info, tip);
-			
+
 			// Added for Totem Accounting
 			// If the actual fee is zero no need to record an entry unnecessarily
 			if !actual_fee.is_zero() {
 				let real_fee = T::TransactionConverter::convert(actual_fee.clone());
 				// Error should not happen, because there is no way the fees can overflow
 				// when converting i128 -> u128
-				T::Accounting::account_for_fees(real_fee, who.clone())
-					.map_err(|_| TransactionValidityError::Invalid(InvalidTransaction::Custom(99)))?;
+				T::Accounting::account_for_fees(real_fee, who.clone()).map_err(|_| {
+					TransactionValidityError::Invalid(InvalidTransaction::Custom(99))
+				})?;
 			}
 
 			T::OnChargeTransaction::correct_and_deposit_fee(

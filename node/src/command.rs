@@ -6,7 +6,6 @@ use cumulus_primitives_core::ParaId;
 use frame_benchmarking_cli::{BenchmarkCmd, SUBSTRATE_REFERENCE_HARDWARE};
 use log::{info, warn};
 // use totem_parachain_runtime::{Block, RuntimeApi};
-use totem_parachain_runtime::Block;
 use sc_cli::{
 	ChainSpec, CliConfiguration, DefaultConfigurationValues, ImportParams, KeystoreParams,
 	NetworkParams, Result, RuntimeVersion, SharedParams, SubstrateCli,
@@ -14,6 +13,7 @@ use sc_cli::{
 use sc_service::config::{BasePath, PrometheusConfig};
 use sp_core::hexdisplay::HexDisplay;
 use sp_runtime::traits::{AccountIdConversion, Block as BlockT};
+use totem_parachain_runtime::Block;
 
 use crate::{
 	chain_spec,
@@ -27,7 +27,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		"dev" => Box::new(chain_spec::development_config()),
 		"template-rococo" => Box::new(chain_spec::local_testnet_config()),
 		"local" => Box::new(chain_spec::local_testnet_config()),
-		
+
 		// Totem specific
 		// Lego Testnet (Rococo Local)
 		"lego" => Box::new(chain_spec::lego_config()?),
@@ -37,7 +37,7 @@ fn load_spec(id: &str) -> std::result::Result<Box<dyn ChainSpec>, String> {
 		"wapex" => Box::new(chain_spec::wapex_config()?),
 		// Kapex Live (Polkadot)
 		"" | "kapex" => Box::new(chain_spec::kapex_config()?),
-		
+
 		path => Box::new(chain_spec::ChainSpec::from_json_file(std::path::PathBuf::from(path))?),
 	})
 }

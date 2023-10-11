@@ -38,9 +38,9 @@
 use frame_support::pallet_prelude::*;
 
 pub trait Storing<Hash> {
-    fn claim_data(r: Hash, d: Hash) -> DispatchResultWithPostInfo;
+	fn claim_data(r: Hash, d: Hash) -> DispatchResultWithPostInfo;
 
-    fn start_tx(u: Hash) -> DispatchResultWithPostInfo;
+	fn start_tx(u: Hash) -> DispatchResultWithPostInfo;
 
-    fn end_tx(u: Hash) -> DispatchResultWithPostInfo;
+	fn end_tx(u: Hash) -> DispatchResultWithPostInfo;
 }

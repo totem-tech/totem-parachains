@@ -41,5 +41,5 @@ use scale_info::TypeInfo;
 #[derive(PartialEq, Eq, Clone, Encode, Decode, Default, TypeInfo)]
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct TxKeysT<Hash> {
-    pub tx_uid: Hash,
+	pub tx_uid: Hash,
 }

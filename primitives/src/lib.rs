@@ -49,7 +49,10 @@ pub mod timekeeping;
 pub mod transfer;
 pub mod unit_of_account;
 
-use frame_support::{dispatch::{ EncodeLike, TypeInfo }, pallet_prelude::*};
+use frame_support::{
+	dispatch::{EncodeLike, TypeInfo},
+	pallet_prelude::*,
+};
 // use scale_info::TypeInfo;
 use sp_std::vec::Vec;
 
@@ -67,9 +70,9 @@ pub type ComparisonAmounts = u128;
 
 #[derive(MaxEncodedLen, Decode, Encode, Debug, Clone, Copy, PartialEq, TypeInfo)]
 pub enum RecordType {
-    Teams,
-    Timekeeping,
-    Orders,
+	Teams,
+	Timekeeping,
+	Orders,
 }
 
 /// A collection based on `Vec` that guarantees that every member is unique.
@@ -81,25 +84,25 @@ pub struct Set<T>(Vec<T>);
 impl EncodeLike<RecordType> for u8 {}
 
 impl<T> Default for Set<T> {
-    fn default() -> Self {
-        Set(Default::default())
-    }
+	fn default() -> Self {
+		Set(Default::default())
+	}
 }
 
 impl<T> Set<T>
 where
-    T: Eq,
+	T: Eq,
 {
-    pub fn new() -> Self {
-        Default::default()
-    }
+	pub fn new() -> Self {
+		Default::default()
+	}
 
-    pub fn insert(&mut self, elem: T) {
-        self.remove(&elem);
-        self.0.push(elem)
-    }
+	pub fn insert(&mut self, elem: T) {
+		self.remove(&elem);
+		self.0.push(elem)
+	}
 
-    pub fn remove(&mut self, elem: &T) {
-        self.0.retain(|x| x != elem)
-    }
+	pub fn remove(&mut self, elem: &T) {
+		self.0.retain(|x| x != elem)
+	}
 }
