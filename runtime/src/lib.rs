@@ -178,7 +178,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
 	spec_version: 4,
-	impl_version: 5,
+	impl_version: 4,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
@@ -206,10 +206,6 @@ pub const UNIT: Balance = 1_000_000_000_000; //named UNITS & DOLLARS in substrat
 pub const MILLIUNIT: Balance = 1_000_000_000; // CENTS
 pub const MICROUNIT: Balance = 1_000_000; // no equivalent
 pub const THOUSAND: Balance = 1_000; // no equivalent
-
-pub const fn deposit(items: u32, bytes: u32) -> Balance {
-	items as Balance * 20 * MICROUNIT + (bytes as Balance) * 100 * THOUSAND
-}
 
 pub const fn deposit(items: u32, bytes: u32) -> Balance {
 	items as Balance * 15 * THOUSAND + (bytes as Balance) * 6 * THOUSAND
@@ -439,41 +435,6 @@ impl pallet_multisig::Config for Runtime {
 	type DepositFactor = DepositFactor;
 	type MaxSignatories = MaxSignatories;
 	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
-}
-
-parameter_types! {
-	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
-	pub const DepositBase: Balance = deposit(1, 88);
-	// Additional storage item size of 32 bytes.
-	pub const DepositFactor: Balance = deposit(0, 32);
-}
-
-impl pallet_multisig::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type RuntimeCall = RuntimeCall;
-	type Currency = pallet_balances_totem::Pallet<Runtime>;
-	type DepositBase = DepositBase;
-	type DepositFactor = DepositFactor;
-	type MaxSignatories = ConstU32<100>;
-	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
-}
-
-parameter_types! {
-	pub const MinVestedTransfer: Balance = THOUSAND;
-	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
-		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
-}
-
-impl pallet_vesting::Config for Runtime {
-	type RuntimeEvent = RuntimeEvent;
-	type Currency = pallet_balances_totem::Pallet<Runtime>;
-	type BlockNumberToBalance = ConvertInto;
-	type MinVestedTransfer = MinVestedTransfer;
-	type WeightInfo = pallet_vesting::weights::SubstrateWeight<Runtime>;
-	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
-	// `VestingInfo` encode length is 36bytes. 28 schedules gets encoded as 1009 bytes, which is the
-	// highest number of schedules that encodes less than 2^10.
-	const MAX_VESTING_SCHEDULES: u32 = 28;
 }
 
 parameter_types! {
