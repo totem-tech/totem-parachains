@@ -1,11 +1,9 @@
 #![cfg(feature = "runtime-benchmarks")]
 use super::*;
 use crate::Pallet as UnitOfAccount;
-use frame_benchmarking::{
-	benchmarks, whitelisted_caller,
-};
+use frame_benchmarking::{benchmarks, whitelisted_caller};
 use frame_system::RawOrigin;
-use totem_primitives::unit_of_account::{COIN, CoinType};
+use totem_primitives::unit_of_account::{CoinType, COIN};
 
 fn assert_last_event<T: Config>(generic_event: <T as Config>::RuntimeEvent) {
 	frame_system::Pallet::<T>::assert_last_event(generic_event.into());
@@ -46,18 +44,18 @@ benchmarks! {
 		let aca_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let aca_issuance = 203_080_000_000_000;
 		let aca_price = 1_400_000_000_00;
-		let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
-		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
+		//let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
+		//let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold, aca_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price);
 
 		let ada_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let ada_issuance = 15_646_926_171_000;
 		let ada_price =  1_000_000_000_000;
-		let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
-		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
+		//let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
+		//let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-	}: _(RawOrigin::Signed(account), ada_symbol.clone(), ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold)
+	}: _(RawOrigin::Signed(account), ada_symbol.clone(), ada_issuance, ada_price)
 	verify {
 		assert_last_event::<T>(Event::AssetAddedToBasket(ada_symbol).into());
 	}
@@ -71,26 +69,26 @@ benchmarks! {
 		let aca_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let aca_issuance = 203_080_000_000_000;
 		let aca_price = 1_400_000_000_00;
-		let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
-		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
+		//let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
+		//let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold, aca_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price);
 
 		let ada_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let ada_issuance = 15_646_926_171_000;
 		let ada_price =  1_000_000_000_000;
-		let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
-		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
+		//let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
+		//let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price);
 
 		let a_str_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let a_str_issuance = 12_141_252_300_000;
 		let a_str_price =  1_080_000_000_000;
-		let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
-		let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
+		//let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
+		//let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, );
 
 	}: _(RawOrigin::Root, a_str_symbol.clone())
 	verify {
@@ -105,26 +103,26 @@ benchmarks! {
 		let aca_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let aca_issuance = 203_080_000_000_000;
 		let aca_price = 1_400_000_000_00;
-		let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
-		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
+		//let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
+		//let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold,  aca_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price);
 
 		let ada_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let ada_issuance = 15_646_926_171_000;
 		let ada_price =  1_000_000_000_000;
-		let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
-		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
+		//let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
+		//let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price);
 
 		let a_str_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let a_str_issuance = 12_141_252_300_000;
 		let a_str_price =  1_080_000_000_000;
-		let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
-		let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
+		//let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
+		//let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price);
 
 		let new_ada_price = 1_800_000_000_000;
 	}: _(RawOrigin::Signed(account.clone()), ada_symbol.clone(), new_ada_price)
@@ -140,26 +138,26 @@ benchmarks! {
 		let aca_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
 		let aca_issuance = 203_080_000_000_000;
 		let aca_price = 1_400_000_000_00;
-		let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
-		let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
+		//let aca_price_threshold = (1_400_000_000_00, 2_400_000_000_00);
+		//let aca_issuance_threshold = (203_080_000_000_000, 503_080_000_000_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price, aca_price_threshold,  aca_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), aca_symbol, aca_issuance, aca_price);
 
 		let ada_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ADA));
 		let ada_issuance = 15_646_926_171_000;
 		let ada_price =  1_000_000_000_000;
-		let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
-		let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
+		//let ada_price_threshold =  (1_000_000_000_000, 2_000_000_000_000);
+		//let ada_issuance_threshold = (15_646_926_171_000, 20_646_926_171_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price, ada_price_threshold, ada_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), ada_symbol, ada_issuance, ada_price);
 
 		let a_str_symbol =  Tickers::Crypto(CoinType::Coin(COIN::ASTR));
 		let a_str_issuance = 12_141_252_300_000;
 		let a_str_price =  1_080_000_000_000;
-		let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
-		let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
+		//let a_str_price_threshold = (1_080_000_000_000, 2_080_000_000_000);
+		//let a_str_issuance_threshold = (12_141_252_300_000, 20_141_252_300_000);
 
-		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price, a_str_price_threshold, a_str_issuance_threshold);
+		let _ = UnitOfAccount::<T>::add_new_asset(RawOrigin::Signed(account.clone()).into(), a_str_symbol, a_str_issuance, a_str_price);
 
 		let new_ada_issuance = 17_646_926_171_000;
 	}: _(RawOrigin::Signed(account.clone()), ada_symbol.clone(), new_ada_issuance)
