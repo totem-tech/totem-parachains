@@ -154,7 +154,7 @@ impl<AccountId, Hash, BlockNumber, CoinAmount> Posting<AccountId, Hash, BlockNum
 		_from: AccountId,
 		_to: AccountId,
 		_amount: CoinAmount,
-	) -> Result {
+	) -> DispatchResult {
 		unimplemented!("Used as a mock, shouldn't be called")
 	}
 
