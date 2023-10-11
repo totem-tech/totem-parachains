@@ -1,6 +1,6 @@
 [package]
 name = "totem-parachain-runtime"
-version = "1.4.3"
+version = "1.4.4"
 authors = ['Totem Accounting <support@totemaccounting.com>']
 description = 'Totem Parachain Runtime'
 license = 'GNU'
@@ -12,7 +12,7 @@ edition = "2021"
 targets = ["x86_64-unknown-linux-gnu"]
 
 [build-dependencies]
-substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.36" }
+substrate-wasm-builder = { git = "https://github.com/paritytech/substrate", branch = "polkadot-v0.9.43" }
 
 [dependencies]
 codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive"] }
@@ -57,6 +57,10 @@ pallet-transaction-payment-rpc-runtime-api = { git = "https://github.com/parityt
 pallet-indices = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36"}
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.36" }
 pallet-utility = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36"}
+pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
+# pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
+# Vesting may be added in future
+# pallet-vesting = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 
 # Substrate Dependencies
 ## Substrate Primitive Dependencies

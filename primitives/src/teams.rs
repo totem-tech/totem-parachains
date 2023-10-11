@@ -39,11 +39,11 @@ use frame_support::pallet_prelude::*;
 use scale_info::TypeInfo;
 
 pub trait Validating<AccountId, Hash> {
-    fn is_project_owner(o: AccountId, h: Hash) -> bool;
+	fn is_project_owner(o: AccountId, h: Hash) -> bool;
 
-    fn is_project_valid(h: Hash) -> bool;
+	fn is_project_valid(h: Hash) -> bool;
 
-    fn is_owner_and_project_valid(o: AccountId, h: Hash) -> bool;
+	fn is_owner_and_project_valid(o: AccountId, h: Hash) -> bool;
 }
 
 /// Reference supplied externally.
@@ -52,22 +52,22 @@ pub type ProjectStatus = u16;
 
 #[derive(PartialEq, Eq, Clone, Debug, Encode, Decode, TypeInfo)]
 pub struct DeletedProject<AccountId, ProjectStatus> {
-    pub owned_by: AccountId,
-    pub deleted_by: AccountId,
-    pub status: ProjectStatus,
+	pub owned_by: AccountId,
+	pub deleted_by: AccountId,
+	pub status: ProjectStatus,
 }
 
 #[cfg(any(test, feature = "mock"))]
 impl<AccountId, Hash> Validating<AccountId, Hash> for () {
-    fn is_project_owner(_o: AccountId, _h: Hash) -> bool {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn is_project_owner(_o: AccountId, _h: Hash) -> bool {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn is_project_valid(_h: Hash) -> bool {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn is_project_valid(_h: Hash) -> bool {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 
-    fn is_owner_and_project_valid(_o: AccountId, _h: Hash) -> bool {
-        unimplemented!("Used as a mock, shouldn't be called")
-    }
+	fn is_owner_and_project_valid(_o: AccountId, _h: Hash) -> bool {
+		unimplemented!("Used as a mock, shouldn't be called")
+	}
 }

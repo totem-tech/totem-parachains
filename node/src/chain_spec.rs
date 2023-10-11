@@ -1,19 +1,18 @@
 use cumulus_primitives_core::ParaId;
-use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
 use sc_chain_spec::{ChainSpecExtension, ChainSpecGroup};
 use sc_service::ChainType;
 use serde::{Deserialize, Serialize};
 use sp_core::{sr25519, Pair, Public};
 use sp_runtime::traits::{IdentifyAccount, Verify};
+use totem_parachain_runtime::{AccountId, AuraId, Signature, EXISTENTIAL_DEPOSIT};
 
-use totem_primitives::{LedgerBalance};
+use totem_primitives::LedgerBalance;
 
 /// Specialized `ChainSpec` for the normal parachain runtime.
 pub type ChainSpec =
 	sc_service::GenericChainSpec<totem_parachain_runtime::GenesisConfig, Extensions>;
 
 pub type DummyChainSpec = sc_service::GenericChainSpec<(), Extensions>;
-
 
 /// The default XCM version to set in genesis config.
 const SAFE_XCM_VERSION: u32 = xcm::prelude::XCM_VERSION;
@@ -79,7 +78,7 @@ pub fn kapex_config() -> Result<DummyChainSpec, String> {
 }
 
 pub fn stagex_config() -> Result<DummyChainSpec, String> {
-	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/stagex/stagex-parachain-raw.json")[..])
+	DummyChainSpec::from_json_bytes(&include_bytes!("../../res/stagex/stagex-parachain-raw-fix.json")[..])
 }
 
 pub fn development_config() -> ChainSpec {
@@ -222,7 +221,11 @@ fn testnet_genesis(
 			balances: endowed_accounts.iter().cloned().map(|k| (k, 1 << 60)).collect(),
 		},
 		accounting: totem_parachain_runtime::AccountingConfig {
-			opening_balances: opening_balances.iter().cloned().map(|(acc, bal)| (acc, bal)).collect(),
+			opening_balances: opening_balances
+				.iter()
+				.cloned()
+				.map(|(acc, bal)| (acc, bal))
+				.collect(),
 		},
 		parachain_info: totem_parachain_runtime::ParachainInfoConfig { parachain_id: id },
 		collator_selection: totem_parachain_runtime::CollatorSelectionConfig {

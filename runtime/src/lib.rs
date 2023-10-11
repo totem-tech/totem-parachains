@@ -6,9 +6,9 @@
 #[cfg(feature = "std")]
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
+mod totem;
 mod weights;
 pub mod xcm_config;
-mod totem;
 
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
@@ -16,7 +16,7 @@ use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
+	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, IdentifyAccount, Verify},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
 };
@@ -30,7 +30,7 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{ConstU32, ConstU64, ConstU8, Everything},
+	traits::{ConstU32, ConstU64, ConstU8, Everything, WithdrawReasons},
 	weights::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
@@ -178,7 +178,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
 	spec_version: 4,
-	impl_version: 3,
+	impl_version: 4,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
@@ -202,11 +202,14 @@ pub const HOURS: BlockNumber = MINUTES * 60;
 pub const DAYS: BlockNumber = HOURS * 24;
 
 // Unit = the base number of indivisible units for balances
-pub const UNIT: Balance = 1_000_000_000_000;
-pub const MILLIUNIT: Balance = 1_000_000_000;
-pub const MICROUNIT: Balance = 1_000_000;
-pub const THOUSAND: Balance = 1_000;
+pub const UNIT: Balance = 1_000_000_000_000; //named UNITS & DOLLARS in substrate
+pub const MILLIUNIT: Balance = 1_000_000_000; // CENTS
+pub const MICROUNIT: Balance = 1_000_000; // no equivalent
+pub const THOUSAND: Balance = 1_000; // no equivalent
 
+pub const fn deposit(items: u32, bytes: u32) -> Balance {
+	items as Balance * 15 * THOUSAND + (bytes as Balance) * 6 * THOUSAND
+}
 /// The existential deposit. Set to 1/10 of the Connected Relay Chain.
 // pub const EXISTENTIAL_DEPOSIT: Balance = MILLIUNIT;
 
@@ -344,7 +347,7 @@ parameter_types! {
 
 impl pallet_indices::Config for Runtime {
 	type AccountIndex = Index;
-	type Currency = pallet_balances_totem::Pallet<Runtime>;
+	type Currency = pallet_balances_totem::Pallet<Self>;
 	type Deposit = IndexDeposit;
 	type RuntimeEvent = RuntimeEvent;
 	type WeightInfo = pallet_indices::weights::SubstrateWeight<Runtime>;
@@ -397,6 +400,41 @@ impl pallet_utility::Config for Runtime {
 	type RuntimeCall = RuntimeCall;
 	type PalletsOrigin = OriginCaller;
 	type WeightInfo = pallet_utility::weights::SubstrateWeight<Runtime>;
+}
+
+// Totem May be added in future
+// parameter_types! {
+// 	pub const MinVestedTransfer: Balance = 1 * DOLLARS;
+// 	pub UnvestedFundsAllowedWithdrawReasons: WithdrawReasons =
+// 		WithdrawReasons::except(WithdrawReasons::TRANSFER | WithdrawReasons::RESERVE);
+// }
+
+// impl pallet_vesting::Config for Runtime {
+// 	type RuntimeEvent = RuntimeEvent;
+// 	type Currency = pallet_balances_totem::Pallet<Self>;
+// 	type BlockNumberToBalance = ConvertInto;
+// 	type MinVestedTransfer = MinVestedTransfer;
+// 	type WeightInfo = weights::pallet_vesting::WeightInfo<Runtime>;
+// 	type UnvestedFundsAllowedWithdrawReasons = UnvestedFundsAllowedWithdrawReasons;
+// 	const MAX_VESTING_SCHEDULES: u32 = 28;
+// }
+
+parameter_types! {
+	// One storage item; key size is 32; value is size 4+4+16+32 bytes = 56 bytes.
+	pub const DepositBase: Balance = deposit(1, 88);
+	// Additional storage item size of 32 bytes.
+	pub const DepositFactor: Balance = deposit(0, 32);
+	pub const MaxSignatories: u32 = 100;
+}
+
+impl pallet_multisig::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = pallet_balances_totem::Pallet<Self>;
+	type DepositBase = DepositBase;
+	type DepositFactor = DepositFactor;
+	type MaxSignatories = MaxSignatories;
+	type WeightInfo = pallet_multisig::weights::SubstrateWeight<Runtime>;
 }
 
 parameter_types! {
@@ -518,6 +556,8 @@ construct_runtime!(
 		Sudo: pallet_sudo::{Pallet, Call, Event<T>, Config<T>} = 4,
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
 		Utility: pallet_utility = 6,
+		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 7,
+		// Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 8,
 
 		// Monetary stuff.
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
