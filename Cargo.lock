@@ -4972,6 +4972,7 @@ dependencies = [
 name = "pallet-accounting"
 version = "1.4.1"
 dependencies = [
+ "frame-benchmarking",
  "frame-support",
  "frame-system",
  "pallet-randomness-collective-flip",
@@ -4983,6 +4984,21 @@ dependencies = [
  "sp-runtime",
  "sp-std",
  "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
+name = "pallet-archive"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
  "totem-primitives",
 ]
 
@@ -5152,6 +5168,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-bonsai"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
 name = "pallet-bounties"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -5312,6 +5343,22 @@ dependencies = [
  "sp-npos-elections",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-escrow"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "log",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
 ]
 
 [[package]]
@@ -5562,6 +5609,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-orders"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
+name = "pallet-prefunding"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
 name = "pallet-preimage"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -5802,6 +5878,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-teams"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
+name = "pallet-timekeeping"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
+]
+
+[[package]]
 name = "pallet-timestamp"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -5903,6 +6008,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "pallet-transfer"
+version = "1.1.0"
+dependencies = [
+ "frame-support",
+ "frame-system",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-runtime",
+ "sp-std",
+ "totem-primitives",
+]
+
+[[package]]
 name = "pallet-treasury"
 version = "4.0.0-dev"
 source = "git+https://github.com/paritytech/substrate?branch=polkadot-v0.9.36#cb4f2491b00af7d7817f3a54209c26b20faa1f51"
@@ -5917,6 +6035,30 @@ dependencies = [
  "serde",
  "sp-runtime",
  "sp-std",
+]
+
+[[package]]
+name = "pallet-unit-of-account"
+version = "1.0.0"
+dependencies = [
+ "frame-benchmarking",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "log",
+ "pallet-accounting",
+ "pallet-balances-totem",
+ "pallet-randomness-collective-flip",
+ "pallet-timestamp",
+ "parity-scale-codec",
+ "scale-info",
+ "serde",
+ "sp-core",
+ "sp-io",
+ "sp-runtime",
+ "sp-std",
+ "totem-common",
+ "totem-primitives",
 ]
 
 [[package]]
@@ -7936,7 +8078,7 @@ dependencies = [
  "aho-corasick",
  "memchr",
  "regex-automata 0.4.1",
- "regex-syntax 0.8.0",
+ "regex-syntax 0.8.1",
 ]
 
 [[package]]
@@ -7956,7 +8098,7 @@ checksum = "465c6fc0621e4abc4187a2bda0937bfd4f722c2730b29562e19689ea796c9a4b"
 dependencies = [
  "aho-corasick",
  "memchr",
- "regex-syntax 0.8.0",
+ "regex-syntax 0.8.1",
 ]
 
 [[package]]
@@ -7967,9 +8109,9 @@ checksum = "f162c6dd7b008981e4d40210aca20b4bd0f9b60ca9271061b07f78537722f2e1"
 
 [[package]]
 name = "regex-syntax"
-version = "0.8.0"
+version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3cbb081b9784b07cceb8824c8583f86db4814d172ab043f3c23f7dc600bf83d"
+checksum = "56d84fdd47036b038fc80dd333d10b6aab10d5d31f4a366e20014def75328d33"
 
 [[package]]
 name = "resolv-conf"
@@ -11181,11 +11323,12 @@ dependencies = [
  "parity-scale-codec",
  "sp-runtime",
  "sp-std",
+ "totem-primitives",
 ]
 
 [[package]]
 name = "totem-parachain-node"
-version = "1.4.4"
+version = "1.5.0"
 dependencies = [
  "clap",
  "cumulus-client-cli",
@@ -11245,7 +11388,7 @@ dependencies = [
 
 [[package]]
 name = "totem-parachain-runtime"
-version = "1.4.4"
+version = "1.5.0"
 dependencies = [
  "cumulus-pallet-aura-ext",
  "cumulus-pallet-dmp-queue",
@@ -11266,18 +11409,26 @@ dependencies = [
  "hex-literal",
  "log",
  "pallet-accounting",
+ "pallet-archive",
  "pallet-aura",
  "pallet-authorship",
  "pallet-balances-totem",
+ "pallet-bonsai",
  "pallet-collator-selection",
+ "pallet-escrow",
  "pallet-indices",
  "pallet-multisig",
+ "pallet-orders",
+ "pallet-prefunding",
  "pallet-randomness-collective-flip",
  "pallet-session",
  "pallet-sudo",
+ "pallet-teams",
+ "pallet-timekeeping",
  "pallet-timestamp",
  "pallet-transaction-payment-rpc-runtime-api",
  "pallet-transaction-payment-totem",
+ "pallet-unit-of-account",
  "pallet-utility",
  "pallet-xcm",
  "parachain-info",
@@ -12734,11 +12885,10 @@ dependencies = [
 
 [[package]]
 name = "zstd-sys"
-version = "2.0.8+zstd.1.5.5"
+version = "2.0.9+zstd.1.5.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5556e6ee25d32df2586c098bbfa278803692a20d0ab9565e049480d52707ec8c"
+checksum = "9e16efa8a874a0481a574084d34cc26fdb3b99627480f785888deb6386506656"
 dependencies = [
  "cc",
- "libc",
  "pkg-config",
 ]
