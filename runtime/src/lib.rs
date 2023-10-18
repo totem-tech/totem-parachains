@@ -10,13 +10,14 @@ mod totem;
 mod weights;
 pub mod xcm_config;
 
+use codec::{Decode, Encode, MaxEncodedLen};
 use cumulus_pallet_parachain_system::RelayNumberStrictlyIncreases;
 use smallvec::smallvec;
 use sp_api::impl_runtime_apis;
 use sp_core::{crypto::KeyTypeId, OpaqueMetadata};
 use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
-	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, ConvertInto, IdentifyAccount, Verify},
+	traits::{AccountIdLookup, BlakeTwo256, Block as BlockT, IdentifyAccount, Verify},
 	transaction_validity::{TransactionSource, TransactionValidity},
 	ApplyExtrinsicResult, MultiSignature,
 };
@@ -30,12 +31,13 @@ use frame_support::{
 	construct_runtime,
 	dispatch::DispatchClass,
 	parameter_types,
-	traits::{ConstU32, ConstU64, ConstU8, Everything, WithdrawReasons},
+	traits::{ConstU32, ConstU64, ConstU8, Everything, InstanceFilter},
 	weights::{
 		constants::WEIGHT_REF_TIME_PER_SECOND, ConstantMultiplier, Weight, WeightToFeeCoefficient,
 		WeightToFeeCoefficients, WeightToFeePolynomial,
 	},
-	PalletId,
+	PalletId, 
+	RuntimeDebug,
 };
 use frame_system::{
 	limits::{BlockLength, BlockWeights},
@@ -178,7 +180,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	impl_name: create_runtime_str!("totem-parachain"),
 	authoring_version: 1,
 	spec_version: 4,
-	impl_version: 4,
+	impl_version: 5,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
@@ -438,6 +440,93 @@ impl pallet_multisig::Config for Runtime {
 }
 
 parameter_types! {
+	// One storage item; key size 32, value size 8; .
+	pub const ProxyDepositBase: Balance = deposit(1, 8);
+	// Additional storage item size of 33 bytes.
+	pub const ProxyDepositFactor: Balance = deposit(0, 33);
+	pub const AnnouncementDepositBase: Balance = deposit(1, 8);
+	pub const AnnouncementDepositFactor: Balance = deposit(0, 66);
+}
+
+/// The type used to represent the kinds of proxying allowed.
+#[derive(
+	Copy,
+	Clone,
+	Eq,
+	PartialEq,
+	Ord,
+	PartialOrd,
+	Encode,
+	Decode,
+	RuntimeDebug,
+	MaxEncodedLen,
+	scale_info::TypeInfo,
+)]
+pub enum ProxyType {
+	Any,
+	NonTransfer,
+	// Governance,
+	// Staking,
+}
+impl Default for ProxyType {
+	fn default() -> Self {
+		Self::Any
+	}
+}
+impl InstanceFilter<RuntimeCall> for ProxyType {
+	fn filter(&self, c: &RuntimeCall) -> bool {
+		match self {
+			ProxyType::Any => true,
+			ProxyType::NonTransfer => !matches!(
+				c,
+				RuntimeCall::Balances(..) |
+					// RuntimeCall::Assets(..) |
+					// RuntimeCall::Uniques(..) |
+					// RuntimeCall::Nfts(..) |
+					// RuntimeCall::Vesting(pallet_vesting::Call::vested_transfer { .. }) |
+					RuntimeCall::Indices(pallet_indices::Call::transfer { .. })
+			),
+			// ProxyType::Governance => matches!(
+			// 	c,
+			// 	RuntimeCall::Democracy(..) |
+			// 		RuntimeCall::Council(..) |
+			// 		RuntimeCall::Society(..) |
+			// 		RuntimeCall::TechnicalCommittee(..) |
+			// 		RuntimeCall::Elections(..) |
+			// 		RuntimeCall::Treasury(..)
+			// ),
+			// ProxyType::Staking => {
+			// 	matches!(c, RuntimeCall::Staking(..) | RuntimeCall::FastUnstake(..))
+			// },
+		}
+	}
+	fn is_superset(&self, o: &Self) -> bool {
+		match (self, o) {
+			(x, y) if x == y => true,
+			(ProxyType::Any, _) => true,
+			(_, ProxyType::Any) => false,
+			(ProxyType::NonTransfer, _) => true,
+			// _ => false,
+		}
+	}
+}
+
+impl pallet_proxy::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+	type RuntimeCall = RuntimeCall;
+	type Currency = pallet_balances_totem::Pallet<Self>;
+	type ProxyType = ProxyType;
+	type ProxyDepositBase = ProxyDepositBase;
+	type ProxyDepositFactor = ProxyDepositFactor;
+	type MaxProxies = ConstU32<32>;
+	type WeightInfo = pallet_proxy::weights::SubstrateWeight<Runtime>;
+	type MaxPending = ConstU32<32>;
+	type CallHasher = BlakeTwo256;
+	type AnnouncementDepositBase = AnnouncementDepositBase;
+	type AnnouncementDepositFactor = AnnouncementDepositFactor;
+}
+
+parameter_types! {
 	pub const ReservedXcmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 	pub const ReservedDmpWeight: Weight = MAXIMUM_BLOCK_WEIGHT.saturating_div(4);
 }
@@ -557,9 +646,10 @@ construct_runtime!(
 		Indices: pallet_indices::{Pallet, Call, Storage, Event<T>} = 5,
 		Utility: pallet_utility = 6,
 		Multisig: pallet_multisig::{Pallet, Call, Storage, Event<T>} = 7,
-		// Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 8,
+		Proxy: pallet_proxy::{Pallet, Call, Storage, Event<T>} = 8,
+		// Vesting: pallet_vesting::{Pallet, Call, Storage, Event<T>, Config<T>} = 9,
 
-		// Monetary stuff.
+		// Monetary stuff. // DO NOT CHANGE THE SEQUENCE NUMBER OF THESE	
 		Balances: pallet_balances_totem::{Pallet, Call, Storage, Config<T>, Event<T>} = 10,
 		TransactionPayment: pallet_transaction_payment::{Pallet, Storage, Event<T>} = 11,
 
@@ -581,7 +671,8 @@ construct_runtime!(
 		// TemplatePallet: pallet_template::{Pallet, Call, Storage, Event<T>}  = 40,
 
 		// Totem
-		Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
+		// Accounting: pallet_accounting::{Pallet, Storage, Event<T>, Config<T>} = 40,
+		Accounting: pallet_accounting::{Pallet, Storage, Config<T>} = 40,
 		// Archive: pallet_archive::{Pallet, Call, Storage, Event<T>} = 41,
 		// Bonsai: pallet_bonsai::{Pallet, Call, Storage, Event<T>} = 42,
 		// Escrow: pallet_escrow::{Pallet, Call, Storage, Event<T>} = 43,
