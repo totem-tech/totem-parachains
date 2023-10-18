@@ -60,7 +60,7 @@ use sp_runtime::{
 		InvalidTransaction, TransactionPriority, TransactionValidity, TransactionValidityError,
 		ValidTransaction,
 	},
-	FixedPointNumber, FixedPointOperand, FixedU128, Perquintill, RuntimeDebug,
+	FixedPointNumber, FixedPointOperand, FixedU128, RuntimeDebug,
 };
 use sp_std::prelude::*;
 

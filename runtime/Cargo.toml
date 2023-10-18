@@ -1,6 +1,6 @@
 [package]
 name = "totem-parachain-runtime"
-version = "1.4.4"
+version = "1.4.5"
 authors = ['Totem Accounting <support@totemaccounting.com>']
 description = 'Totem Parachain Runtime'
 license = 'GNU'
@@ -58,7 +58,7 @@ pallet-indices = {git = "https://github.com/paritytech/substrate", default-featu
 pallet-randomness-collective-flip = { git = "https://github.com/paritytech/substrate", default-features = false , branch = "polkadot-v0.9.36" }
 pallet-utility = {git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36"}
 pallet-multisig = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
-# pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
+pallet-proxy = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 # Vesting may be added in future
 # pallet-vesting = { git = "https://github.com/paritytech/substrate", default-features = false, branch = "polkadot-v0.9.36" }
 

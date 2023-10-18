@@ -215,7 +215,7 @@ mod pallet {
 	#[pallet::config]
 	pub trait Config: frame_system::Config {
 		// type Event: From<Event<Self>> + IsType<<Self as frame_system::Config>::Event>;
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		// type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
 		type AccountingConverter: TryConvert<CurrencyBalanceOf<Self>, LedgerBalance>
 			+ Convert<[u8; 32], Self::AccountId>;
@@ -251,11 +251,12 @@ mod pallet {
 	//     }
 	// }
 
-	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {
-		LegderUpdate(<T as frame_system::Config>::AccountId, Ledger, LedgerBalance, PostingIndex),
-	}
+	// Temporarily removed until events are re-added
+	// #[pallet::event]
+	// #[pallet::generate_deposit(pub(super) fn deposit_event)]
+	// pub enum Event<T: Config> {
+	// 	LegderUpdate(<T as frame_system::Config>::AccountId, Ledger, LedgerBalance, PostingIndex),
+	// }
 
 	impl<T: Config> Pallet<T> {
 		/// Basic posting function (warning! can cause imbalance if not called with corresponding debit or credit entries)

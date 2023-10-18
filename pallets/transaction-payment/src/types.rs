@@ -46,13 +46,13 @@ pub struct InclusionFee<Balance> {
 	pub adjusted_weight_fee: Balance,
 }
 
-// TODO Gives a compiler warning in Totem
 impl<Balance: AtLeast32BitUnsigned + Copy> InclusionFee<Balance> {
 	/// Returns the total of inclusion fee.
 	///
 	/// ```ignore
 	/// inclusion_fee = base_fee + len_fee + adjusted_weight_fee
 	/// ```
+	#[allow(dead_code)]
 	pub fn inclusion_fee(&self) -> Balance {
 		self.base_fee
 			.saturating_add(self.len_fee)
@@ -75,13 +75,13 @@ pub struct FeeDetails<Balance> {
 	pub tip: Balance,
 }
 
-// TODO Gives a compiler warning in Totem
 impl<Balance: AtLeast32BitUnsigned + Copy> FeeDetails<Balance> {
 	/// Returns the final fee.
 	///
 	/// ```ignore
 	/// final_fee = inclusion_fee + tip;
 	/// ```
+	#[allow(dead_code)]
 	pub fn final_fee(&self) -> Balance {
 		self.inclusion_fee
 			.as_ref()
