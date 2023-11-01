@@ -1,48 +1,55 @@
 mod permitted_assets;
 pub use permitted_assets::{Tickers, *};
-use crate::LedgerBalance;
 use frame_support::{
-	pallet_prelude::*,
 	dispatch::{
 		TypeInfo
 	},
+	codec::{
+		Encode,
+		Decode,
+		MaxEncodedLen,
+	},
 };
-// Used for converting floats 1.08 to 1_080_000_000_000 for correct storage as a LedgerBalance.
-// The front end will apply 12 decimals when reading to return the value to 1.08
-pub const STORAGE_MULTIPLIER: LedgerBalance = 1_000_000_000_000;
+
+// This replaces STORAGE_MULTIPLIER because multiplying large floats causes overflow issues. This can be chained to avoid overflows.
+// e.g. CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64
+pub const CONVERSION_FACTOR_F64: f64 = 1_000_000_000.0;
 
 /// Holds the details for each asset for storage
-#[derive(MaxEncodedLen, Clone, Decode, Encode, TypeInfo, Debug, PartialEq)]
-#[scale_info(skip_type_params(SymbolMaxChars))]
+#[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
+#[scale_info(capture_docs = "always")]
 pub struct TickerDetails {
 	/// The symbol of the asset
 	pub symbol: Tickers,
 	/// The total issuance of the asset converted
-	pub issuance: LedgerBalance,
+	pub issuance: u64,
 	/// The price of the asset in base currency (e.g. USD, but later TODO can be any asset)
-	pub price: LedgerBalance,
+	pub price: u64,
 	/// weighting_per_asset converted
-	pub weighting_per_asset: LedgerBalance,
+	pub weighting_per_asset: u64,
 	/// weight_adjusted_price in unit of account
-	pub weight_adjusted_price: LedgerBalance,
+	pub weight_adjusted_price: u64,
 	/// uoa_per_asset converted
-	pub uoa_per_asset: LedgerBalance,
+	pub uoa_per_asset: u64,
+	/// display decimals (not to used for direct conversion)
+	pub display_decimals: u8,
 }
 
 /// Holds the details for each asset for processing
-#[derive(Clone, Decode, Encode, Debug, PartialEq)]
-pub struct TickerData<T> {
-	/// The symbol of the asset
-	pub symbol: Tickers,
-	/// The total issuance of the asset
-	pub issuance: u128,
-	pub inverse_issuance: Option<T>,
-	/// The price of the asset in base currency (e.g. USD, but later TODO can be any asset)
-	pub price: u128,
-	/// weighting_per_asset = inverse_issuance / sum_total_inverse_issuances
-	pub weighting_per_asset: Option<T>,
-	/// weight_adjusted_price = weighting_per_asset * price_in_base_asset
-	pub weight_adjusted_price: Option<T>,
-	/// uoa_per_asset = price_in_base_asset / (100_000 * unit_of_account)
-	pub uoa_per_asset: Option<T>,
+#[derive(Debug, Encode, Decode, Copy, Clone, PartialEq)]
+pub struct TickerData {
+/// The symbol of the asset
+pub st_symbol: Tickers,
+/// The decimals that should be displayed (smallest available monetary unit)
+pub st_display_decimals: u8,
+/// The total issuance of the asset
+pub st_issuance: u64,
+/// Price for processing the basket	
+pub price: f64,
+pub weighting: f64,
+pub st_integer_weighting: u64,
+pub weight_adjusted_price: f64,
+pub st_integer_weight_adjusted_price: u64,
+pub unit_of_account: f64,
+pub st_integer_unit_of_account: u64,
 }

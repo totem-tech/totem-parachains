@@ -102,7 +102,7 @@ impl pallet_balances_totem::Config for Test {
 }
 
 parameter_types! {
-	pub const WhitelistDeposit: u128 = 0;
+	pub const WhitelistDeposit: u128 = 1;
 	pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
 }
 
@@ -110,8 +110,7 @@ impl pallet_unit_of_account::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type Currency = pallet_balances_totem::Pallet<Test>;
 	type MaxWhitelistedAccounts = ConstU32<2>;
-	type MaxTickersInBasket = ConstU32<3>;
-	type MaxTickersInput = ConstU32<100>;
+	type TickersLimit = ConstU32<310>;
 	type AccountBytes = AccountBytes;
 	type WhitelistDeposit = WhitelistDeposit;
 	type UnitOfAccountConverter = Converter;

@@ -47,9 +47,8 @@
 //! * Remove whitelisted account
 //! * Add new asset to the basket
 //! * Remove asset from the basket
-//! * updating the price of up to 100 assets in the basket
-//! * updating the issuance up to 100 assets in the basket
-//! * jointly updating all assets and prices
+//! * updating the price of a single in the basket
+//! * updating the issuance a single in the basket
 //!
 //! The supported dispatchable functions are documented in the [`Call`] enum.
 //!
@@ -69,93 +68,59 @@
 
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
-mod benchmarking;
-#[cfg(test)]
-mod mock;
-#[cfg(test)]
-mod tests;
+// mod benchmarking;
+// #[cfg(test)]
+// mod mock;
+// #[cfg(test)]
+// mod tests;
+
 pub mod weights;
 
-use frame_support::{
-	dispatch::DispatchResultWithPostInfo,
-	traits::{
-		Get,
-		Currency,
-		// ConstU32,
-		ExistenceRequirement::{
-			AllowDeath,
-		},
-	},
-	BoundedVec,
-	sp_runtime::{
-		DispatchError,
-		traits::{
-			Convert,
-			UniqueSaturatedInto,
-			BadOrigin,
-		},
-	}
-};
-use sp_std::{
-	convert::{TryInto},
-	prelude::*,
-};
-use totem_primitives::{
-	LedgerBalance,
-	unit_of_account::{
-		TickerDetails,
-		TickerData,
-		Tickers
-	},
-};
-
 pub use pallet::*;
-pub use weights::WeightInfo;
 
 #[frame_support::pallet]
-pub mod pallet {
-	use super::*;
-	use frame_support::pallet_prelude::*;
+mod pallet {
+
+	use frame_support::{
+		ensure,
+		pallet_prelude::*,
+		dispatch::{
+			result::{
+				Result
+			}, 
+		},
+		traits::{
+			Get,
+			Currency,
+			ExistenceRequirement::{
+				AllowDeath,
+			},
+		},
+		sp_runtime::{
+			DispatchError,
+			traits::{
+				Convert,
+				BadOrigin,
+				UniqueSaturatedInto,
+			},
+		},
+	};
 	use frame_system::pallet_prelude::*;
-	use totem_primitives::unit_of_account::Tickers;
+    use sp_std::prelude::*;
+	use sp_std::vec::Vec;
 
-	#[pallet::config]
-	/// The module configuration trait.
-	pub trait Config: frame_system::Config {
-		/// The overarching event type.
-		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-		
-		/// For transferring balances
-		type Currency: Currency<Self::AccountId>;
+	// pub use weights::WeightInfo;
+	pub use crate::weights::WeightInfo;
 
-		/// The max length of a whitelisted account Initial 50
-		#[pallet::constant]
-		type MaxWhitelistedAccounts: Get<u32>;
+	use totem_primitives::{
+		unit_of_account::{
+			TickerDetails,
+			TickerData,
+			Tickers,
+			CONVERSION_FACTOR_F64,
+		},
+	};
 
-		/// The max number of assets allowed in the basket
-		#[pallet::constant]
-		type MaxTickersInBasket: Get<u32>;
-
-		/// The max number of assets allowed to be updated in one extrinsic
-		#[pallet::constant]
-		type MaxTickersInput: Get<u32>;
-
-		/// The whitelisting deposit ammount
-		#[pallet::constant]
-		type WhitelistDeposit: Get<u128>;
-
-		/// Weightinfo for pallet
-		type WeightInfo: WeightInfo;
-
-		#[pallet::constant]
-		type AccountBytes: Get<[u8; 32]>;
-
-		// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
-		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId> 
-			+ Convert<f64, LedgerBalance>;
-	}
-
-	/// The current storage version.
 	const STORAGE_VERSION: frame_support::traits::StorageVersion =
 	frame_support::traits::StorageVersion::new(1);
 
@@ -164,14 +129,12 @@ pub mod pallet {
 	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T>(_);
 
-
 	/// The list of whitelisted accounts that can update the basket of assets
 	#[pallet::storage]
 	#[pallet::getter(fn whitelisted_accounts)]
 	pub type WhitelistedAccounts<T: Config> = StorageMap<
 	_,
-	Blake2_128Concat,
-	T::AccountId,
+	Blake2_128Concat, T::AccountId,
 	Option<()>,
 	ValueQuery
 	>;
@@ -186,35 +149,24 @@ pub mod pallet {
 	ValueQuery
 	>;
 
-	/// Holds an array of all assets in the basket and their details
-	/// Reading the storage will return the entire array
+	/// Always contains an updated list of Tickers and their details at any point in time.
+	/// This means that state history will contain previous values of the basket.
 	#[pallet::storage]
-	#[pallet::getter(fn asset_basket)]
-	pub type AssetBasket<T: Config> = StorageValue<
+	#[pallet::getter(fn basket)]
+	pub type Basket<T: Config> = StorageValue<
 	_,
-	BoundedVec<TickerDetails, T::MaxTickersInBasket>,
-	ValueQuery,
-	>;
-
-	/// Holds an array of all assets by symbol
-	/// Used to quickly determine if an asset is in the basket
-	/// without having to read the asset details
-	#[pallet::storage]
-	#[pallet::getter(fn asset_symbol)]
-	pub type AssetTickerSymbol<T: Config> = StorageValue<
-	_,
-	BoundedVec<Tickers, T::MaxTickersInBasket>,
-	ValueQuery,
+	Option<BoundedVec<TickerDetails, T::TickersLimit>>,
+	ValueQuery
 	>;
 
 	/// The calculated Nominal Effective Exchange Rate which is
-	/// also known as the Unit of Account
-	/// should vary with price changes, but should remain historically stable
+	/// also known as the Financial Index from which the unit of account for each currency is calculated
+	/// should vary little with price changes, and should remain historically stable relative to all currencies
 	#[pallet::storage]
-	#[pallet::getter(fn unit_of_account)]
-	pub type UnitOfAccount<T: Config> = StorageValue<
+	#[pallet::getter(fn financial_index)]
+	pub type FinancialIndex<T: Config> = StorageValue<
 	_,
-	LedgerBalance,
+	u64,
 	ValueQuery
 	>;
 
@@ -224,7 +176,7 @@ pub mod pallet {
 	#[pallet::getter(fn total_inverse_issuance)]
 	pub type TotalInverseIssuance<T: Config> = StorageValue<
 	_,
-	LedgerBalance,
+	u64,
 	ValueQuery
 	>;
 
@@ -233,31 +185,120 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn deposit_account)]
 	pub type DepositAccount<T: Config> = StorageValue<
-		_,
-		T::AccountId,
-		OptionQuery
+	_,
+	T::AccountId,
+	OptionQuery
 	>;
-
+	
+	#[pallet::config]
+	/// The module configuration trait.
+	pub trait Config: frame_system::Config {
+		/// The overarching event type.
+		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+		
+		/// For transferring balances
+		type Currency: Currency<Self::AccountId>;
+		
+		/// The max length of a whitelisted account Initial 50
+		#[pallet::constant]
+		type MaxWhitelistedAccounts: Get<u32>;
+		
+		/// The max number of assets allowed to be updated in one extrinsic
+		#[pallet::constant]
+		type TickersLimit: Get<u32>;
+		
+		/// The whitelisting deposit ammount
+		#[pallet::constant]
+		type WhitelistDeposit: Get<u128>;
+		
+		/// used to convert bytes to address format
+		#[pallet::constant]
+		type AccountBytes: Get<[u8; 32]>;
+		
+		/// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
+		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId>; 
+		
+		/// Weightinfo for pallet
+		type WeightInfo: WeightInfo;
+	}
+		
+	#[pallet::event]
+	#[pallet::generate_deposit(pub(super) fn deposit_event)]
+	pub enum Event<T: Config> {
+		/// Account Whitelisted
+		AccountWhitelisted(T::AccountId),
+		/// Account removed from whitelisted accounts
+		AccountRemoved(T::AccountId),
+		/// Asset added to the basket
+		AssetAddedToBasket(Tickers),
+		/// Asset removed from the basket
+		AssetRemoved(Tickers),
+		/// Asset price updated in the basket
+		AssetPriceUpdated(Tickers),
+		/// Asset issuance updated in the basket
+		AssetIssuanceUpdated(Tickers),
+	}
+	
+	#[pallet::error]
+	pub enum Error<T> {
+		/// Whitelisted account out of bounds
+		MaxWhitelistedAccountOutOfBounds,
+		/// Already Whitelisted account
+		AlreadyWhitelistedAccount,
+		/// Unknown whitelisted account
+		UnknownWhitelistedAccount,
+		/// Not a whitelisted account
+		NotWhitelistedAccount,
+		/// Invalid Issuance Value
+		InvalidIssuanceValue,
+		/// Invalid Price Value
+		InvalidPriceValue,
+		/// Invalid Account To Whitelist
+		InvalidAccountToWhitelist,
+		/// Problem computing the inverse issuance
+		ErrorInverseIssuance,
+		/// Problem computing weights
+		ErrorComputingWeights,
+		/// Problem applying weights to prices
+		ErrorApplyingWeights,
+		/// Problem computing the financial inex
+		ErrorFinancialIndex,
+		/// Problem computing the Unit of Account
+		ErrorComputingUoA,
+		/// Problem converting the Intermediate basket
+		ErrorConvertingBasket,
+		/// Error gettting the basket from storage
+		ErrorGettingBasket,
+		/// Conversion Overflow error
+		ConversionOverflow,
+		/// Error updating storage
+		ErrorUpdatingStorage,
+		/// Error removing asset
+		ErrorRemovingAsset,
+		/// Error intermediate basket is empty
+		EmptyIntermediateBasket,
+		/// Conversion error to Bounded Vec
+		VecConversion,
+	}
+		
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		/// Whitelist an account.
-		/// A white-listed account is able to update the price or issuance quantity in the basket.
-		/// There are a limited number of accounts that can be added to the whitelist. Current limit is 50 accounts set as a parameter.
-		/// A white-listed account must pay a security deposit of to be added to the whitelist. This can be found in metadata.
-		/// Security deposit will be returned when the account is removed from the whitelist.
+
+		/// Whitelists an account, allowing it to be used to provide updated values to the basket
+		/// Requires a locked security deposit of 1000 KPX to be whitelisted
 		///
 		/// Parameters:
-		/// - `origin`: Any signed origin. This is also the account adding itself to the whitelist.
-		#[pallet::weight(T::WeightInfo::whitelist_account())]
+		/// - `origin`: The account to be whitelisted
 		#[pallet::call_index(0)]
+		#[pallet::weight(T::WeightInfo::whitelist_account())]
 		pub fn whitelist_account(
 			origin: OriginFor<T>,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
 			let who = ensure_signed(origin)?;
-
+			
 			// Check that the number of whitelisted accounts has not already reached the maximum
 			let mut counter = Self::whitelisted_accounts_count();
 			if counter >= T::MaxWhitelistedAccounts::get() {
@@ -267,7 +308,7 @@ pub mod pallet {
 					Some(()) => return Err(Error::<T>::AlreadyWhitelistedAccount.into()),
 					None => {
 						let deposit_account = Self::get_deposit_account();
-
+						
 						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
 							&who,
@@ -279,14 +320,14 @@ pub mod pallet {
 				}
 				counter += 1;
 			}
-
+			
 			WhitelistedAccountsCount::<T>::set(counter);
 			WhitelistedAccounts::<T>::set(who.clone(), Some(()));
-
+			
 			Self::deposit_event(Event::AccountWhitelisted(who));
 			Ok(().into())
 		}
-
+		
 		/// Removes an account that is already whitelisted
 		/// This can only be carried out by sudo or the whitelisted account itself
 		/// When the account is removed it also releases the lock whitelisting security deposit
@@ -294,12 +335,12 @@ pub mod pallet {
 		///
 		/// Parameters:
 		/// - `origin`: A whitelisted account
-		#[pallet::weight(T::WeightInfo::remove_account())]
 		#[pallet::call_index(1)]
+		#[pallet::weight(T::WeightInfo::remove_account())]
 		pub fn remove_account(
 			origin: OriginFor<T>,
 			account: Option<T::AccountId>,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
@@ -315,7 +356,7 @@ pub mod pallet {
 				match Self::whitelisted_accounts(account.clone().unwrap()) {
 					Some(()) => {
 						let deposit_account =  Self::get_deposit_account();
-
+						
 						// Transfer 1000 KPX to the account. If this process fails, then return error.
 						T::Currency::transfer(
 							&deposit_account,
@@ -334,7 +375,7 @@ pub mod pallet {
 				match Self::whitelisted_accounts(who.clone()) {
 					Some(()) => {
 						let deposit_account =  Self::get_deposit_account();
-
+						
 						// Transfer 1000 KPX to the account. If this process fails, then return error.
 						T::Currency::transfer(
 							&deposit_account,
@@ -349,578 +390,395 @@ pub mod pallet {
 			let mut counter = Self::whitelisted_accounts_count();
 			// decrease the whitelist counter
 			counter -= 1;
-
+			
 			WhitelistedAccountsCount::<T>::set(counter);
 			// Then remove the account from the whitelist
 			WhitelistedAccounts::<T>::remove(account_to_whitelist.clone());
-
+			
 			Self::deposit_event(Event::AccountRemoved(account_to_whitelist));
-
+			
 			Ok(().into())
 		}
-
-		/// Adds a single new asset to the basket of assets
+		
+		/// Adds a new asset to the basket
+		/// Can only be performed by a whitelisted caller
+		/// The asset must not already exist in the basket
+		/// The issuance and price values must not be zero
 		///
 		/// Parameters:
-		/// - `origin`: A whitelisted callet origin
-		/// - `symbol:` The asset symbol
-		/// - `issuance`: The total asset issuance
-		/// - `price`: The price in the base currency for the asset
-		/// - `threshold_price`: The minimum and maximum price that can be attained for an asset
-		#[pallet::weight(T::WeightInfo::add_new_asset())]
+		/// - `origin`: A whitelisted caller origin
+		/// - `symbol`: The currency symbol of the asset to add
+		/// - `issuance`: The issuance value of the asset
+		/// - `price`: The price value of the asset. Must be converted to u64 by multiplying by the conversion factor squared
+		/// - `display_decimals`: The number of decimal places to display for the asset
 		#[pallet::call_index(2)]
+		#[pallet::weight(T::WeightInfo::add_new_asset())]
 		pub fn add_new_asset(
 			origin: OriginFor<T>,
 			symbol: Tickers,
-			issuance: u128,
-			price: u128,
-			// price_threshold: (u128, u128),
-			// issuance_threshold: (u128, u128)
-		) -> DispatchResultWithPostInfo {
+			issuance: u64,
+			price: u64,
+			display_decimals: u8,
+		) -> DispatchResult {
 			// ------------- Checks ------------- //
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
 			// check that the origin is signed otherwise the extrinsic can be spammed
 			let who = ensure_signed(origin)?;
-
 			// check that the caller is whitelisted
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
-
-			// Ensure that the total number of assets is not greater than the maximum allowed
-			let mut assets = AssetTickerSymbol::<T>::get();
-			assets.try_push(symbol.clone()).map_err(|_| Error::<T>::TickerCannotBeAddedToBasket)?;
-
-			// Check that the symbol is not already in use.
-			ensure!(!Self::asset_in_array(&symbol), Error::<T>::SymbolAlreadyExists);
-
 			// check that the issuance is not zero
-			ensure!(issuance != u128::MIN, Error::<T>::InvalidIssuanceValue);
-
+			ensure!(issuance != u64::MIN, Error::<T>::InvalidIssuanceValue);
 			// check that the price is not zero
-			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
-
-			// check that the price threshold is not zero
-			// ensure!(price_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
-
-			// ensure!(price_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
-
-			// ensure!(price >= price_threshold.0, Error::<T>::PriceBelowMinimumThresholdRange);
-
-			// ensure!(price <= price_threshold.1, Error::<T>::PriceAboveMinimumThresholdRange);
-
-			// check that the price threshold is not zero
-			// ensure!(issuance_threshold.0 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
-
-			// ensure!(issuance_threshold.1 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
-
-			// ensure!(issuance >= issuance_threshold.0, Error::<T>::IssuanceBelowMinimumThresholdRange);
-
-			// ensure!(issuance <= issuance_threshold.1, Error::<T>::IssuanceAboveMinimumThresholdRange);
-
-			// --------------- Processing ---------------- //
-			// Create an intermediate basket including new asset
-			let mut intermediate_basket = Self::combined_intermediate_basket(
-				&symbol,
-				&issuance,
-				&price,
-				// &price_threshold,
-				// &issuance_threshold
-			);
-
-			// get the total inverse issuance (f64)
-			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
-
-			// Partially recalculate the basket to get weighting_per_asset and weight_adjusted_price
-			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
-
-			// from the updated basket calculate the unit of account
-			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
-
-			// final recalculations of the basket
-			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
-
-			// Convert the new basket values to LedgerBalance types
-			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-
-			// -------------- Update Storage ---------------- //
-			// Add the symbol to the array of symbols in Storage
-			AssetTickerSymbol::<T>::set(assets);
-
-			// Update the Unit of Account Value in Storage
-			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
-
-			// Update Total Inverse Issuance in Storage
-			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
-
-			// Update the basket of assets in Storage
-			AssetBasket::<T>::set(new_basket);
-
+			ensure!(price != u64::MIN, Error::<T>::InvalidPriceValue);			
+			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
+			// Add the new asset to the intermediary vec
+			intermediate_basket.push(TickerData {
+				st_symbol: symbol.clone(), // also used in event
+				st_display_decimals: display_decimals,
+				st_issuance: issuance,
+				price: Self::convert_int_to_float(price),
+				weighting: 0.0,
+				st_integer_weighting: 0,
+				weight_adjusted_price: 0.0,
+				st_integer_weight_adjusted_price: 0,
+				unit_of_account: 0.0,
+				st_integer_unit_of_account: 0,
+			});
+			// use process and update storage using the intermediate_basket
+			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
+			
 			Self::deposit_event(Event::AssetAddedToBasket(symbol));
-
+			
 			Ok(().into())
 		}
-
+		
 		/// Removes asset from the basket
 		/// Can only be performed by sudo because it does not remove the history of the asset
 		/// nor does it guarantee that it will not be added back again in the future
-		/// It should only be done in the exceptional cases where the storage limit is met and
-		/// the community decides that it does not wish to extend the storage limit
+		/// It should only be done in the exceptional cases
 		///
 		/// Parameters:
 		/// - `origin`: A sudo origin
 		/// - `symbol:` The currency symbol to remove
-		#[pallet::weight(T::WeightInfo::remove_asset())]
 		#[pallet::call_index(3)]
+		#[pallet::weight(T::WeightInfo::remove_asset())]
 		pub fn remove_asset(
 			origin: OriginFor<T>,
 			symbol: Tickers,
-		) -> DispatchResultWithPostInfo {
+		) -> DispatchResult {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
 			ensure_root(origin)?;
-
-			let assets = Self::find_and_remove_asset(&symbol)?;
-
-			let mut intermediate_basket = Self::reduced_intermediate_basket(
-				&symbol,
-			);
-
-			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
-			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
-			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
-			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
-			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-
-			AssetTickerSymbol::<T>::set(assets);
-			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
-			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
-			AssetBasket::<T>::set(new_basket);
-
+			
+			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
+			// Remove the asset from the intermediate basket
+			intermediate_basket.retain(|x| x.st_symbol != symbol);
+			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
+			
 			Self::deposit_event(Event::AssetRemoved(symbol));
-
+			
 			Ok(().into())
 		}
-
+		
 		/// Updates an asset's price in the basket
-		/// The price value must be within the `price_threshold` values
+		/// The price value must not be zero
 		///
 		/// Parameters:
-		/// - `origin`: A whitelisted call	er origin
-		/// - `symbol:` The asset symbol to remove
-		/// - `price:` The asset price
-		#[pallet::weight(T::WeightInfo::update_asset_price())]
+		/// - `origin`: A whitelisted caller origin
+		/// - `symbol:` The asset symbol to update
+		/// - `price:` The new price of the asset - this must be converted to u64 by multiplying by the conversion factor squared
 		#[pallet::call_index(4)]
+		#[pallet::weight(T::WeightInfo::update_asset_price())]
 		pub fn update_asset_price(
 			origin: OriginFor<T>,
 			symbol: Tickers,
-			price: u128,
-		) -> DispatchResultWithPostInfo {
+			price: u64,
+		) -> DispatchResult {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			ensure_signed(origin)?;
-
-			ensure!(price != u128::MIN, Error::<T>::InvalidPriceValue);
-
-			// let asset_details = Self::find_and_return_asset(&symbol)?;
-
-			// ensure!(asset_details.price_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdPriceValue);
-			// ensure!(asset_details.price_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdPriceValue);
-
-			// ensure!(price >= asset_details.price_threshold.0 as u128, Error::<T>::PriceBelowMinimumThresholdRange);
-			// ensure!(price <= asset_details.price_threshold.1 as u128, Error::<T>::PriceAboveMinimumThresholdRange);
-
-			let mut intermediate_basket = Self::update_asset_price_in_intermediate_basket(&symbol, price);
-			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
-			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
-			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
-			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
-			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-
-			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
-			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
-			AssetBasket::<T>::set(new_basket);
-
+			// check that the origin is signed otherwise the extrinsic can be spammed
+			let who = ensure_signed(origin)?;
+			// check that the caller is whitelisted
+			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
+			// check that the price is not zero
+			ensure!(price != u64::MIN, Error::<T>::InvalidPriceValue);			
+			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
+			
+			// If the asset exists, update its price in the intermediate basket directly.
+			// The extrinsic cannot accept f64 as input so it needs to be converted.
+			for asset in &mut intermediate_basket {
+				asset.price = Self::convert_int_to_float(price);
+			}
+			
+			// use process and update storage using the intermediate_basket
+			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
+			
 			Self::deposit_event(Event::AssetPriceUpdated(symbol));
 			Ok(().into())
 		}
-
-
+		
 		/// Updates an asset's issuance in the basket
-		/// The issuance value must be within the `issuance_threshold` values
+		/// The issuance value must not be zero
 		///
 		/// Parameters:
-		/// - `origin`: A whitelisted call	er origin
-		/// - `symbol:` The asset symbol to remove
-		/// - `issuance:` The total issuance of an asset
-		#[pallet::weight(T::WeightInfo::update_asset_issuance())]
+		/// - `origin`: A whitelisted caller origin
+		/// - `symbol:` The asset symbol to update
+		/// - `issuance:` The new issuance of the asset
 		#[pallet::call_index(5)]
+		#[pallet::weight(T::WeightInfo::update_asset_issuance())]
 		pub fn update_asset_issuance(
 			origin: OriginFor<T>,
 			symbol: Tickers,
-			issuance: u128,
-		) -> DispatchResultWithPostInfo {
+			issuance: u64,
+		) -> DispatchResult {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			ensure_signed(origin)?;
-
-			ensure!(issuance != u128::MIN, Error::<T>::InvalidIssuanceValue);
-
-			// let asset_details = Self::find_and_return_asset(&symbol)?;
-
-			// ensure!(asset_details.issuance_threshold.0 as u128 != u128::MIN, Error::<T>::InvalidMinimumThresholdIssuanceValue);
-			// ensure!(asset_details.issuance_threshold.1 as u128 != u128::MIN, Error::<T>::InvalidMaximumThresholdIssuanceValue);
-
-			// ensure!(issuance >= asset_details.issuance_threshold.0 as u128, Error::<T>::IssuanceBelowMinimumThresholdRange);
-			// ensure!(issuance <= asset_details.issuance_threshold.1 as u128, Error::<T>::IssuanceAboveMinimumThresholdRange);
-
-			let mut intermediate_basket = Self::update_asset_issuance_in_intermediate_basket(&symbol, issuance);
-			let tiv = Self::get_total_inverse_issuance(&intermediate_basket);
-			Self::partial_recalculation_of_basket(&mut intermediate_basket, tiv.clone());
-			let unit_of_account = Self::calculate_unit_of_account(&intermediate_basket);
-			Self::final_recalculation_of_basket(&mut intermediate_basket, unit_of_account.clone());
-			let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket)?;
-
-			UnitOfAccount::<T>::set(Self::convert_float_to_storage(unit_of_account)?);
-			TotalInverseIssuance::<T>::set(Self::convert_float_to_storage(tiv)?);
-			AssetBasket::<T>::set(new_basket);
-
+			// check that the origin is signed otherwise the extrinsic can be spammed
+			let who = ensure_signed(origin)?;
+			// check that the caller is whitelisted
+			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
+			// check that the issuance is not zero
+			ensure!(issuance != u64::MIN, Error::<T>::InvalidIssuanceValue);		
+			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
+			
+			// If the asset exists, update its issuance in the intermediate basket directly.
+			for asset in &mut intermediate_basket {
+				if asset.st_symbol == symbol {
+					asset.st_issuance = issuance;
+					break;
+				}
+			}
+			
+			// use process and update storage using the intermediate_basket
+			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
+			
 			Self::deposit_event(Event::AssetIssuanceUpdated(symbol));
 			Ok(().into())
 		}
 	}
-
-	#[pallet::event]
-	#[pallet::generate_deposit(pub(super) fn deposit_event)]
-	pub enum Event<T: Config> {
-		/// Account Whitelisted
-		AccountWhitelisted(T::AccountId),
-		/// Account removed from whitelisted accounts
-		AccountRemoved(T::AccountId),
-		/// Asset added to the basket
-		AssetAddedToBasket(Tickers),
-		/// Asset removed from the basket
-		AssetRemoved(Tickers),
-		/// Asset price updated in the basket
-		AssetPriceUpdated(Tickers),
-		/// Asset issuance updated in the basket
-		AssetIssuanceUpdated(Tickers),
-	}
-
-	#[pallet::error]
-	pub enum Error<T> {
-		/// Whitelisted account out of bounds
-		MaxWhitelistedAccountOutOfBounds,
-		/// Already Whitelisted account
-		AlreadyWhitelistedAccount,
-		/// Unknown whitelisted account
-		UnknownWhitelistedAccount,
-		/// Not a whitelisted account
-		NotWhitelistedAccount,
-		/// Max assets exceeded
-		MaxTickersOutOfBounds,
-		/// Asset Symbol already exists
-		SymbolAlreadyExists,
-		/// Asset cannot be added to the basket
-		TickerCannotBeAddedToBasket,
-		/// Asset not found during removal
-		TickerNotFound,
-		/// Invalid Issuance Value
-		InvalidIssuanceValue,
-		/// Invalid Price Value
-		InvalidPriceValue,
-		/// Conversion from basket failed!
-		TryConvertFailed,
-		/// Invalid Account To Whitelist
-		InvalidAccountToWhitelist,
-		/// Overflow error when converting float to storage value
-		OverflowErrorConversionToStorage,
-		/// Invalid Minimum Bound threshold Price Value
-		InvalidMinimumThresholdPriceValue,
-		/// Invalid Maximum Bound threshold Price Value
-		InvalidMaximumThresholdPriceValue,
-		/// Price is below minimum threshold range
-		PriceBelowMinimumThresholdRange,
-		/// Price is above minimum threshold range
-		PriceAboveMinimumThresholdRange,
-		/// Invalid Minimum Bound threshold Issuance Value
-		InvalidMinimumThresholdIssuanceValue,
-		/// Invalid Maximum Bound threshold Issuance Value
-		InvalidMaximumThresholdIssuanceValue,
-		/// Issuance is below minimum threshold range
-		IssuanceBelowMinimumThresholdRange,
-		/// Issuance is above minimum threshold range
-		IssuanceAboveMinimumThresholdRange,
-	}
-}
-
-
-impl<T: Config> Pallet<T> {
-	fn asset_in_array(symbol: &Tickers) -> bool {
-		let asset_symbol = <AssetTickerSymbol<T>>::get();
-		match asset_symbol.iter().any(|s| s == symbol) {
-			true => true,
-			false => false,
+	
+	impl<T: Config> Pallet<T> {
+		/// Utility to convert a f64 price to a u64 price
+		fn convert_float_to_int(price: f64) -> u64 {
+			// Multiply f64 by a large float conversion factor without truncation
+			let price_float = price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
+				
+			// Round the result to the nearest integer
+			let price_u64 = price_float.round() as u64;
+			return price_u64;
 		}
-	}
-
-	fn find_and_remove_asset(
-		symbol: &Tickers,
-	) -> Result<BoundedVec<Tickers, T::MaxTickersInBasket>, DispatchError> {
-		let mut assets = AssetTickerSymbol::<T>::get();
-		match assets.iter().position(|s| s == symbol) {
-			Some(idx) => {
-				assets.remove(idx);
-				Ok(assets)
-			},
-			None => Err(Error::<T>::TickerNotFound.into())
+		
+		/// Utility to convert a u64 price to a f64 price
+		fn convert_int_to_float(price: u64) -> f64 {
+			// Divide u64 by a large float conversion factor without truncation and cast to f64
+			let price_f64 = price as f64 / CONVERSION_FACTOR_F64 / CONVERSION_FACTOR_F64 ;
+			
+			return price_f64;
 		}
-	}
 
-	// fn find_and_return_asset(
-	// 	symbol: &Assets,
-	// ) -> Result<TickerDetails, DispatchError> {
-	// 	let assets = AssetBasket::<T>::get();
-	// 	let asset = assets.iter().find(|a| a.symbol == *symbol);
+		/// Gets the deposit account from storage. This is more efficient than recalculating it every time.
+		fn get_deposit_account() -> T::AccountId {
+			DepositAccount::<T>::get().unwrap_or_else(|| {
+				let get_deposit_account = T::UnitOfAccountConverter::convert(T::AccountBytes::get());
+				DepositAccount::<T>::put(get_deposit_account.clone());
+				get_deposit_account
+			})
+		}
 
-	// 	match asset {
-	// 		Some(found_asset) => {
-	// 			Ok(found_asset.clone())
-	// 		}
-	// 		None => Err(Error::<T>::AssetNotFound.into())
-	// 	}
-	// }
-
-	fn invert_issuance(issuance: u128) -> Option<f64> {
-		let inverted_issuance = 1u128 as f64 / issuance as f64;
-		return Some(inverted_issuance)
-	}
-
-	fn get_total_inverse_issuance(basket: &Vec<TickerData<f64>>) -> f64 {
-		let total_inverse_in_asset_basket = basket
-		.iter()
-		.fold(0.0f64, |acc, asset| acc + match asset.inverse_issuance {
-			Some(iv) => iv,
-			None => 0.0f64
-		});
-		return total_inverse_in_asset_basket
-	}
-
-	fn partial_recalculation_of_basket(basket: &mut Vec<TickerData<f64>>, tiv: f64) -> &mut Vec<TickerData<f64>> {
-		for asset in &mut *basket {
-			asset.weighting_per_asset = match asset.inverse_issuance.clone() {
-				Some(i) => Some(i / tiv.clone()),
-				None => None
+		/// Utility to get the current basket from storage
+		fn get_intermediate_basket(intermediate_basket: &mut Vec<TickerData>) -> Result<(), DispatchError> {
+			// read the Basket storage into a new array
+			match Self::basket() {
+				Some(basket) => {
+					*intermediate_basket = basket.into_iter().map(|x| {
+						TickerData {
+							st_symbol: x.symbol,
+							st_display_decimals: x.display_decimals,
+							st_issuance: x.issuance,
+							price: Self::convert_int_to_float(x.price),
+							weighting: 0.0,
+							st_integer_weighting: 0,
+							weight_adjusted_price: 0.0,
+							st_integer_weight_adjusted_price: 0,
+							unit_of_account: 0.0,
+							st_integer_unit_of_account: 0,
+						}
+					}).collect::<Vec<TickerData>>();
+				},
+				None => intermediate_basket.clear(),
 			};
-			asset.weight_adjusted_price = match asset.weighting_per_asset.clone() {
-				Some(w) => Some(w * asset.price as f64),
-				None => None
-			};
+			
+			Ok(())
 		}
 
-		return basket
-	}
-
-	fn final_recalculation_of_basket(basket: &mut Vec<TickerData<f64>>, uoa: f64) -> &mut Vec<TickerData<f64>> {
-		for asset in &mut *basket {
-			asset.uoa_per_asset = match asset.weight_adjusted_price.clone() {
-				Some(u) => Some(u / uoa.clone()),
-				None => None
-			};
-		}
-
-		return basket
-	}
-
-	fn calculate_unit_of_account(basket: &Vec<TickerData<f64>>) -> f64 {
-		let unit_of_account = basket
-		.iter()
-		.fold(0.0f64, |acc, asset| acc + match asset.weight_adjusted_price {
-			Some(wap) => wap,
-			None => 0.0f64
-		});
-
-		return unit_of_account
-	}
-
-	fn conversion_of_basket_to_storage(
-		basket: Vec<TickerData<f64>>,
-	) -> Result<BoundedVec::<TickerDetails, T::MaxTickersInBasket>, DispatchError> {
-		let mut new_basket: BoundedVec::<TickerDetails, T::MaxTickersInBasket> = Default::default();
+		/// Conversion of the basket from float to integer for storage
+		fn conversion_of_basket_to_storage(
+			basket: &Vec<TickerData>,
+		) -> Result<BoundedVec<TickerDetails, T::TickersLimit>, DispatchError> {
+			let mut new_basket: Vec<TickerDetails> = Default::default();
 			for asset in basket {
 				let converted_entry = TickerDetails {
-					symbol: asset.symbol.clone(),
-					issuance: asset.issuance as LedgerBalance,
-					price: asset.price as LedgerBalance,
-					weighting_per_asset: match asset.weighting_per_asset {
-						Some(wpa) => Self::convert_float_to_storage(wpa)?,
-						None => 0 as LedgerBalance,
-					},
-					weight_adjusted_price: match asset.weight_adjusted_price {
-						Some(wap) => Self::convert_float_to_storage(wap)?,
-						None => 0 as LedgerBalance,
-					},
-					uoa_per_asset: match asset.uoa_per_asset {
-						Some(uoa) => Self::convert_float_to_storage(uoa)?,
-						None => 0 as LedgerBalance,
-					},
-					// price_threshold: (asset.price_threshold.0 as LedgerBalance, asset.price_threshold.1 as LedgerBalance),
-					// issuance_threshold: (asset.issuance_threshold.0 as LedgerBalance, asset.issuance_threshold.1 as LedgerBalance)
+					symbol: asset.st_symbol,
+					issuance: asset.st_issuance,
+					price: Self::convert_float_to_int(asset.price),
+					weighting_per_asset: asset.st_integer_weighting,
+					weight_adjusted_price: asset.st_integer_weight_adjusted_price,
+					uoa_per_asset: asset.st_integer_unit_of_account,
+					display_decimals: asset.st_display_decimals,
 				};
-				new_basket.try_push(converted_entry).map_err(|_| Error::<T>::MaxTickersOutOfBounds)?;
+				new_basket.push(converted_entry);
 			}
-
-		Ok(new_basket)
-	}
-
-	fn combined_intermediate_basket(
-		symbol: &Tickers,
-		issuance: &u128,
-		price: &u128,
-		// price_threshold: &(u128, u128),
-		// issuance_threshold: &(u128, u128)
-	) -> Vec<TickerData<f64>> {
-
-		let current_asset_basket = AssetBasket::<T>::get();
-		let mut intermediate_basket = Vec::new();
-
-		let new_entry = TickerData {
-			symbol: symbol.clone(),
-			issuance: issuance.clone(),
-			inverse_issuance: Self::invert_issuance(issuance.clone()),
-			price: price.clone(),
-			weighting_per_asset: None,
-			weight_adjusted_price: None,
-			uoa_per_asset: None,
-			// price_threshold: price_threshold.clone(),
-			// issuance_threshold: issuance_threshold.clone()
-		};
-		intermediate_basket.push(new_entry);
-
-		// Move data to new array erasing values that are to be recalculated
-		for asset in current_asset_basket {
-			let existing_entry = TickerData {
-				symbol: asset.symbol.clone(),
-				issuance: asset.issuance.clone() as u128,
-				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
-				price: asset.price as u128,
-				weighting_per_asset: None,
-				weight_adjusted_price: None,
-				uoa_per_asset: None,
-				// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-				// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
-			};
-			intermediate_basket.push(existing_entry);
+			let bounded_vec: BoundedVec<TickerDetails, T::TickersLimit> = new_basket.try_into()
+			.map_err(|_| Error::<T>::VecConversion)?;
+	
+			Ok(bounded_vec)
 		}
-		intermediate_basket
-	}
-
-	fn reduced_intermediate_basket(
-		symbol: &Tickers,
-	) -> Vec<TickerData<f64>> {
-		let current_asset_basket = AssetBasket::<T>::get();
-		let mut intermediate_basket = Vec::new();
-		// Move data to new array erasing values that are to be recalculated
-		for asset in current_asset_basket {
-			if asset.symbol == *symbol {
-				continue
-			}
-			let existing_entry = TickerData {
-				symbol: asset.symbol.clone(),
-				issuance: asset.issuance.clone() as u128,
-				inverse_issuance: Self::invert_issuance(asset.issuance as u128),
-				price: asset.price as u128,
-				weighting_per_asset: None,
-				weight_adjusted_price: None,
-				uoa_per_asset: None,
-				// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-				// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
-			};
-			intermediate_basket.push(existing_entry);
-		}
-		intermediate_basket
-	}
-
-	fn update_asset_price_in_intermediate_basket(
-		symbol: &Tickers,
-		price: u128
-	) -> Vec<TickerData<f64>> {
-		let current_asset_basket = AssetBasket::<T>::get();
-		let mut intermediate_basket = Vec::new();
-		// Move data to new array erasing values that are to be recalculated
-		for asset in current_asset_basket {
-			if asset.symbol == *symbol {
-				let updated_entry = Self::update_asset_data(&asset, price  as u128, asset.issuance as u128);
-				intermediate_basket.push(updated_entry);
+		
+		/// Computes the value of weights for every currency using the given formula.
+		fn compute_weights(intermediate_basket: &mut Vec<TickerData>, sum_inverse_issuance: f64) -> Option<()> {
+			if sum_inverse_issuance.is_finite() {
+				for ticker_data in intermediate_basket.iter_mut() {
+					let weight = (1.0 / ticker_data.st_issuance as f64) / sum_inverse_issuance;
+					
+					// Multiply f64 by a large float conversion factor without truncation
+					let weighted_float = weight * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
+					
+					// Round the result to the nearest integer
+					let integer_weighting = weighted_float.round() as u64;
+					
+					ticker_data.weighting = weight;
+					ticker_data.st_integer_weighting = integer_weighting;
+				}
+				Some(())
 			} else {
-				let existing_entry = Self::update_asset_data(&asset, asset.price  as u128, asset.issuance as u128);
-				intermediate_basket.push(existing_entry);
+				None
 			}
 		}
-		intermediate_basket
-	}
 
-	fn update_asset_issuance_in_intermediate_basket(
-		symbol: &Tickers,
-		issuance: u128
-	) -> Vec<TickerData<f64>> {
-		let current_asset_basket = AssetBasket::<T>::get();
-		let mut intermediate_basket = Vec::new();
-		// Move data to new array erasing values that are to be recalculated
-		for asset in current_asset_basket {
-			if asset.symbol == *symbol {
-				let updated_entry = Self::update_asset_data(&asset, asset.price as u128, issuance as u128);
-				intermediate_basket.push(updated_entry);
+		/// Computes the sum of the inverse of the issuance of all assets.
+		fn sum_issuances(intermediate_basket: &Vec<TickerData>) -> Option<f64> {
+			if intermediate_basket.is_empty() {
+				None
 			} else {
-				let existing_entry = Self::update_asset_data(&asset, asset.price as u128, asset.issuance as u128);
-				intermediate_basket.push(existing_entry);
+				let mut sum_inverse_issuance: f64 = 0.0;
+				for ticker_data in intermediate_basket {
+					sum_inverse_issuance += 1.0 / ticker_data.st_issuance as f64;
+				}
+				Some(sum_inverse_issuance)
+			}
+		}    
+		
+		/// Computes the sum of the units of account of all assets creating an financial index.
+		fn sum_units_creating_financial_index(intermediate_basket: &Vec<TickerData>) -> Option<f64> {
+			if intermediate_basket.is_empty() {
+				None
+			} else {
+				let mut sum_units: f64 = 0.0;
+				for ticker_data in intermediate_basket {
+					sum_units += ticker_data.weight_adjusted_price;
+				}
+				// sum_units = sum_units * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
+				Some(sum_units)
 			}
 		}
-		intermediate_basket
-	}
-
-	fn update_asset_data(
-		asset: &TickerDetails,
-		price: u128,
-		issuance: u128
-	) -> TickerData<f64> {
-		let asset_data = TickerData {
-			symbol: asset.symbol.clone(),
-			issuance,
-			inverse_issuance: Self::invert_issuance(issuance as u128),
-			price,
-			weighting_per_asset: None,
-			weight_adjusted_price: None,
-			uoa_per_asset: None,
-			// price_threshold: (asset.price_threshold.0 as u128, asset.price_threshold.1 as u128),
-			// issuance_threshold: (asset.issuance_threshold.0 as u128, asset.issuance_threshold.1 as u128)
-		};
-		asset_data
-	}
-
-	fn get_deposit_account() -> T::AccountId {
-		let deposit_account;
-		if DepositAccount::<T>::get().is_some() {
-			deposit_account = DepositAccount::<T>::get().unwrap();
-		} else {
-			deposit_account = T::UnitOfAccountConverter::convert(T::AccountBytes::get());
-			DepositAccount::<T>::put(deposit_account.clone());
+		
+		/// Applies the weights to the exchange rates of all assets to create the weight_adjusted_price per currency.
+		fn apply_weights_to_prices(intermediate_basket: &mut Vec<TickerData>) -> Option<()> {
+			if intermediate_basket.is_empty() {
+				None
+			} else {
+				
+				for ticker_data in intermediate_basket.iter_mut() {
+					let weight_adjusted_price = ticker_data.price * ticker_data.weighting;
+					
+					// Multiply f64 by a large float conversion factor without truncation
+					let weight_adjusted_price_float = weight_adjusted_price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
+					
+					// Round the result to the nearest integer
+					let integer_weight_adjusted_price = weight_adjusted_price_float.round() as u64;
+					
+					ticker_data.weight_adjusted_price = weight_adjusted_price;
+					ticker_data.st_integer_weight_adjusted_price = integer_weight_adjusted_price;
+				}
+				Some(())
+			}
 		}
-
-		deposit_account
-	}
-
-	fn convert_float_to_storage(amount: f64) -> Result<LedgerBalance, DispatchError> {
-		let converted_amount = T::UnitOfAccountConverter::convert(amount);
-
-		let max_ledger_balance= LedgerBalance::MAX;
-		if converted_amount > max_ledger_balance {
-			return Err(Error::<T>::OverflowErrorConversionToStorage.into());
+		
+		/// Creates the new unit of account per currency
+		fn compute_units_of_account(intermediate_basket: &mut Vec<TickerData>, financial_index: f64) -> Option<()> {
+			if intermediate_basket.is_empty() {
+				None
+			} else {
+				
+				for ticker_data in intermediate_basket.iter_mut() {
+					let unit_of_account = ticker_data.weight_adjusted_price / financial_index;
+					
+					// Multiply f64 by a large float conversion factor without truncation
+					let unit_of_account_float = unit_of_account * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
+					
+					// Round the result to the nearest integer
+					let integer_unit_of_account = unit_of_account_float.round() as u64;
+					
+					ticker_data.unit_of_account = unit_of_account;
+					ticker_data.st_integer_unit_of_account = integer_unit_of_account;
+				}
+				Some(())
+			}
 		}
+		
+		/// Handles processing on intermediate basket and returns financial_index: f64 and a new_basket: Vec<TickerDetails> 
+		fn update_from_intermediate(intermediate_basket: &mut Vec<TickerData>) -> Result<(), DispatchError> {
+			if intermediate_basket.is_empty() {
+				Err(Error::<T>::EmptyIntermediateBasket.into())
+			} else {
+				
+				// Get the sum of the inverse of the issuance of all assets.
+				let sum_inverse_issuance = match Self::sum_issuances(&intermediate_basket) {
+					Some(sum) => sum,
+					None => return Err(Error::<T>::ErrorInverseIssuance.into()),
+				};
+				
+				// Compute the weight of each asset.
+				if Self::compute_weights(intermediate_basket, sum_inverse_issuance.clone()).is_none() {
+					return Err(Error::<T>::ErrorComputingWeights.into());
+				}
+				
+				// Apply weights to prices.
+				if Self::apply_weights_to_prices(intermediate_basket).is_none() {
+					return Err(Error::<T>::ErrorApplyingWeights.into());
+				}
+				
+				// generate financial index.
+				let financial_index = Self::sum_units_creating_financial_index(&intermediate_basket).ok_or(Error::<T>::ErrorFinancialIndex)?;
 
-		Ok(converted_amount)
+				// Compute units of account.
+				if Self::compute_units_of_account(intermediate_basket, financial_index.clone()).is_none() {
+					return Err(Error::<T>::ErrorComputingUoA.into());
+				}
+				
+				// Convert the intermediate_basket to the format required for storage.
+				// let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket).ok_or(Error::<T>::ErrorConvertingBasket)?;
+				let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket).map_err(|_| Error::<T>::ErrorConvertingBasket)?;
+				// Update the Unit of Account Value in Storage
+				FinancialIndex::<T>::set(Self::convert_float_to_int(financial_index));
+				
+				// Update Total Inverse Issuance in Storage
+				TotalInverseIssuance::<T>::set(Self::convert_float_to_int(sum_inverse_issuance));
+				
+				// Update the basket of assets in Storage
+				Basket::<T>::set(Some(new_basket));
+				
+				Ok(())
+			}
+		}
 	}
 }
