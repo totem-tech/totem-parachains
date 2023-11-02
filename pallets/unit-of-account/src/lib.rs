@@ -324,7 +324,6 @@ mod pallet {
 						T::Currency::transfer(
 							&who,
 							&deposit_account,
-							// T::WhitelistDeposit::get().unique_saturated_into(),
 							deposit_amount,
 							KeepAlive,
 						)?;

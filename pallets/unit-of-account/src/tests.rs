@@ -19,75 +19,57 @@ fn should_add_a_whitelisted_account_successfully() {
 }
 
 #[test]
-fn whitelisted_account_should_fail_insufficient_balace() {
+fn whitelisted_account_add_should_fail_insufficient_balace() {
 	new_test_ext().execute_with(|| {
 		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 100, 0));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-		// assert_ok!(res);
 		assert_err!(
-			res,
-			DispatchError::Module(ModuleError {
-				index: 3,
-				error: [0, 0, 0, 0],
-				message: Some("MaxWhitelistedAccountOutOfBounds"),
-			})
+			PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)),
+			Error::<Test>::InsufficientBalance,
+		);
+		assert_eq!(Balances::free_balance(1), 100);
 	});
 }
-
 
 #[test]
 fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-		assert_ok!(res);
-
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(2));
-		assert_ok!(res);
-
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(3));
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 2, 2000, 0));
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 3, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(2)));
 		assert_err!(
-			res,
-			DispatchError::Module(ModuleError {
-				index: 3,
-				error: [0, 0, 0, 0],
-				message: Some("MaxWhitelistedAccountOutOfBounds"),
-			})
+			PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(3)),
+			Error::<Test>::MaxWhitelistedAccounts,
 		);
+		assert_eq!(Balances::free_balance(1), 1000);
+		assert_eq!(Balances::free_balance(2), 1000);
+		assert_eq!(Balances::free_balance(3), 2000);
 	});
 }
 
 #[test]
 fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-		assert_ok!(res);
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 3000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 		assert_err!(
-			res,
-			DispatchError::Module(ModuleError {
-				index: 3,
-				error: [1, 0, 0, 0],
-				message: Some("AlreadyWhitelistedAccount"),
-			})
+			PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)),
+			Error::<Test>::MaxWhitelistedAccounts,
 		);
+		assert_eq!(Balances::free_balance(1), 2000);
 	});
 }
 
 #[test]
 fn should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-		assert_ok!(res);
-
-		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None);
-		assert_ok!(res);
-
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_eq!(Balances::free_balance(1), 1000);
+		assert_ok!(PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1)));
+		assert_eq!(Balances::free_balance(1), 2000);
 		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
 	});
 }
@@ -95,14 +77,11 @@ fn should_remove_a_whitelisted_account_successfully() {
 #[test]
 fn sudo_should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 100, 0));
-		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
-		assert_ok!(res);
-
-		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1));
-		assert_ok!(res);
-
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_eq!(Balances::free_balance(1), 1000);
+		assert_ok!(PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1)));
+		assert_eq!(Balances::free_balance(1), 2000);
 		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
 	});
 }
@@ -110,17 +89,12 @@ fn sudo_should_remove_a_whitelisted_account_successfully() {
 #[test]
 fn remove_account_should_fail_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
-		let res =
-			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None);
-
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
 		assert_err!(
-			res,
-			DispatchError::Module(ModuleError {
-				index: 3,
-				error: [2, 0, 0, 0],
-				message: Some("UnknownWhitelistedAccount"),
-			})
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1)),
+			Error::<Test>::UnknownWhitelistedAccount,
 		);
+		assert_eq!(Balances::free_balance(1), 2000);
 	});
 }
 
