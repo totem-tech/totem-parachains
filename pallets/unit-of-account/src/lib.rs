@@ -93,7 +93,7 @@ mod pallet {
 			Get,
 			Currency,
 			ExistenceRequirement::{
-				AllowDeath,
+				KeepAlive,
 			},
 		},
 		sp_runtime::{
@@ -211,6 +211,9 @@ mod pallet {
 		#[pallet::constant]
 		type WhitelistDeposit: Get<u128>;
 		
+		#[pallet::constant]
+		type WhitelistMinimum: Get<u128>;
+		
 		/// used to convert bytes to address format
 		#[pallet::constant]
 		type AccountBytes: Get<[u8; 32]>;
@@ -279,6 +282,8 @@ mod pallet {
 		EmptyIntermediateBasket,
 		/// Conversion error to Bounded Vec
 		VecConversion,
+		/// Insufficent balance to pay the deposit
+		InsufficientBalance,
 	}
 		
 	#[pallet::call]
@@ -304,17 +309,24 @@ mod pallet {
 			if counter >= T::MaxWhitelistedAccounts::get() {
 				return Err(Error::<T>::MaxWhitelistedAccountOutOfBounds.into());
 			} else {
+				// Check that the account holder has sufficient free balance to make this deposit.
+				// There should be a minimum threshold balance after the deposit is taken of WhitelistMinimum.
+				let deposit_amount = T::WhitelistDeposit::get().unique_saturated_into();
+				let free_balance = T::Currency::free_balance(&who);
+				let min_balance = T::WhitelistMinimum::get().unique_saturated_into();
+				ensure!(free_balance >= deposit_amount + min_balance, Error::<T>::InsufficientBalance);
+
 				match Self::whitelisted_accounts(who.clone()) {
 					Some(()) => return Err(Error::<T>::AlreadyWhitelistedAccount.into()),
 					None => {
 						let deposit_account = Self::get_deposit_account();
-						
 						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
 							&who,
 							&deposit_account,
-							T::WhitelistDeposit::get().unique_saturated_into(),
-							AllowDeath,
+							// T::WhitelistDeposit::get().unique_saturated_into(),
+							deposit_amount,
+							KeepAlive,
 						)?;
 					},
 				}
@@ -362,7 +374,7 @@ mod pallet {
 							&deposit_account,
 							&account.unwrap(),
 							T::WhitelistDeposit::get().unique_saturated_into(),
-							AllowDeath,
+							KeepAlive,
 						)?;
 					},
 					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
@@ -381,7 +393,7 @@ mod pallet {
 							&deposit_account,
 							&who,
 							T::WhitelistDeposit::get().unique_saturated_into(),
-							AllowDeath,
+							KeepAlive,
 						)?;
 					},
 					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
@@ -573,7 +585,7 @@ mod pallet {
 			let price_float = price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
 				
 			// Round the result to the nearest integer
-			let price_u64 = price_float.round() as u64;
+			let price_u64 = Self::round_float_to_u64(price_float);
 			return price_u64;
 		}
 		
@@ -583,6 +595,16 @@ mod pallet {
 			let price_f64 = price as f64 / CONVERSION_FACTOR_F64 / CONVERSION_FACTOR_F64 ;
 			
 			return price_f64;
+		}
+
+		/// Utility to round a f64 to the nearest u64
+		/// This is used so that we do not need to use use num_traits::float::FloatCore in case it is incompatible with WASM build.
+		fn round_float_to_u64(value: f64) -> u64 {
+			if value >= 0.0 {
+				(value + 0.5) as u64
+			} else {
+				(value - 0.5) as u64
+			}
 		}
 
 		/// Gets the deposit account from storage. This is more efficient than recalculating it every time.
@@ -653,7 +675,7 @@ mod pallet {
 					let weighted_float = weight * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
 					
 					// Round the result to the nearest integer
-					let integer_weighting = weighted_float.round() as u64;
+					let integer_weighting = Self::round_float_to_u64(weighted_float);
 					
 					ticker_data.weighting = weight;
 					ticker_data.st_integer_weighting = integer_weighting;
@@ -704,7 +726,8 @@ mod pallet {
 					let weight_adjusted_price_float = weight_adjusted_price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
 					
 					// Round the result to the nearest integer
-					let integer_weight_adjusted_price = weight_adjusted_price_float.round() as u64;
+					let integer_weight_adjusted_price = Self::round_float_to_u64(weight_adjusted_price_float);
+					
 					
 					ticker_data.weight_adjusted_price = weight_adjusted_price;
 					ticker_data.st_integer_weight_adjusted_price = integer_weight_adjusted_price;
@@ -726,7 +749,7 @@ mod pallet {
 					let unit_of_account_float = unit_of_account * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
 					
 					// Round the result to the nearest integer
-					let integer_unit_of_account = unit_of_account_float.round() as u64;
+					let integer_unit_of_account = Self::round_float_to_u64(unit_of_account_float);
 					
 					ticker_data.unit_of_account = unit_of_account;
 					ticker_data.st_integer_unit_of_account = integer_unit_of_account;
@@ -766,7 +789,6 @@ mod pallet {
 				}
 				
 				// Convert the intermediate_basket to the format required for storage.
-				// let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket).ok_or(Error::<T>::ErrorConvertingBasket)?;
 				let new_basket = Self::conversion_of_basket_to_storage(intermediate_basket).map_err(|_| Error::<T>::ErrorConvertingBasket)?;
 				// Update the Unit of Account Value in Storage
 				FinancialIndex::<T>::set(Self::convert_float_to_int(financial_index));

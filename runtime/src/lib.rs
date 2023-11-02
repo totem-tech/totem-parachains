@@ -218,6 +218,7 @@ pub const fn deposit(items: u32, bytes: u32) -> Balance {
 // Totem does not want users to lose funds accidentally. This will cause rounding errors.
 pub const EXISTENTIAL_DEPOSIT: Balance = 1;
 pub const WHITELIST_DEPOSIT: Balance = 1_000_000_000_000_000;
+pub const WHITELIST_MINIMUM: Balance = 100_000_000_000_000;
 
 /// We assume that ~5% of the block weight is consumed by `on_initialize` handlers. This is
 /// used to limit the maximal weight of a single extrinsic.

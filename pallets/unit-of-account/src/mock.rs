@@ -102,7 +102,7 @@ impl pallet_balances_totem::Config for Test {
 }
 
 parameter_types! {
-	pub const WhitelistDeposit: u128 = 1;
+	pub const WhitelistDeposit: u128 = 1000;
 	pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
 }
 

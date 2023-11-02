@@ -12,12 +12,28 @@ use totem_primitives::unit_of_account::{COIN, CoinType};
 #[test]
 fn should_add_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
-		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 100, 0));
-
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
 		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
 		assert_ok!(res);
 	});
 }
+
+#[test]
+fn whitelisted_account_should_fail_insufficient_balace() {
+	new_test_ext().execute_with(|| {
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 100, 0));
+		let res = PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1));
+		// assert_ok!(res);
+		assert_err!(
+			res,
+			DispatchError::Module(ModuleError {
+				index: 3,
+				error: [0, 0, 0, 0],
+				message: Some("MaxWhitelistedAccountOutOfBounds"),
+			})
+	});
+}
+
 
 #[test]
 fn whitelisted_account_should_fail_when_max_bound_is_reached() {
