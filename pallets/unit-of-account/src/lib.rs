@@ -92,9 +92,7 @@ mod pallet {
 		traits::{
 			Get,
 			Currency,
-			ExistenceRequirement::{
-				KeepAlive,
-			},
+			ExistenceRequirement,
 		},
 		sp_runtime::{
 			DispatchError,
@@ -261,6 +259,8 @@ mod pallet {
 		InvalidPriceValue,
 		/// Invalid Account To Whitelist
 		InvalidAccountToWhitelist,
+		/// Invalid Account To Unlist
+		InvalidAccountToUnlist,
 		/// Problem computing the inverse issuance
 		ErrorInverseIssuance,
 		/// Problem computing weights
@@ -328,7 +328,7 @@ mod pallet {
 							&who,
 							&deposit_account,
 							deposit_amount,
-							KeepAlive,
+							ExistenceRequirement::KeepAlive,
 						)?;
 					},
 				}
@@ -358,58 +358,38 @@ mod pallet {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			let account_to_whitelist;
-			// If sudo then remove the account from the whitelist
-			let is_sudo = ensure_root(origin.clone());
-			if is_sudo.is_ok() {
-				// checks if account to whitelist is valid
-				if account.is_none() {
-					return Err(Error::<T>::InvalidAccountToWhitelist.into())
+			
+			let account_to_unlist = if ensure_root(origin.clone()).is_ok() {
+				account.ok_or(Error::<T>::InvalidAccountToUnlist)?
+			} else {
+				if let Some(_) = account {
+					return Err(Error::<T>::InvalidAccountToUnlist.into());
 				}
-				account_to_whitelist = account.clone().unwrap();
-				match Self::whitelisted_accounts(account.clone().unwrap()) {
-					Some(()) => {
-						let deposit_account =  Self::get_deposit_account();
-						
-						// Transfer 1000 KPX to the account. If this process fails, then return error.
-						T::Currency::transfer(
-							&deposit_account,
-							&account.unwrap(),
-							T::WhitelistDeposit::get().unique_saturated_into(),
-							KeepAlive,
-						)?;
-					},
-					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
-				}
-			}  else {
-				// else use the origin account to remove from the whitelist
-				let who = ensure_signed(origin.clone())?;
-				account_to_whitelist = who.clone();
-				// Check that the account exists in the whitelist
-				match Self::whitelisted_accounts(who.clone()) {
-					Some(()) => {
-						let deposit_account =  Self::get_deposit_account();
-						
-						// Transfer 1000 KPX to the account. If this process fails, then return error.
-						T::Currency::transfer(
-							&deposit_account,
-							&who,
-							T::WhitelistDeposit::get().unique_saturated_into(),
-							KeepAlive,
-						)?;
-					},
-					None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
-				}
+				ensure_signed(origin)?
+			};
+
+			match Self::whitelisted_accounts(account_to_unlist.clone()) {
+				Some(()) => {
+					let deposit_account: T::AccountId = Self::get_deposit_account();
+					
+					// AllowDeath because the deposit account could end up with nothing.
+					T::Currency::transfer(
+						&deposit_account,
+						&account_to_unlist,
+						T::WhitelistDeposit::get().unique_saturated_into(),
+						ExistenceRequirement::AllowDeath,
+					)?;
+				},
+				None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
 			}
-			let mut counter = Self::whitelisted_accounts_count();
+
 			// decrease the whitelist counter
-			counter -= 1;
-			
+			let counter = Self::whitelisted_accounts_count().checked_sub(1).unwrap_or_default();
+
 			WhitelistedAccountsCount::<T>::set(counter);
-			// Then remove the account from the whitelist
-			WhitelistedAccounts::<T>::remove(account_to_whitelist.clone());
+			WhitelistedAccounts::<T>::remove(account_to_unlist.clone());
 			
-			Self::deposit_event(Event::AccountRemoved(account_to_whitelist));
+			Self::deposit_event(Event::AccountRemoved(account_to_unlist));
 			
 			Ok(().into())
 		}

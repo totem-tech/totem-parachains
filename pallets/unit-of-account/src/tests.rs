@@ -10,22 +10,34 @@ use mock::{
 use frame_support::{
 	assert_err, 
 	assert_ok,
-	// assert_eq,
-	// assert_noop,
+	assert_noop,
 };
-// use sp_runtime::testing::Block;
-// use sp_runtime::{
-// 	// ModuleError,
-// 	traits::{
-// 		BadOrigin, 
-// 	},
-// };
+use sp_runtime::DispatchError::BadOrigin;
 
-// use totem_primitives::unit_of_account::{
-// 	COIN, 
-// 	CoinType,
-// };
+// Bad Origin Tests - MANDATORY FOR ALL EXTRINISCS
+#[test]
+fn should_fail_whitelist_account_bad_origin() {
+	new_test_ext().execute_with(|| {
+        assert_noop!(
+            PalletUnitOfAccount::whitelist_account(RuntimeOrigin::none()),
+            BadOrigin,
+        );
+		
+	});
+}
 
+#[test]
+fn should_fail_remove_account_bad_origin() {
+	new_test_ext().execute_with(|| {
+        assert_noop!(
+            PalletUnitOfAccount::remove_account(RuntimeOrigin::none(), None),
+            BadOrigin,
+        );
+		
+	});
+}
+
+// Other Extrinsic Tests
 #[test]
 fn should_add_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
@@ -85,69 +97,110 @@ fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 		assert_err!(
 			PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)),
-			Error::<Test>::MaxWhitelistedAccounts,
+			Error::<Test>::AlreadyWhitelistedAccount,
 		);
 		assert_eq!(Balances::free_balance(1), 2000);
 	});
 }
 
-// #[test]
-// fn should_remove_a_whitelisted_account_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-// 		assert_eq!(Balances::free_balance(1), 1000);
-// 		assert_ok!(PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1)));
-// 		assert_eq!(Balances::free_balance(1), 2000);
-// 		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
-// 	});
-// }
+#[test]
+fn should_remove_a_whitelisted_account_successfully() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_eq!(Balances::free_balance(1), 1000);
+		assert_ok!(PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
+	});
+}
 
-// #[test]
-// fn sudo_should_remove_a_whitelisted_account_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-// 		assert_eq!(Balances::free_balance(1), 1000);
-// 		assert_ok!(PalletUnitOfAccount::remove_account(RawOrigin::Root.into(), Some(1)));
-// 		assert_eq!(Balances::free_balance(1), 2000);
-// 		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
-// 	});
-// }
+#[test]
+fn sudo_should_remove_a_whitelisted_account_successfully() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_eq!(Balances::free_balance(1), 1000);
+		assert_ok!(PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1)));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_eq!(PalletUnitOfAccount::whitelisted_accounts(1), None);
+	});
+}
 
-// #[test]
-// fn remove_account_should_fail_when_account_is_not_whitelisted() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
-// 		assert_err!(
-// 			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1)),
-// 			Error::<Test>::UnknownWhitelistedAccount,
-// 		);
-// 		assert_eq!(Balances::free_balance(1), 2000);
-// 	});
-// }
+#[test]
+fn remove_account_should_fail_when_account_is_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_err!(
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), None),
+			Error::<Test>::UnknownWhitelistedAccount,
+		);
+		assert_eq!(Balances::free_balance(1), 2000);
+	});
+}
 
-// #[test]
-// fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
-// 		assert_err!(
-// 			PalletUnitOfAccount::remove_account(RawOrigin::Root.into(), Some(1)),
-// 			Error::<Test>::UnknownWhitelistedAccount,
-// 		);
-// 		assert_eq!(Balances::free_balance(1), 2000);
-// 	});
-// }
+#[test]
+fn remove_account_should_fail_when_account_is_not_valid() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 2, 2000, 0));
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		assert_err!(
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::signed(1), Some(2)),
+			Error::<Test>::InvalidAccountToUnlist,
+		);
+		// Balance of 1 should be reduced and not equal to the original balance
+		assert_ne!(Balances::free_balance(1), 2000);
+		assert_eq!(Balances::free_balance(2), 2000);
+	});
+}
 
-// #[test]
-// fn remove_account_should_fail_using_sudo_when_account_is_invalid() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_err!(
-// 			PalletUnitOfAccount::remove_account(RawOrigin::Root.into(), None),
-// 			Error::<Test>::InvalidAccountToWhitelist,
-// 		);
-// 	});
-// }
+#[test]
+fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_err!(
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), Some(1)),
+			Error::<Test>::UnknownWhitelistedAccount,
+		);
+		assert_eq!(Balances::free_balance(1), 2000);
+	});
+}
+
+#[test]
+fn remove_account_should_fail_using_sudo_when_account_is_not_valid() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(), 1, 2000, 0));
+		assert_err!(
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::root(), None),
+			Error::<Test>::InvalidAccountToUnlist,
+		);
+		assert_eq!(Balances::free_balance(1), 2000);
+	});
+}
+
+#[test]
+fn test_name_stating_what_should_happen() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		// perform tests
+		...
+	});
+}
 
 // #[test]
 // fn should_add_new_asset_successfully() {
