@@ -1,4 +1,4 @@
-use super::*;
+// use super::*;
 use crate::{self as pallet_unit_of_account};
 
 use frame_support::{
@@ -19,6 +19,7 @@ use totem_common::converter::Converter;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+
 
 // Configure a mock runtime to test the pallet.
 // The index in the error assertion refers to the fourth item (3) in construct runtime. 
@@ -42,7 +43,7 @@ parameter_types! {
 }
 
 impl system::Config for Test {
-	type AccountData = pallet_balances_totem::AccountData<u64>;
+	type AccountData = pallet_balances_totem::AccountData<u128>;
 	type AccountId = u64;
 	type BaseCallFilter = frame_support::traits::Everything;
 	type BlockHashCount = BlockHashCount;
@@ -84,13 +85,14 @@ impl pallet_randomness_collective_flip::Config for Test {}
 
 impl pallet_accounting::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type AccountingConverter = Converter;
+	type AccountingConverter =  totem_common::converter::Converter;
 	type Currency = Balances;
 	type RandomThing = RandomnessCollectiveFlip;
+	type Acc = pallet_accounting::Pallet<Test>;
 }
 
 impl pallet_balances_totem::Config for Test {
-	type Balance = u64;
+	type Balance = u128;
 	type DustRemoval = ();
 	type RuntimeEvent = RuntimeEvent;
 	type ExistentialDeposit = ExistentialDeposit;
@@ -104,6 +106,7 @@ impl pallet_balances_totem::Config for Test {
 
 parameter_types! {
 	pub const WhitelistDeposit: u128 = 1000;
+	pub const WhitelistMinimum: u128 = 10;
 	pub const AccountBytes: [u8; 32] = *b"totems/whitelist/deposit/account";
 }
 
@@ -114,6 +117,7 @@ impl pallet_unit_of_account::Config for Test {
 	type TickersLimit = ConstU32<310>;
 	type AccountBytes = AccountBytes;
 	type WhitelistDeposit = WhitelistDeposit;
+	type WhitelistMinimum = WhitelistMinimum;
 	type UnitOfAccountConverter = Converter;
 	type WeightInfo = ();
 }

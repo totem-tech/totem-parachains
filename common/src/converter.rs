@@ -5,6 +5,24 @@ use sp_std::vec::Vec;
 
 pub struct Converter;
 
+// Converter for unit tests only
+impl Convert<u32, u64> for Converter {
+	fn convert(x: u32) -> u64 {
+		x as u64
+	}
+}
+
+// Other converters
+impl Convert<u64, i128> for Converter {
+	fn convert(x: u64) -> i128 {
+		if x <= i128::MAX as u64 {
+			x as i128
+		} else {
+			0 // default value
+		}
+	}
+}
+
 impl Convert<u32, u32> for Converter {
 	fn convert(x: u32) -> u32 {
 		x
@@ -16,6 +34,7 @@ impl Convert<u64, u64> for Converter {
 		x
 	}
 }
+
 
 impl Convert<u128, u128> for Converter {
 	fn convert(x: u128) -> u128 {
@@ -35,6 +54,7 @@ impl Convert<i128, i128> for Converter {
 	}
 }
 
+
 impl Convert<[u8; 32], AccountId32> for Converter {
 	fn convert(a: [u8; 32]) -> AccountId32 {
 		AccountId32::new(a)
@@ -44,8 +64,8 @@ impl Convert<[u8; 32], AccountId32> for Converter {
 impl Convert<[u8; 32], u64> for Converter {
     fn convert(a: [u8; 32]) -> u64 {
         let mut result: u64 = 0;
-        for i in 0..a.len() {
-            result = result << 8 | a[i] as u64;
+        for &byte in a.iter() {
+            result = (result << 8) | u64::from(byte);
         }
         result
     }
@@ -54,22 +74,25 @@ impl Convert<[u8; 32], u64> for Converter {
 impl Convert<u64, [u8; 32]> for Converter {
     fn convert(a: u64) -> [u8; 32] {
         let mut result: [u8; 32] = [0; 32];
+        let mut temp = a;
         for i in 0..result.len() {
-            result[31 - i] = (a >> (8 * i)) as u8;
+            result[31 - i] = temp as u8;
+            temp >>= 8;
         }
         result
     }
 }
 
 impl Convert<Vec<u8>, [u8; 8]> for Converter {
-	fn convert(mut v: Vec<u8>) -> [u8; 8] {
-		let mut a = [0; 8];
-
-		v.resize(8, 0);
-		a.copy_from_slice(&v);
-
-		a
-	}
+    fn convert(v: Vec<u8>) -> [u8; 8] {
+        let mut a = [0; 8];
+        if v.len() >= 8 {
+            a.copy_from_slice(&v[..8]);
+        } else {
+            a[..v.len()].copy_from_slice(&v);
+        }
+        a
+    }
 }
 
 impl TryConvert<i128, u128> for Converter {

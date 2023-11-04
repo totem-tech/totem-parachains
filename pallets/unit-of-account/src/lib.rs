@@ -69,10 +69,10 @@
 // Ensure we're `no_std` when compiling for Wasm.
 #![cfg_attr(not(feature = "std"), no_std)]
 // mod benchmarking;
-// #[cfg(test)]
-// mod mock;
-// #[cfg(test)]
-// mod tests;
+#[cfg(test)]
+mod mock;
+#[cfg(test)]
+mod tests;
 
 pub mod weights;
 
@@ -120,6 +120,9 @@ mod pallet {
 			CONVERSION_FACTOR_F64,
 		},
 	};
+
+	type CurrencyBalanceOf<T> =
+    <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
 
 	const STORAGE_VERSION: frame_support::traits::StorageVersion =
 	frame_support::traits::StorageVersion::new(1);
@@ -245,7 +248,7 @@ mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		/// Whitelisted account out of bounds
-		MaxWhitelistedAccountOutOfBounds,
+		MaxWhitelistedAccounts,
 		/// Already Whitelisted account
 		AlreadyWhitelistedAccount,
 		/// Unknown whitelisted account
@@ -307,20 +310,20 @@ mod pallet {
 			// Check that the number of whitelisted accounts has not already reached the maximum
 			let mut counter = Self::whitelisted_accounts_count();
 			if counter >= T::MaxWhitelistedAccounts::get() {
-				return Err(Error::<T>::MaxWhitelistedAccountOutOfBounds.into());
+				return Err(Error::<T>::MaxWhitelistedAccounts.into());
 			} else {
 				// Check that the account holder has sufficient free balance to make this deposit.
 				// There should be a minimum threshold balance after the deposit is taken of WhitelistMinimum.
-				let deposit_amount = T::WhitelistDeposit::get().unique_saturated_into();
-				let free_balance = T::Currency::free_balance(&who);
-				let min_balance = T::WhitelistMinimum::get().unique_saturated_into();
+				let deposit_amount: CurrencyBalanceOf<T> = T::WhitelistDeposit::get().unique_saturated_into();
+				let free_balance: CurrencyBalanceOf<T> = T::Currency::free_balance(&who);
+				let min_balance: CurrencyBalanceOf<T> = T::WhitelistMinimum::get().unique_saturated_into();
 				ensure!(free_balance >= deposit_amount + min_balance, Error::<T>::InsufficientBalance);
-
+				
 				match Self::whitelisted_accounts(who.clone()) {
 					Some(()) => return Err(Error::<T>::AlreadyWhitelistedAccount.into()),
 					None => {
-						let deposit_account = Self::get_deposit_account();
-						// Transfer 1000 KPX to the deposit account. If this process fails, then return error.
+						let deposit_account: T::AccountId = Self::get_deposit_account();
+						//Transfer 1000 KPX to the deposit account. If this process fails, then return error.
 						T::Currency::transfer(
 							&who,
 							&deposit_account,
