@@ -427,6 +427,7 @@ mod pallet {
 			// check that the price is not zero
 			ensure!(price != u64::MIN, Error::<T>::InvalidPriceValue);			
 			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			// This code should never return an error.
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			// Add the new asset to the intermediary vec
 			intermediate_basket.push(TickerData {
@@ -562,7 +563,7 @@ mod pallet {
 	
 	impl<T: Config> Pallet<T> {
 		/// Utility to convert a f64 price to a u64 price
-		fn convert_float_to_int(price: f64) -> u64 {
+		pub fn convert_float_to_int(price: f64) -> u64 {
 			// Multiply f64 by a large float conversion factor without truncation
 			let price_float = price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
 				
@@ -572,7 +573,7 @@ mod pallet {
 		}
 		
 		/// Utility to convert a u64 price to a f64 price
-		fn convert_int_to_float(price: u64) -> f64 {
+		pub fn convert_int_to_float(price: u64) -> f64 {
 			// Divide u64 by a large float conversion factor without truncation and cast to f64
 			let price_f64 = price as f64 / CONVERSION_FACTOR_F64 / CONVERSION_FACTOR_F64 ;
 			
@@ -581,7 +582,7 @@ mod pallet {
 
 		/// Utility to round a f64 to the nearest u64
 		/// This is used so that we do not need to use use num_traits::float::FloatCore in case it is incompatible with WASM build.
-		fn round_float_to_u64(value: f64) -> u64 {
+		pub fn round_float_to_u64(value: f64) -> u64 {
 			if value >= 0.0 {
 				(value + 0.5) as u64
 			} else {
@@ -599,6 +600,8 @@ mod pallet {
 		}
 
 		/// Utility to get the current basket from storage
+		/// If there are no values yet, then return an empty vec that can receive values when returning
+		/// to the calling function.
 		fn get_intermediate_basket(intermediate_basket: &mut Vec<TickerData>) -> Result<(), DispatchError> {
 			// read the Basket storage into a new array
 			match Self::basket() {

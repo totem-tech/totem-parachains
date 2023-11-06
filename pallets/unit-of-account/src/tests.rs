@@ -14,6 +14,8 @@ use frame_support::{
 };
 use sp_runtime::DispatchError::BadOrigin;
 
+use totem_primitives::unit_of_account::*; 
+
 // Bad Origin Tests - MANDATORY FOR ALL EXTRINISCS
 #[test]
 fn should_fail_whitelist_account_bad_origin() {
@@ -191,14 +193,41 @@ fn remove_account_should_fail_using_sudo_when_account_is_not_valid() {
 	});
 }
 
+// #[test]
+// fn test_name_stating_what_should_happen() {
+// 	new_test_ext().execute_with(|| {
+// 		System::set_block_number(100);
+// 		assert_eq!(System::block_number(), 100);
+// 		// setup state
+// 		// perform tests
+// 		...
+// 	});
+// }
+
 #[test]
-fn test_name_stating_what_should_happen() {
+fn should_add_new_single_asset() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
 		// setup state
+		// main testing logic
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let issuance: u64 = 20308000000000000;
+		let price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let decimals: u8 = 2;
 		// perform tests
-		...
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
 	});
 }
 
