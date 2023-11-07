@@ -228,10 +228,10 @@ fn x_12_should_add_new_single_asset_successfully() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -244,10 +244,10 @@ fn x_12_should_add_new_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -260,10 +260,10 @@ fn x_12_should_add_new_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -273,10 +273,10 @@ fn x_12_should_add_new_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -286,10 +286,10 @@ fn x_12_should_add_new_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -313,10 +313,10 @@ fn x_13_add_new_asset_should_fail_when_using_account_not_whitelisted() {
 		let decimals: u8 = 2;
 		// perform tests
 		assert_err!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		),
@@ -341,10 +341,10 @@ fn x_14_add_new_asset_should_fail_when_issuance_is_zero() {
 		let decimals: u8 = 2;
 		// perform tests
 		assert_err!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		),
@@ -369,10 +369,10 @@ fn x_15_add_new_asset_should_fail_when_price_is_zero() {
 		let decimals: u8 = 2;
 		// perform tests
 		assert_err!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		),
@@ -398,10 +398,10 @@ fn x_16_sudo_should_remove_single_asset_successfully() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -411,10 +411,10 @@ fn x_16_sudo_should_remove_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -427,10 +427,10 @@ fn x_16_sudo_should_remove_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -440,10 +440,10 @@ fn x_16_sudo_should_remove_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -453,10 +453,10 @@ fn x_16_sudo_should_remove_single_asset_successfully() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -490,10 +490,10 @@ fn x_17_whitelisted_account_should_fail_remove_single_asset() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -503,10 +503,10 @@ fn x_17_whitelisted_account_should_fail_remove_single_asset() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -519,10 +519,10 @@ fn x_17_whitelisted_account_should_fail_remove_single_asset() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -532,10 +532,10 @@ fn x_17_whitelisted_account_should_fail_remove_single_asset() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -545,10 +545,10 @@ fn x_17_whitelisted_account_should_fail_remove_single_asset() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -582,10 +582,10 @@ fn x_18_sudo_should_fail_remove_asset_not_in_basket() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -595,10 +595,10 @@ fn x_18_sudo_should_fail_remove_asset_not_in_basket() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -630,10 +630,10 @@ fn x_19_whitelisted_account_should_fail_update_asset_price_out_of_bounds() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -643,28 +643,67 @@ fn x_19_whitelisted_account_should_fail_update_asset_price_out_of_bounds() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
-			decimals, // decimals as u8
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
+			decimals,
 			//source, // source of data from enum
 		));
 		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
 		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);		
+		
+		System::set_block_number(110);
+		assert_eq!(System::block_number(), 110);
 
 		ticker = Tickers::Forex(FIAT::CNY);
-		price = PalletUnitOfAccount::convert_float_to_int(0.76);
+		price = PalletUnitOfAccount::convert_float_to_int(0.140000780);
 
 		assert_err!(PalletUnitOfAccount::update_asset_price(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			price, 
 			//source, // source of data from enum
 		), Error::<Test>::PriceOutOfBounds);
+
 		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
 		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);	
 
+		price = PalletUnitOfAccount::convert_float_to_int(0.139999100);
+
+		assert_err!(PalletUnitOfAccount::update_asset_price(
+			RuntimeOrigin::signed(1),
+			ticker, 
+			price, 
+			//source, // source of data from enum
+		), Error::<Test>::PriceOutOfBounds);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+		
+		System::set_block_number(18310);
+		assert_eq!(System::block_number(), 18310);
+
+		price = PalletUnitOfAccount::convert_float_to_int(0.15);
+
+		assert_err!(PalletUnitOfAccount::update_asset_price(
+			RuntimeOrigin::signed(1),
+			ticker, 
+			price, 
+			//source, // source of data from enum
+		), Error::<Test>::PriceOutOfBounds);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+
+		price = PalletUnitOfAccount::convert_float_to_int(0.12);
+
+		assert_err!(PalletUnitOfAccount::update_asset_price(
+			RuntimeOrigin::signed(1),
+			ticker, 
+			price, 
+			//source, // source of data from enum
+		), Error::<Test>::PriceOutOfBounds);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
 	});
 }
 
@@ -684,10 +723,10 @@ fn x_20_whitelisted_account_should_fail_update_issuance_out_of_bounds() {
 		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -697,10 +736,10 @@ fn x_20_whitelisted_account_should_fail_update_issuance_out_of_bounds() {
 		decimals = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
-			price, // price as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
+			price, 
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
@@ -711,9 +750,9 @@ fn x_20_whitelisted_account_should_fail_update_issuance_out_of_bounds() {
 		issuance = 30308000000000000;
 
 		assert_err!(PalletUnitOfAccount::update_asset_issuance(
-			RuntimeOrigin::signed(1), // must be whitelisted account
-			ticker, // symbol from Tickers enum
-			issuance, // issuance as a u64
+			RuntimeOrigin::signed(1),
+			ticker, 
+			issuance, 
 			//source, // source of data from enum
 		), Error::<Test>::IssuanceOutOfBounds);
 		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);

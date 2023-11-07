@@ -18,7 +18,7 @@ pub const CONVERSION_FACTOR_F64: f64 = 1_000_000_000.0;
 /// Holds the details for each asset for storage
 #[derive(MaxEncodedLen, Debug, Encode, Decode, Copy, Clone, Eq, PartialEq, TypeInfo)]
 #[scale_info(capture_docs = "always")]
-pub struct TickerDetails {
+pub struct TickerDetails<BlockNumber> {
 	/// The symbol of the asset
 	pub symbol: Tickers,
 	/// The total issuance of the asset converted
@@ -33,11 +33,13 @@ pub struct TickerDetails {
 	pub uoa_per_asset: u64,
 	/// display decimals (not to used for direct conversion)
 	pub display_decimals: u8,
+	/// block number of last update
+	pub last_update_block: BlockNumber,
 }
 
 /// Holds the details for each asset for processing
 #[derive(Debug, Encode, Decode, Copy, Clone, PartialEq)]
-pub struct TickerData {
+pub struct TickerData<BlockNumber> {
 /// The symbol of the asset
 pub st_symbol: Tickers,
 /// The decimals that should be displayed (smallest available monetary unit)
@@ -52,4 +54,5 @@ pub weight_adjusted_price: f64,
 pub st_integer_weight_adjusted_price: u64,
 pub unit_of_account: f64,
 pub st_integer_unit_of_account: u64,
+pub st_last_update_block: BlockNumber,
 }

@@ -80,7 +80,7 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 mod pallet {
-
+	
 	use frame_support::{
 		ensure,
 		pallet_prelude::*,
@@ -104,12 +104,12 @@ mod pallet {
 		},
 	};
 	use frame_system::pallet_prelude::*;
-    use sp_std::prelude::*;
+	use sp_std::prelude::*;
 	use sp_std::vec::Vec;
-
+	
 	// pub use weights::WeightInfo;
 	pub use crate::weights::WeightInfo;
-
+	
 	use totem_primitives::{
 		unit_of_account::{
 			TickerDetails,
@@ -118,18 +118,18 @@ mod pallet {
 			CONVERSION_FACTOR_F64,
 		},
 	};
-
+	
 	type CurrencyBalanceOf<T> =
-    <<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-
+	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+	
 	const STORAGE_VERSION: frame_support::traits::StorageVersion =
 	frame_support::traits::StorageVersion::new(1);
-
+	
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	#[pallet::storage_version(STORAGE_VERSION)]
 	pub struct Pallet<T>(_);
-
+	
 	/// The list of whitelisted accounts that can update the basket of assets
 	#[pallet::storage]
 	#[pallet::getter(fn whitelisted_accounts)]
@@ -139,7 +139,7 @@ mod pallet {
 	Option<()>,
 	ValueQuery
 	>;
-
+	
 	/// A counter so that whitelist does not exceed the max number of accounts
 	/// Current Max is 256
 	#[pallet::storage]
@@ -149,17 +149,17 @@ mod pallet {
 	u32,
 	ValueQuery
 	>;
-
+	
 	/// Always contains an updated list of Tickers and their details at any point in time.
 	/// This means that state history will contain previous values of the basket.
 	#[pallet::storage]
 	#[pallet::getter(fn basket)]
 	pub type Basket<T: Config> = StorageValue<
 	_,
-	Option<BoundedVec<TickerDetails, T::TickersLimit>>,
+	Option<BoundedVec<TickerDetails<T::BlockNumber>, T::TickersLimit>>,
 	ValueQuery
 	>;
-
+	
 	/// The calculated Nominal Effective Exchange Rate which is
 	/// also known as the Financial Index from which the unit of account for each currency is calculated
 	/// should vary little with price changes, and should remain historically stable relative to all currencies
@@ -170,7 +170,7 @@ mod pallet {
 	u64,
 	ValueQuery
 	>;
-
+	
 	/// The Total Inverse Issuance of all assets
 	/// This is also used as a cached value when new prices are updated
 	#[pallet::storage]
@@ -180,7 +180,7 @@ mod pallet {
 	u64,
 	ValueQuery
 	>;
-
+	
 	/// Deposit account which is a cached value to allow for faster read
 	/// of the deposit account to hold funds for whitelisting an account
 	#[pallet::storage]
@@ -219,13 +219,13 @@ mod pallet {
 		#[pallet::constant]
 		type AccountBytes: Get<[u8; 32]>;
 		
-		/// For converting [u8; 32] bytes to AccountId  and f64 to LedgerBalance
-		type UnitOfAccountConverter: Convert<[u8; 32], Self::AccountId>; 
+		type Converter: Convert<[u8; 32], Self::AccountId>
+			+ Convert<Self::BlockNumber, f64>; 
 		
 		/// Weightinfo for pallet
 		type WeightInfo: WeightInfo;
 	}
-		
+	
 	#[pallet::event]
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
@@ -295,11 +295,13 @@ mod pallet {
 		IssuanceOutOfBounds,
 		/// Price value to update is out of bounds (5% +/-)
 		PriceOutOfBounds,
+		/// Perecentage calculation overflow caused by update delay too late
+		PercentageOverflow,
 	}
-		
+	
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-
+		
 		/// Whitelists an account, allowing it to be used to provide updated values to the basket
 		/// Requires a locked security deposit of 1000 KPX to be whitelisted
 		///
@@ -375,7 +377,7 @@ mod pallet {
 				}
 				ensure_signed(origin)?
 			};
-
+			
 			match Self::whitelisted_accounts(account_to_unlist.clone()) {
 				Some(()) => {
 					let deposit_account: T::AccountId = Self::get_deposit_account();
@@ -390,10 +392,10 @@ mod pallet {
 				},
 				None => return Err(Error::<T>::UnknownWhitelistedAccount.into()),
 			}
-
+			
 			// decrease the whitelist counter
 			let counter = Self::whitelisted_accounts_count().checked_sub(1).unwrap_or_default();
-
+			
 			WhitelistedAccountsCount::<T>::set(counter);
 			WhitelistedAccounts::<T>::remove(account_to_unlist.clone());
 			
@@ -434,9 +436,10 @@ mod pallet {
 			ensure!(issuance != u64::MIN, Error::<T>::InvalidIssuanceValue);
 			// check that the price is not zero
 			ensure!(price != u64::MIN, Error::<T>::InvalidPriceValue);			
-			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			let mut intermediate_basket: Vec<TickerData<T::BlockNumber>> = Vec::new();
 			// This code should never return an error.
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
+			let current_block = frame_system::Pallet::<T>::block_number();
 			// Add the new asset to the intermediary vec
 			intermediate_basket.push(TickerData {
 				st_symbol: symbol.clone(), // also used in event
@@ -449,6 +452,7 @@ mod pallet {
 				st_integer_weight_adjusted_price: 0,
 				unit_of_account: 0.0,
 				st_integer_unit_of_account: 0,
+				st_last_update_block: current_block.into(),
 			});
 			// use process and update storage using the intermediate_basket
 			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
@@ -480,7 +484,7 @@ mod pallet {
 				return Err(Error::<T>::UnAuthorisedAccount.into());
 			}
 			
-			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			let mut intermediate_basket: Vec<TickerData<T::BlockNumber>> = Vec::new();
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			// Remove the asset from the intermediate basket
 			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
@@ -488,7 +492,7 @@ mod pallet {
 			} else {
 				return Err(Error::<T>::AssetNotFound.into());
 			}
-
+			
 			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
 			
 			Self::deposit_event(Event::AssetRemoved(symbol));
@@ -519,27 +523,33 @@ mod pallet {
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
 			// check that the price is not zero
 			ensure!(price != u64::MIN, Error::<T>::InvalidPriceValue);			
-			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			let mut intermediate_basket: Vec<TickerData<T::BlockNumber>> = Vec::new();
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			
-			// If the asset exists, update its price in the intermediate basket directly.
-			// The extrinsic cannot accept f64 as input so it needs to be converted.
-			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
-				let existing_price = intermediate_basket[index].price;
-				// let existing_price_float = Self::convert_int_to_float(existing_price);
-				let new_price_float = Self::convert_int_to_float(price.clone());
-				let min_price = existing_price - (existing_price * 5.0) / 100.0;
-				let max_price = existing_price + (existing_price * 5.0) / 100.0;
 			
-				if new_price_float < min_price || new_price_float > max_price {
+
+			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
+				let current_block = frame_system::Pallet::<T>::block_number();
+				let last_updated_block: T::BlockNumber = intermediate_basket[index].st_last_update_block.into();
+				let blocks_since_last_update = current_block - last_updated_block;
+				let new_price: f64 = Self::convert_int_to_float(price);
+				let max_delay_for_new_price: T::BlockNumber = 18000u32.into(); 
+				let existing_price = intermediate_basket[index].price;
+				let percentage: f64 = if blocks_since_last_update >= max_delay_for_new_price { 
+					0.05 
+				} else { 
+					(0.00005555 * T::Converter::convert(blocks_since_last_update)) / 100.0 
+				};
+				let min_price = existing_price * (1.0 - percentage);
+				let max_price = existing_price * (1.0 + percentage);
+		
+				if new_price < min_price || new_price > max_price {
 					return Err(Error::<T>::PriceOutOfBounds.into());
 				}
-			
-				intermediate_basket[index].price = Self::convert_int_to_float(price);
 			} else {
 				return Err(Error::<T>::AssetNotFound.into());
 			}
-
+			
 			// use process and update storage using the intermediate_basket
 			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
 			
@@ -570,7 +580,7 @@ mod pallet {
 			ensure!(WhitelistedAccounts::<T>::contains_key(&who), Error::<T>::NotWhitelistedAccount);
 			// check that the issuance is not zero
 			ensure!(issuance != u64::MIN, Error::<T>::InvalidIssuanceValue);		
-			let mut intermediate_basket: Vec<TickerData> = Vec::new();
+			let mut intermediate_basket: Vec<TickerData<T::BlockNumber>> = Vec::new();
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			
 			// If the asset exists, update its issuance in the intermediate basket directly.
@@ -578,11 +588,11 @@ mod pallet {
 				let existing_issuance = intermediate_basket[index].st_issuance;
 				let min_issuance = existing_issuance - (existing_issuance * 5) / 100;
 				let max_issuance = existing_issuance + (existing_issuance * 5) / 100;
-			
+				
 				if issuance < min_issuance || issuance > max_issuance {
 					return Err(Error::<T>::IssuanceOutOfBounds.into());
 				}
-			
+				
 				intermediate_basket[index].st_issuance = issuance;
 			} else {
 				return Err(Error::<T>::AssetNotFound.into());
@@ -601,7 +611,7 @@ mod pallet {
 		pub fn convert_float_to_int(price: f64) -> u64 {
 			// Multiply f64 by a large float conversion factor without truncation
 			let price_float = price * CONVERSION_FACTOR_F64 * CONVERSION_FACTOR_F64;
-				
+			
 			// Round the result to the nearest integer
 			let price_u64 = Self::round_float_to_u64(price_float);
 			return price_u64;
@@ -614,7 +624,7 @@ mod pallet {
 			
 			return price_f64;
 		}
-
+		
 		/// Utility to round a f64 to the nearest u64
 		/// This is used so that we do not need to use use num_traits::float::FloatCore in case it is incompatible with WASM build.
 		pub fn round_float_to_u64(value: f64) -> u64 {
@@ -624,20 +634,20 @@ mod pallet {
 				(value - 0.5) as u64
 			}
 		}
-
+		
 		/// Gets the deposit account from storage. This is more efficient than recalculating it every time.
 		fn get_deposit_account() -> T::AccountId {
 			DepositAccount::<T>::get().unwrap_or_else(|| {
-				let get_deposit_account = T::UnitOfAccountConverter::convert(T::AccountBytes::get());
+				let get_deposit_account = T::Converter::convert(T::AccountBytes::get());
 				DepositAccount::<T>::put(get_deposit_account.clone());
 				get_deposit_account
 			})
 		}
-
+		
 		/// Utility to get the current basket from storage
 		/// If there are no values yet, then return an empty vec that can receive values when returning
 		/// to the calling function.
-		fn get_intermediate_basket(intermediate_basket: &mut Vec<TickerData>) -> Result<(), DispatchError> {
+		fn get_intermediate_basket(intermediate_basket: &mut Vec<TickerData<T::BlockNumber>>) -> Result<(), DispatchError> {
 			// read the Basket storage into a new array
 			match Self::basket() {
 				Some(basket) => {
@@ -653,20 +663,21 @@ mod pallet {
 							st_integer_weight_adjusted_price: 0,
 							unit_of_account: 0.0,
 							st_integer_unit_of_account: 0,
+							st_last_update_block: x.last_update_block.into(),
 						}
-					}).collect::<Vec<TickerData>>();
+					}).collect::<Vec<TickerData<T::BlockNumber>>>();
 				},
 				None => intermediate_basket.clear(),
 			};
 			
 			Ok(())
 		}
-
+		
 		/// Conversion of the basket from float to integer for storage
 		fn conversion_of_basket_to_storage(
-			basket: &Vec<TickerData>,
-		) -> Result<BoundedVec<TickerDetails, T::TickersLimit>, DispatchError> {
-			let mut new_basket: Vec<TickerDetails> = Default::default();
+			basket: &Vec<TickerData<T::BlockNumber>>,
+		) -> Result<BoundedVec<TickerDetails<T::BlockNumber>, T::TickersLimit>, DispatchError> {
+			let mut new_basket: Vec<TickerDetails<T::BlockNumber>> = Default::default();
 			for asset in basket {
 				let converted_entry = TickerDetails {
 					symbol: asset.st_symbol,
@@ -676,17 +687,18 @@ mod pallet {
 					weight_adjusted_price: asset.st_integer_weight_adjusted_price,
 					uoa_per_asset: asset.st_integer_unit_of_account,
 					display_decimals: asset.st_display_decimals,
+					last_update_block: asset.st_last_update_block.into(),
 				};
 				new_basket.push(converted_entry);
 			}
-			let bounded_vec: BoundedVec<TickerDetails, T::TickersLimit> = new_basket.try_into()
+			let bounded_vec: BoundedVec<TickerDetails<T::BlockNumber>, T::TickersLimit> = new_basket.try_into()
 			.map_err(|_| Error::<T>::VecConversion)?;
-	
+			
 			Ok(bounded_vec)
 		}
 		
 		/// Computes the value of weights for every currency using the given formula.
-		fn compute_weights(intermediate_basket: &mut Vec<TickerData>, sum_inverse_issuance: f64) -> Option<()> {
+		fn compute_weights(intermediate_basket: &mut Vec<TickerData<T::BlockNumber>>, sum_inverse_issuance: f64) -> Option<()> {
 			if sum_inverse_issuance.is_finite() {
 				for ticker_data in intermediate_basket.iter_mut() {
 					let weight = (1.0 / ticker_data.st_issuance as f64) / sum_inverse_issuance;
@@ -705,9 +717,9 @@ mod pallet {
 				None
 			}
 		}
-
+		
 		/// Computes the sum of the inverse of the issuance of all assets.
-		fn sum_issuances(intermediate_basket: &Vec<TickerData>) -> Option<f64> {
+		fn sum_issuances(intermediate_basket: &Vec<TickerData<T::BlockNumber>>) -> Option<f64> {
 			if intermediate_basket.is_empty() {
 				None
 			} else {
@@ -720,7 +732,7 @@ mod pallet {
 		}    
 		
 		/// Computes the sum of the units of account of all assets creating an financial index.
-		fn sum_units_creating_financial_index(intermediate_basket: &Vec<TickerData>) -> Option<f64> {
+		fn sum_units_creating_financial_index(intermediate_basket: &Vec<TickerData<T::BlockNumber>>) -> Option<f64> {
 			if intermediate_basket.is_empty() {
 				None
 			} else {
@@ -734,7 +746,7 @@ mod pallet {
 		}
 		
 		/// Applies the weights to the exchange rates of all assets to create the weight_adjusted_price per currency.
-		fn apply_weights_to_prices(intermediate_basket: &mut Vec<TickerData>) -> Option<()> {
+		fn apply_weights_to_prices(intermediate_basket: &mut Vec<TickerData<T::BlockNumber>>) -> Option<()> {
 			if intermediate_basket.is_empty() {
 				None
 			} else {
@@ -757,7 +769,7 @@ mod pallet {
 		}
 		
 		/// Creates the new unit of account per currency
-		fn compute_units_of_account(intermediate_basket: &mut Vec<TickerData>, financial_index: f64) -> Option<()> {
+		fn compute_units_of_account(intermediate_basket: &mut Vec<TickerData<T::BlockNumber>>, financial_index: f64) -> Option<()> {
 			if intermediate_basket.is_empty() {
 				None
 			} else {
@@ -779,7 +791,7 @@ mod pallet {
 		}
 		
 		/// Handles processing on intermediate basket and returns financial_index: f64 and a new_basket: Vec<TickerDetails> 
-		fn update_from_intermediate(intermediate_basket: &mut Vec<TickerData>) -> Result<(), DispatchError> {
+		fn update_from_intermediate(intermediate_basket: &mut Vec<TickerData<T::BlockNumber>>) -> Result<(), DispatchError> {
 			if intermediate_basket.is_empty() {
 				Err(Error::<T>::EmptyIntermediateBasket.into())
 			} else {
@@ -802,7 +814,7 @@ mod pallet {
 				
 				// generate financial index.
 				let financial_index = Self::sum_units_creating_financial_index(&intermediate_basket).ok_or(Error::<T>::ErrorFinancialIndex)?;
-
+				
 				// Compute units of account.
 				if Self::compute_units_of_account(intermediate_basket, financial_index.clone()).is_none() {
 					return Err(Error::<T>::ErrorComputingUoA.into());

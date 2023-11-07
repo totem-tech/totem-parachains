@@ -5,14 +5,24 @@ use sp_std::vec::Vec;
 
 pub struct Converter;
 
-// Converter for unit tests only
 impl Convert<u32, u64> for Converter {
 	fn convert(x: u32) -> u64 {
 		x as u64
 	}
 }
 
-// Other converters
+impl Convert<u32, f64> for Converter {
+	fn convert(x: u32) -> f64 {
+		x as f64
+	}
+}
+
+impl Convert<u64, f64> for Converter {
+	fn convert(x: u64) -> f64 {
+		x as f64
+	}
+}
+
 impl Convert<u64, i128> for Converter {
 	fn convert(x: u64) -> i128 {
 		if x <= i128::MAX as u64 {

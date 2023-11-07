@@ -25,7 +25,7 @@ impl pallet_unit_of_account::Config for Runtime {
     type MaxWhitelistedAccounts = MaxWhitelistedAccounts;
     type TickersLimit = TickersLimit;
     type AccountBytes = AccountBytes;
-    type UnitOfAccountConverter = Converter;
+    type Converter = Converter;
     type WhitelistDeposit = WhitelistDeposit;
     type WhitelistMinimum = WhitelistMinimum;
     type WeightInfo = pallet_unit_of_account::weights::TotemWeight<Runtime>;

@@ -85,7 +85,7 @@ impl pallet_randomness_collective_flip::Config for Test {}
 
 impl pallet_accounting::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type AccountingConverter =  totem_common::converter::Converter;
+	type AccountingConverter =  Converter;
 	type Currency = Balances;
 	type RandomThing = RandomnessCollectiveFlip;
 	type Acc = pallet_accounting::Pallet<Test>;
@@ -118,7 +118,7 @@ impl pallet_unit_of_account::Config for Test {
 	type AccountBytes = AccountBytes;
 	type WhitelistDeposit = WhitelistDeposit;
 	type WhitelistMinimum = WhitelistMinimum;
-	type UnitOfAccountConverter = Converter;
+	type Converter = Converter;
 	type WeightInfo = ();
 }
 
