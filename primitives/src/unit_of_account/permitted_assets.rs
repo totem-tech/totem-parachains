@@ -429,7 +429,7 @@ pub enum BANK {
     /// Bank of America : NYSE
     BAC, 
     /// Citigroup : NYSE
-    C, 
+    C,
     /// Wells Fargo & Co : NYSE
     WFC, 
     /// PNC Financial Services : NYSE

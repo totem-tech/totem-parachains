@@ -287,6 +287,14 @@ mod pallet {
 		VecConversion,
 		/// Insufficent balance to pay the deposit
 		InsufficientBalance,
+		/// Only root account is able to perform this action
+		UnAuthorisedAccount,
+		/// Asset not found in Basket
+		AssetNotFound,
+		/// Issuance value to update is out of bounds (5% +/-)
+		IssuanceOutOfBounds,
+		/// Price value to update is out of bounds (5% +/-)
+		PriceOutOfBounds,
 	}
 		
 	#[pallet::call]
@@ -467,12 +475,20 @@ mod pallet {
 			if ensure_none(origin.clone()).is_ok() {
 				return Err(BadOrigin.into())
 			}
-			ensure_root(origin)?;
+			
+			if ensure_root(origin).is_err() {
+				return Err(Error::<T>::UnAuthorisedAccount.into());
+			}
 			
 			let mut intermediate_basket: Vec<TickerData> = Vec::new();
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			// Remove the asset from the intermediate basket
-			intermediate_basket.retain(|x| x.st_symbol != symbol);
+			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
+				let _ = intermediate_basket.remove(index);
+			} else {
+				return Err(Error::<T>::AssetNotFound.into());
+			}
+
 			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
 			
 			Self::deposit_event(Event::AssetRemoved(symbol));
@@ -508,10 +524,22 @@ mod pallet {
 			
 			// If the asset exists, update its price in the intermediate basket directly.
 			// The extrinsic cannot accept f64 as input so it needs to be converted.
-			for asset in &mut intermediate_basket {
-				asset.price = Self::convert_int_to_float(price);
-			}
+			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
+				let existing_price = intermediate_basket[index].price;
+				// let existing_price_float = Self::convert_int_to_float(existing_price);
+				let new_price_float = Self::convert_int_to_float(price.clone());
+				let min_price = existing_price - (existing_price * 5.0) / 100.0;
+				let max_price = existing_price + (existing_price * 5.0) / 100.0;
 			
+				if new_price_float < min_price || new_price_float > max_price {
+					return Err(Error::<T>::PriceOutOfBounds.into());
+				}
+			
+				intermediate_basket[index].price = Self::convert_int_to_float(price);
+			} else {
+				return Err(Error::<T>::AssetNotFound.into());
+			}
+
 			// use process and update storage using the intermediate_basket
 			Self::update_from_intermediate(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorUpdatingStorage)?;
 			
@@ -546,11 +574,18 @@ mod pallet {
 			Self::get_intermediate_basket(&mut intermediate_basket).map_err(|_| Error::<T>::ErrorGettingBasket)?;
 			
 			// If the asset exists, update its issuance in the intermediate basket directly.
-			for asset in &mut intermediate_basket {
-				if asset.st_symbol == symbol {
-					asset.st_issuance = issuance;
-					break;
+			if let Some(index) = intermediate_basket.iter().position(|x| x.st_symbol == symbol) {
+				let existing_issuance = intermediate_basket[index].st_issuance;
+				let min_issuance = existing_issuance - (existing_issuance * 5) / 100;
+				let max_issuance = existing_issuance + (existing_issuance * 5) / 100;
+			
+				if issuance < min_issuance || issuance > max_issuance {
+					return Err(Error::<T>::IssuanceOutOfBounds.into());
 				}
+			
+				intermediate_basket[index].st_issuance = issuance;
+			} else {
+				return Err(Error::<T>::AssetNotFound.into());
 			}
 			
 			// use process and update storage using the intermediate_basket

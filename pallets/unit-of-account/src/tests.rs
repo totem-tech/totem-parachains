@@ -18,30 +18,37 @@ use totem_primitives::unit_of_account::*;
 
 // Bad Origin Tests - MANDATORY FOR ALL EXTRINISCS
 #[test]
-fn should_fail_whitelist_account_bad_origin() {
+fn x_1_should_fail_bad_origin() {
 	new_test_ext().execute_with(|| {
         assert_noop!(
             PalletUnitOfAccount::whitelist_account(RuntimeOrigin::none()),
             BadOrigin,
         );
-		
-	});
-}
-
-#[test]
-fn should_fail_remove_account_bad_origin() {
-	new_test_ext().execute_with(|| {
-        assert_noop!(
-            PalletUnitOfAccount::remove_account(RuntimeOrigin::none(), None),
-            BadOrigin,
-        );
-		
+		assert_noop!(
+			PalletUnitOfAccount::remove_account(RuntimeOrigin::none(), None),
+			BadOrigin,
+		);
+		assert_noop!(
+			PalletUnitOfAccount::add_new_asset(RuntimeOrigin::none(), 
+			Tickers::Forex(FIAT::CNY), 
+			20308000000000000, 
+			140000000000000000, 
+			2
+		),
+			BadOrigin,
+		);
+		assert_noop!(
+			PalletUnitOfAccount::remove_asset(RuntimeOrigin::none(), 
+			Tickers::Forex(FIAT::CNY), 
+		),
+			BadOrigin,
+		);
 	});
 }
 
 // Other Extrinsic Tests
 #[test]
-fn should_add_a_whitelisted_account_successfully() {
+fn x_2_should_add_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		// Explicitly setting the block number is a shim
 		// it solves a problem in RandomnessCollectiveFlip where 1 is subtracted
@@ -57,7 +64,7 @@ fn should_add_a_whitelisted_account_successfully() {
 }
 
 #[test]
-fn whitelisted_account_add_should_fail_insufficient_balace() {
+fn x_3_whitelisted_account_add_should_fail_insufficient_balance() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -71,7 +78,7 @@ fn whitelisted_account_add_should_fail_insufficient_balace() {
 }
 
 #[test]
-fn whitelisted_account_should_fail_when_max_bound_is_reached() {
+fn x_4_whitelisted_account_should_fail_when_max_bound_is_reached() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -91,7 +98,7 @@ fn whitelisted_account_should_fail_when_max_bound_is_reached() {
 }
 
 #[test]
-fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
+fn x_5_whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -106,7 +113,7 @@ fn whitelisted_account_should_fail_when_account_is_already_whitelisted() {
 }
 
 #[test]
-fn should_remove_a_whitelisted_account_successfully() {
+fn x_6_should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -120,7 +127,7 @@ fn should_remove_a_whitelisted_account_successfully() {
 }
 
 #[test]
-fn sudo_should_remove_a_whitelisted_account_successfully() {
+fn x_7_sudo_should_remove_a_whitelisted_account_successfully() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -134,7 +141,7 @@ fn sudo_should_remove_a_whitelisted_account_successfully() {
 }
 
 #[test]
-fn remove_account_should_fail_when_account_is_not_whitelisted() {
+fn x_8_remove_account_should_fail_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -148,7 +155,7 @@ fn remove_account_should_fail_when_account_is_not_whitelisted() {
 }
 
 #[test]
-fn remove_account_should_fail_when_account_is_not_valid() {
+fn x_9_remove_account_should_fail_when_account_is_not_valid() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -166,7 +173,7 @@ fn remove_account_should_fail_when_account_is_not_valid() {
 }
 
 #[test]
-fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
+fn x_10_remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -180,7 +187,7 @@ fn remove_account_should_fail_using_sudo_when_account_is_not_whitelisted() {
 }
 
 #[test]
-fn remove_account_should_fail_using_sudo_when_account_is_not_valid() {
+fn x_11_remove_account_should_fail_using_sudo_when_account_is_not_valid() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -194,7 +201,7 @@ fn remove_account_should_fail_using_sudo_when_account_is_not_valid() {
 }
 
 // #[test]
-// fn test_name_stating_what_should_happen() {
+// fn x_1_x_name_stating_what_should_happen() {
 // 	new_test_ext().execute_with(|| {
 // 		System::set_block_number(100);
 // 		assert_eq!(System::block_number(), 100);
@@ -205,7 +212,7 @@ fn remove_account_should_fail_using_sudo_when_account_is_not_valid() {
 // }
 
 #[test]
-fn should_add_new_single_asset() {
+fn x_12_should_add_new_single_asset_successfully() {
 	new_test_ext().execute_with(|| {
 		System::set_block_number(100);
 		assert_eq!(System::block_number(), 100);
@@ -215,10 +222,10 @@ fn should_add_new_single_asset() {
 		assert_eq!(Balances::free_balance(1), 2000);
 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
 		// Basket does not yet exist. This is the population of the first record
-		let ticker: Tickers = Tickers::Forex(FIAT::CNY);
-		let issuance: u64 = 20308000000000000;
-		let price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
-		let decimals: u8 = 2;
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
 		// perform tests
 		assert_ok!(PalletUnitOfAccount::add_new_asset(
 			RuntimeOrigin::signed(1), // must be whitelisted account
@@ -228,760 +235,489 @@ fn should_add_new_single_asset() {
 			decimals, // decimals as u8
 			//source, // source of data from enum
 		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 49);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 140000000000000000);
+		// now basket exists add more records
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+		
+		ticker = Tickers::Forex(FIAT::EUR);
+		issuance = 1214125230000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.08);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::JPY);
+		issuance = 138166400000000000;
+		price = PalletUnitOfAccount::convert_float_to_int(0.01);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::GBP);
+		issuance = 288957500000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.23);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 4980);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 1163123087857170176);
 	});
 }
 
-// #[test]
-// fn should_add_new_asset_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+#[test]
+fn x_13_add_new_asset_should_fail_when_using_account_not_whitelisted() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		// Basket does not yet exist. This is the population of the first record
+		let ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let issuance: u64 = 123;
+		let price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let decimals: u8 = 2;
+		// perform tests
+		assert_err!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		),
+		Error::<Test>::NotWhitelistedAccount, 
+		);
+	});
+}
+
+#[test]
+fn x_14_add_new_asset_should_fail_when_issuance_is_zero() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let issuance: u64 = 0;
+		let price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let decimals: u8 = 2;
+		// perform tests
+		assert_err!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		),
+		Error::<Test>::InvalidIssuanceValue, 
+		);
+	});
+}
+
+#[test]
+fn x_15_add_new_asset_should_fail_when_price_is_zero() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let issuance: u64 = 123;
+		let price: u64 = PalletUnitOfAccount::convert_float_to_int(0.0);
+		let decimals: u8 = 2;
+		// perform tests
+		assert_err!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		),
+		Error::<Test>::InvalidPriceValue, 
+		);
+	});
+}
+
+#[test]
+fn x_16_sudo_should_remove_single_asset_successfully() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		// main testing logic
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+		
+		ticker = Tickers::Forex(FIAT::EUR);
+		issuance = 1214125230000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.08);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::JPY);
+		issuance = 138166400000000000;
+		price = PalletUnitOfAccount::convert_float_to_int(0.01);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::GBP);
+		issuance = 288957500000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.23);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 4980);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 1163123087857170176);
+
+		assert_ok!(PalletUnitOfAccount::remove_asset(
+			RuntimeOrigin::root(), 
+			Tickers::Forex(FIAT::GBP),
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 1519);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 1010780490503248640);
+	});
+}
+
+#[test]
+fn x_17_whitelisted_account_should_fail_remove_single_asset() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		// main testing logic
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+		
+		ticker = Tickers::Forex(FIAT::EUR);
+		issuance = 1214125230000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.08);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::JPY);
+		issuance = 138166400000000000;
+		price = PalletUnitOfAccount::convert_float_to_int(0.01);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::GBP);
+		issuance = 288957500000000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.23);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 4980);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 1163123087857170176);
+
+		assert_err!(PalletUnitOfAccount::remove_asset(
+			RuntimeOrigin::signed(1), 
+			Tickers::Forex(FIAT::GBP),
+			//source, // source of data from enum
+		), Error::<Test>::UnAuthorisedAccount);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 4980);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 1163123087857170176);
+	});
+}
+
+#[test]
+fn x_18_sudo_should_fail_remove_asset_not_in_basket() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		// main testing logic
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);		
+		assert_err!(PalletUnitOfAccount::remove_asset(
+			RuntimeOrigin::root(), 
+			Tickers::Forex(FIAT::GBP),
+			//source, // source of data from enum
+		), Error::<Test>::AssetNotFound);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);
+	});
+}
+
+#[test]
+fn x_19_whitelisted_account_should_fail_update_asset_price_out_of_bounds() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);		
+
+		ticker = Tickers::Forex(FIAT::CNY);
+		price = PalletUnitOfAccount::convert_float_to_int(0.76);
+
+		assert_err!(PalletUnitOfAccount::update_asset_price(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			price, // price as a u64
+			//source, // source of data from enum
+		), Error::<Test>::PriceOutOfBounds);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);	
+
+	});
+}
+
+#[test]
+fn x_20_whitelisted_account_should_fail_update_issuance_out_of_bounds() {
+	new_test_ext().execute_with(|| {
+		System::set_block_number(100);
+		assert_eq!(System::block_number(), 100);
+		// setup state
+		assert_ok!(Balances::set_balance(RuntimeOrigin::root(),1, 2000, 0));
+		assert_eq!(Balances::free_balance(1), 2000);
+		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
+		// Basket does not yet exist. This is the population of the first record
+		let mut ticker: Tickers = Tickers::Forex(FIAT::CNY);
+		let mut issuance: u64 = 20308000000000000;
+		let mut price: u64 = PalletUnitOfAccount::convert_float_to_int(0.14);
+		let mut decimals: u8 = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		ticker = Tickers::Forex(FIAT::USD);
+		issuance = 1564692617100000;
+		price = PalletUnitOfAccount::convert_float_to_int(1.0);
+		decimals = 2;
+		// perform tests
+		assert_ok!(PalletUnitOfAccount::add_new_asset(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			price, // price as a u64
+			decimals, // decimals as u8
+			//source, // source of data from enum
+		));
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);		
+
+		ticker = Tickers::Forex(FIAT::CNY);
+		issuance = 30308000000000000;
+
+		assert_err!(PalletUnitOfAccount::update_asset_issuance(
+			RuntimeOrigin::signed(1), // must be whitelisted account
+			ticker, // symbol from Tickers enum
+			issuance, // issuance as a u64
+			//source, // source of data from enum
+		), Error::<Test>::IssuanceOutOfBounds);
+		assert_eq!(PalletUnitOfAccount::total_inverse_issuance(), 688);
+		assert_eq!(PalletUnitOfAccount::financial_index(), 938478738111375232);		
+	});
+}
 
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_ne!(unit_of_account, 0);
-// 		assert_eq!(unit_of_account, 101557108542190140499497658089472);
-
-// 		let total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_ne!(total_inverse_issuance, 0);
-// 		assert_eq!(total_inverse_issuance, 15119831);
-// 	});
-// }
-
-// #[test]
-// fn add_currency_should_fail_when_account_is_not_whitelisted() {
-// 	new_test_ext().execute_with(|| {
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [3, 0, 0, 0],
-// 				message: Some("NotWhitelistedAccount"),
-// 			})
-// 		);
-// 	});
-// }
-
-
-// #[test]
-// fn add_currency_should_fail_when_asset_basket_is_out_of_bound() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_4 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_4,
-// 			1_381_664_000_000_000,
-// 			1_000_000_000_00, // 0.1
-// 			// (1_000_000_000_00, 2_000_000_000_00),
-// 			// (1_381_664_000_000_000, 10_381_664_000_000_000)
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [6, 0, 0, 0],
-// 				message: Some("AssetCannotBeAddedToBasket"),
-// 			})
-// 		);
-// 	});
-// }
-
-
-// #[test]
-// fn add_asset_should_fail_when_asset_symbol_already_exists() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			1_381_664_000_000_000,
-// 			1_000_000_000_00, // 0.1
-// 			// (1_000_000_000_00, 2_000_000_000_00),
-// 			// (1_381_664_000_000_000, 10_381_664_000_000_000)
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [5, 0, 0, 0],
-// 				message: Some("SymbolAlreadyExists"),
-// 			})
-// 		);
-// 	});
-// }
-
-
-// #[test]
-// fn add_asset_should_fail_with_invalid_issuance_value() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			0,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [8, 0, 0, 0],
-// 				message: Some("InvalidIssuanceValue"),
-// 			})
-// 		);
-// 	});
-// }
-
-
-// #[test]
-// fn add_asset_should_fail_with_invalid_price_value() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			0, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [9, 0, 0, 0],
-// 				message: Some("InvalidPriceValue"),
-// 			})
-// 		);
-// 	});
-// }
-
-
-// #[test]
-// fn should_remove_asset_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let old_asset_symbol = PalletUnitOfAccount::asset_symbol();
-// 		assert_eq!(old_asset_symbol.len(), 3);
-
-// 		let old_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(old_unit_of_account, 101557108542190140499497658089472);
-
-// 		let old_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(old_total_inverse_issuance, 15119831);
-
-// 		let res =
-// 			PalletUnitOfAccount::remove_asset(RuntimeOrigin::root(), currency_symbol_2);
-// 		assert_ok!(res);
-
-// 		// check that the length has changed
-// 		let new_asset_symbol = PalletUnitOfAccount::asset_symbol();
-// 		assert_eq!(new_asset_symbol.len(), 2);
-// 		assert_ne!(old_asset_symbol, new_asset_symbol);
-
-// 		// check that the unit of account has changed
-// 		let new_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(new_unit_of_account, 102697188572208678029509772967936);
-// 		assert_ne!(old_unit_of_account, new_unit_of_account);
-
-// 		// check that the total inverse issuance has changed
-// 		let new_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(new_total_inverse_issuance, 8728799);
-// 		assert_ne!(old_total_inverse_issuance, new_total_inverse_issuance);
-
-// 	});
-// }
-
-// #[test]
-// fn should_remove_asset_should_fail_when_asset_is_not_in_basket() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-
-// 		let res = PalletUnitOfAccount::remove_asset(RuntimeOrigin::root(), currency_symbol);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [7, 0, 0, 0],
-// 				message: Some("AssetNotFound"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn should_update_asset_price_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let old_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(old_unit_of_account, 101557108542190140499497658089472);
-
-// 		let old_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(old_total_inverse_issuance, 15119831);
-
-// 		// update price for currency_symbol_2
-// 		let res = PalletUnitOfAccount::update_asset_price(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_2, 
-// 			1_880_000_000_000
-// 		);
-// 		assert_ok!(res);
-
-
-// 		// check that the unit of account has changed
-// 		let new_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(new_unit_of_account, 138754004478715014101672447180800);
-// 		assert_ne!(old_unit_of_account, new_unit_of_account);
-
-// 		// check that the total inverse issuance has changed
-// 		let new_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(new_total_inverse_issuance, 15119831);
-// 		assert_eq!(old_total_inverse_issuance, new_total_inverse_issuance);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_price_should_fail_when_asset_is_not_in_basket() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
-// 		let res =
-// 			PalletUnitOfAccount::update_asset_price(
-// 				RuntimeOrigin::signed(1), 
-// 				currency_symbol_3, 
-// 				1_880_000_000_000
-// 			);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [7, 0, 0, 0],
-// 				message: Some("AssetNotFound"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_price_should_fail_when_asset_price_is_below_price_threshold() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let res = PalletUnitOfAccount::update_asset_price(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_3, 
-// 			980_000_000_000
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [15, 0, 0, 0],
-// 				message: Some("InvalidMinimumThresholdPriceValue"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_price_should_fail_when_asset_price_is_above_price_threshold() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let res = PalletUnitOfAccount::update_asset_price(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_3, 
-// 			3_080_000_000_000
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [16, 0, 0, 0],
-// 				message: Some("InvalidMaximumThresholdPriceValue"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn should_update_asset_issuance_successfully() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let old_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(old_unit_of_account, 101557108542190140499497658089472);
-
-// 		let old_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(old_total_inverse_issuance, 15119831);
-
-// 		let res = PalletUnitOfAccount::update_asset_issuance(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_2, 
-// 			19_646_926_171_000
-// 		);
-// 		assert_ok!(res);
-
-// 		// check that the unit of account has changed
-// 		let new_unit_of_account = PalletUnitOfAccount::unit_of_account();
-// 		assert_eq!(new_unit_of_account, 101703727282439271142265324568576);
-// 		assert_ne!(old_unit_of_account, new_unit_of_account);
-
-// 		// check that the total inverse issuance has changed
-// 		let new_total_inverse_issuance = PalletUnitOfAccount::total_inverse_issuance();
-// 		assert_eq!(new_total_inverse_issuance, 13818654);
-// 		assert_ne!(old_total_inverse_issuance, new_total_inverse_issuance);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_issuance_should_fail_when_asset_is_not_in_basket() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (1_400_000_000_00, 2_400_000_000_00),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::AVA));
-// 		let res = PalletUnitOfAccount::update_asset_issuance(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_3, 
-// 			1_000_000_000_000
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [7, 0, 0, 0],
-// 				message: Some("AssetNotFound"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_issuance_should_fail_when_asset_issuance_is_below_issuance_threshold() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let res = PalletUnitOfAccount::update_asset_issuance(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_3, 
-// 			10_141_252_300_000
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [19, 0, 0, 0],
-// 				message: Some("InvalidMinimumThresholdIssuanceValue"),
-// 			})
-// 		);
-// 	});
-// }
-
-// #[test]
-// fn update_asset_issuance_should_fail_when_asset_issuance_is_above_price_threshold() {
-// 	new_test_ext().execute_with(|| {
-// 		assert_ok!(PalletUnitOfAccount::whitelist_account(RuntimeOrigin::signed(1)));
-
-// 		let currency_symbol_1 = Tickers::Crypto(CoinType::Coin(COIN::ACA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_1,
-// 			203_080_000_000_000,
-// 			1_400_000_000_00, // 0.14
-// 			// (140000000000, 240000000000),
-// 			// (203_080_000_000_000, 503_080_000_000_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_2 = Tickers::Crypto(CoinType::Coin(COIN::ADA));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_2,
-// 			15_646_926_171_000,
-// 			1_000_000_000_000, // 1.00
-// 			// (1_000_000_000_000, 2_000_000_000_000),
-// 			// (15_646_926_171_000, 20_646_926_171_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let currency_symbol_3 = Tickers::Crypto(CoinType::Coin(COIN::ASTR));
-// 		let res = PalletUnitOfAccount::add_new_asset(
-// 			RuntimeOrigin::signed(1),
-// 			currency_symbol_3,
-// 			12_141_252_300_000,
-// 			1_080_000_000_000, // 1.08
-// 			// (1_080_000_000_000, 2_080_000_000_000),
-// 			// (12_141_252_300_000, 20_141_252_300_000),
-// 		);
-// 		assert_ok!(res);
-
-// 		let res = PalletUnitOfAccount::update_asset_issuance(
-// 			RuntimeOrigin::signed(1), 
-// 			currency_symbol_3, 
-// 			30_141_252_300_000
-// 		);
-// 		assert_err!(
-// 			res,
-// 			DispatchError::Module(ModuleError {
-// 				index: 3,
-// 				error: [20, 0, 0, 0],
-// 				message: Some("InvalidMaximumThresholdIssuanceValue"),
-// 			})
-// 		);
-// 	});
-// }
